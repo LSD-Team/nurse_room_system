@@ -1,0 +1,50 @@
+@import './fonts.css';
+
+
+#app {
+  margin: 0;
+  padding: 0;
+  font-family: 'Niramit', sans-serif !important;
+}
+
+/* Set font for sweetalert popup */
+.swal2-popup {
+  font-family: 'Niramit', sans-serif !important;
+}
+
+/* Set font for primevue components */
+.p-component,
+.p-dropdown-label,
+.p-datepicker-year,
+.p-datepicker-month {
+  font-family: 'Niramit', sans-serif !important;
+}
+
+/* config scrollbar */
+
+::-webkit-scrollbar {
+  -webkit-appearance: none;
+}
+
+::-webkit-scrollbar:vertical {
+  width: 12px;
+}
+
+::-webkit-scrollbar:horizontal {
+  height: 12px;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.5);
+  border-radius: 10px;
+  border: 2px solid #ffffff;
+}
+
+::-webkit-scrollbar-track {
+  border-radius: 10px;
+  background-color: #ffffff;
+}
+
+.swal2-container {
+  z-index: 999 !important; /* Make sure this value is higher than any other z-index in your app */
+}

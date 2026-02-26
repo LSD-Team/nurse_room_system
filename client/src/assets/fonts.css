@@ -1,0 +1,9 @@
+/* Niramit */
+@font-face {
+    font-family: 'Niramit';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url('@/assets/fonts/Niramit/Niramit-Medium.ttf') format('truetype');
+    /* Add unicode-range if needed */
+}

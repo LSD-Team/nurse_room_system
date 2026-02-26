@@ -1,0 +1,26 @@
+{
+  "extends": "@vue/tsconfig/tsconfig.dom.json",
+  "include": [
+    "src/env.d.ts",
+    "src/**/*",
+    "src/**/*.vue",
+    "../server/shared/**/*",
+    "../server/shared/**/**/*"
+  ],
+  "exclude": ["src/**/__tests__/*"],
+  // "references": [
+  //   {
+  //     "path": "../server/shared/tsconfig.shared.json" // Path to the tsconfig.shared.json file
+  //   }
+  // ],
+  "compilerOptions": {
+    "strict": false,
+    "rootDir": "../",
+    "composite": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@/shared/*": ["../server/shared/*"]
+    }
+  }
+}
