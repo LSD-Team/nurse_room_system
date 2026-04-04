@@ -1,10 +1,10 @@
 <script lang="ts" setup>
-import AppMenu from './AppMenu.vue';
+import AppMenuNurseRoom from './AppMenuNurseRoom.vue';
 </script>
 
 <template>
     <div class="layout-sidebar">
-        <app-menu></app-menu>
+        <app-menu-nurse-room></app-menu-nurse-room>
     </div>
 </template>
 
