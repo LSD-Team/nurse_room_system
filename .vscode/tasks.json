@@ -3,8 +3,14 @@
   "tasks": [
     {
       "label": "start-dev",
-      "dependsOn": ["start-client", "start-server"],
-      "dependsOrder": "parallel"
+      "dependsOn": [
+        "start-client",
+        "start-server"
+      ],
+      "dependsOrder": "parallel",
+      "problemMatcher": [
+        "$tsc"
+      ]
     },
     {
       "label": "start-client",
