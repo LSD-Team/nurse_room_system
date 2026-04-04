@@ -4,226 +4,81 @@ import { type RouteRecordRaw, createRouter, createWebHashHistory } from 'vue-rou
 const routes: RouteRecordRaw[] = [
   {
     path: '/',
-    name: 'landing',
-    component: () => import('@/views/LandingPage.vue'),
-  },
-  {
-    path: '/dashboard',
     component: AppLayout,
-    // TODO: เพิ่ม beforeEnter middleware สำหรับตรวจสอบ authentication & authorization
     children: [
-      {
-        path: '',
-        name: 'dashboard',
-        // TODO: เปลี่ยนเป็น NurseRoomDashboard.vue เมื่อสร้างเสร็จ
-        component: () => import('@/views/Dashboard.vue'),
-      },
-      // ===== เมนูระบบหลัก =====
-      // Dashboard ขึ้นมาแล้ว
+      { path: '', name: 'dashboard', component: () => import('@/views/Dashboard.vue') },
 
-      // ===== จ่ายการจัดการห้องพยาบาล =====
-      {
-        path: 'nurse-rooms',
-        name: 'nurseRooms',
-        // TODO: สร้าง NurseRoomsList.vue component
-        component: () => import('@/views/pages/Empty.vue'),
-      },
-      {
-        path: 'room-status',
-        name: 'roomStatus',
-        // TODO: สร้าง RoomStatusManagement.vue component
-        component: () => import('@/views/pages/Empty.vue'),
-      },
-      {
-        path: 'room-inspection',
-        name: 'roomInspection',
-        // TODO: สร้าง RoomInspection.vue component
-        component: () => import('@/views/pages/Empty.vue'),
-      },
+      // ===== การรักษาพยาบาล =====
+      { path: 'treatment-record', name: 'treatmentRecord', component: () => import('@/views/pages/Empty.vue') },
+      { path: 'treatment-history', name: 'treatmentHistory', component: () => import('@/views/pages/Empty.vue') },
+      { path: 'general-treatment-history', name: 'generalTreatmentHistory', component: () => import('@/views/pages/Empty.vue') },
+      { path: 'refer-history', name: 'referHistory', component: () => import('@/views/pages/Empty.vue') },
+      { path: 'occupational-disease-history', name: 'occupationalDiseaseHistory', component: () => import('@/views/pages/Empty.vue') },
+      { path: 'chronic-disease-history', name: 'chronicDiseaseHistory', component: () => import('@/views/pages/Empty.vue') },
+      { path: 'hospital-treatment-history', name: 'hospitalTreatmentHistory', component: () => import('@/views/pages/Empty.vue') },
+      { path: 'work-accident-history', name: 'workAccidentHistory', component: () => import('@/views/pages/Empty.vue') },
+      { path: 'health-check-new', name: 'healthCheckNew', component: () => import('@/views/pages/Empty.vue') },
+      { path: 'health-check-annual', name: 'healthCheckAnnual', component: () => import('@/views/pages/Empty.vue') },
+      { path: 'health-check-transfer', name: 'healthCheckTransfer', component: () => import('@/views/pages/Empty.vue') },
+      { path: 'cervical-cancer-screening', name: 'cervicalCancerScreening', component: () => import('@/views/pages/Empty.vue') },
+      { path: 'employee-external-people', name: 'employeeExternalPeople', component: () => import('@/views/pages/Empty.vue') },
 
-      // ===== การจัดการพยาบาล =====
-      {
-        path: 'nurses',
-        name: 'nurses',
-        // TODO: สร้าง NursesList.vue component
-        component: () => import('@/views/pages/Empty.vue'),
-      },
-      {
-        path: 'nurse-schedule',
-        name: 'nurseSchedule',
-        // TODO: สร้าง NurseSchedule.vue component
-        component: () => import('@/views/pages/Empty.vue'),
-      },
-      {
-        path: 'nurse-history',
-        name: 'nurseHistory',
-        // TODO: สร้าง NurseHistory.vue component
-        component: () => import('@/views/pages/Empty.vue'),
-      },
+      // ===== ข้อมูลพยาบาลและคลังยา =====
+      { path: 'nurses-list', name: 'nursesList', component: () => import('@/views/pages/Empty.vue') },
+      { path: 'nurse-teams', name: 'nurseTeams', component: () => import('@/views/pages/Empty.vue') },
+      { path: 'nurse-contracts', name: 'nurseContracts', component: () => import('@/views/pages/Empty.vue') },
+      { path: 'medicine-items', name: 'medicineItems', component: () => import('@/views/pages/Empty.vue') },
+      { path: 'units', name: 'units', component: () => import('@/views/pages/Empty.vue') },
+      { path: 'medicine-prices', name: 'medicinePrices', component: () => import('@/views/pages/Empty.vue') },
+      { path: 'purchase-orders', name: 'purchaseOrders', component: () => import('@/views/pages/Empty.vue') },
+      { path: 'goods-receipt', name: 'goodsReceipt', component: () => import('@/views/pages/Empty.vue') },
+      { path: 'borrow-medicines', name: 'borrowMedicines', component: () => import('@/views/pages/Empty.vue') },
+      { path: 'stock-status', name: 'stockStatus', component: () => import('@/views/pages/Empty.vue') },
+      { path: 'movement-records', name: 'movementRecords', component: () => import('@/views/pages/Empty.vue') },
+      { path: 'stock-adjustment', name: 'stockAdjustment', component: () => import('@/views/pages/Empty.vue') },
 
-      // ===== การจัดการผู้ป่วย =====
-      {
-        path: 'patient-registration',
-        name: 'patientRegistration',
-        // TODO: สร้าง PatientRegistration.vue component
-        component: () => import('@/views/pages/Empty.vue'),
-      },
-      {
-        path: 'patients',
-        name: 'patients',
-        // TODO: สร้าง PatientsList.vue component
-        component: () => import('@/views/pages/Empty.vue'),
-      },
-      {
-        path: 'patient-room-allocation',
-        name: 'patientRoomAllocation',
-        // TODO: สร้าง PatientRoomAllocation.vue component
-        component: () => import('@/views/pages/Empty.vue'),
-      },
-      {
-        path: 'patient-treatment-history',
-        name: 'patientTreatmentHistory',
-        // TODO: สร้าง PatientTreatmentHistory.vue component
-        component: () => import('@/views/pages/Empty.vue'),
-      },
+      // ===== ข้อมูลหลัก (Master Data) =====
+      { path: 'suppliers', name: 'suppliers', component: () => import('@/views/pages/Empty.vue') },
+      { path: 'treatment-types', name: 'treatmentTypes', component: () => import('@/views/pages/Empty.vue') },
+      { path: 'refer-types', name: 'referTypes', component: () => import('@/views/pages/Empty.vue') },
+      { path: 'disease-master-data', name: 'diseaseMasterData', component: () => import('@/views/pages/Empty.vue') },
+      { path: 'medical-facilities', name: 'medicalFacilities', component: () => import('@/views/pages/Empty.vue') },
 
-      // ===== การจัดการอุปกรณ์ =====
-      {
-        path: 'items',
-        name: 'items',
-        // TODO: สร้าง ItemsList.vue component
-        component: () => import('@/views/pages/Empty.vue'),
-      },
-      {
-        path: 'inventory',
-        name: 'inventory',
-        // TODO: สร้าง InventoryManagement.vue component
-        component: () => import('@/views/pages/Empty.vue'),
-      },
-      {
-        path: 'equipment-borrow',
-        name: 'equipmentBorrow',
-        // TODO: สร้าง EquipmentBorrow.vue component
-        component: () => import('@/views/pages/Empty.vue'),
-      },
-      {
-        path: 'equipment-return',
-        name: 'equipmentReturn',
-        // TODO: สร้าง EquipmentReturn.vue component
-        component: () => import('@/views/pages/Empty.vue'),
-      },
+      // ===== สุขภาพประจำปี =====
+      { path: 'annual-health-data', name: 'annualHealthData', component: () => import('@/views/pages/Empty.vue') },
+      { path: 'import-excel-health', name: 'importExcelHealth', component: () => import('@/views/pages/Empty.vue') },
 
-      // ===== การจัดการซื้อ-ขาย =====
-      {
-        path: 'purchase-orders',
-        name: 'purchaseOrders',
-        // TODO: สร้าง PurchaseOrdersList.vue component
-        component: () => import('@/views/pages/Empty.vue'),
-      },
-      {
-        path: 'goods-receipt',
-        name: 'goodsReceipt',
-        // TODO: สร้าง GoodsReceipt.vue component
-        component: () => import('@/views/pages/Empty.vue'),
-      },
-      {
-        path: 'approvals',
-        name: 'approvals',
-        // TODO: สร้าง ApprovalsList.vue component และเพิ่ม authorization
-        component: () => import('@/views/pages/Empty.vue'),
-      },
+      // ===== ข้อมูลพนักงาน =====
+      { path: 'employee-holiday-update', name: 'employeeHolidayUpdate', component: () => import('@/views/pages/Empty.vue') },
+      { path: 'social-security-update', name: 'socialSecurityUpdate', component: () => import('@/views/pages/Empty.vue') },
+      { path: 'cervical-cancer-update', name: 'cervicalCancerUpdate', component: () => import('@/views/pages/Empty.vue') },
 
-      // ===== การจัดการโรค =====
-      {
-        path: 'disease-groups',
-        name: 'diseaseGroups',
-        // TODO: สร้าง DiseaseGroups.vue component
-        component: () => import('@/views/pages/Empty.vue'),
-      },
-      {
-        path: 'disease-sub-groups',
-        name: 'diseaseSubGroups',
-        // TODO: สร้าง DiseaseSubGroups.vue component
-        component: () => import('@/views/pages/Empty.vue'),
-      },
-      {
-        path: 'accident-severity',
-        name: 'accidentSeverity',
-        // TODO: สร้าง AccidentSeverity.vue component
-        component: () => import('@/views/pages/Empty.vue'),
-      },
+      // ===== การเบิกยากรณีพิเศษ =====
+      { path: 'special-medicine-request', name: 'specialMedicineRequest', component: () => import('@/views/pages/Empty.vue') },
 
-      // ===== รายงานและวิเคราะห์ =====
-      {
-        path: 'reports/room-usage',
-        name: 'reportRoomUsage',
-        // TODO: สร้าง ReportRoomUsage.vue component
-        component: () => import('@/views/pages/Empty.vue'),
-      },
-      {
-        path: 'reports/inventory',
-        name: 'reportInventory',
-        // TODO: สร้าง ReportInventory.vue component
-        component: () => import('@/views/pages/Empty.vue'),
-      },
-      {
-        path: 'reports/budget',
-        name: 'reportBudget',
-        // TODO: สร้าง ReportBudget.vue component
-        component: () => import('@/views/pages/Empty.vue'),
-      },
-      {
-        path: 'analytics/performance',
-        name: 'analyticsPerformance',
-        // TODO: สร้าง AnalyticsPerformance.vue component
-        component: () => import('@/views/pages/Empty.vue'),
-      },
+      // ===== รายงาน =====
+      { path: 'report-treatment', name: 'reportTreatment', component: () => import('@/views/pages/Empty.vue') },
+      { path: 'report-refer', name: 'reportRefer', component: () => import('@/views/pages/Empty.vue') },
+      { path: 'report-accident', name: 'reportAccident', component: () => import('@/views/pages/Empty.vue') },
+      { path: 'report-occupational-disease', name: 'reportOccupationalDisease', component: () => import('@/views/pages/Empty.vue') },
+      { path: 'report-hospital-treatment', name: 'reportHospitalTreatment', component: () => import('@/views/pages/Empty.vue') },
+      { path: 'report-chronic-disease', name: 'reportChronicDisease', component: () => import('@/views/pages/Empty.vue') },
+      { path: 'report-health-check-new', name: 'reportHealthCheckNew', component: () => import('@/views/pages/Empty.vue') },
+      { path: 'report-health-check-annual', name: 'reportHealthCheckAnnual', component: () => import('@/views/pages/Empty.vue') },
+      { path: 'report-health-check-transfer', name: 'reportHealthCheckTransfer', component: () => import('@/views/pages/Empty.vue') },
+      { path: 'report-cervical-cancer', name: 'reportCervicalCancer', component: () => import('@/views/pages/Empty.vue') },
+      { path: 'report-nurses', name: 'reportNurses', component: () => import('@/views/pages/Empty.vue') },
+      { path: 'report-purchase', name: 'reportPurchase', component: () => import('@/views/pages/Empty.vue') },
+      { path: 'report-borrow', name: 'reportBorrow', component: () => import('@/views/pages/Empty.vue') },
+      { path: 'report-stock-monthly', name: 'reportStockMonthly', component: () => import('@/views/pages/Empty.vue') },
+      { path: 'report-usage-daily', name: 'reportUsageDaily', component: () => import('@/views/pages/Empty.vue') },
+      { path: 'report-treatment-by-disease', name: 'reportTreatmentByDisease', component: () => import('@/views/pages/Empty.vue') },
+      { path: 'report-social-security', name: 'reportSocialSecurity', component: () => import('@/views/pages/Empty.vue') },
+      { path: 'report-health-check-ops4', name: 'reportHealthCheckOps4', component: () => import('@/views/pages/Empty.vue') },
+      { path: 'report-special-medicine', name: 'reportSpecialMedicine', component: () => import('@/views/pages/Empty.vue') },
 
-      // ===== ตั้งค่าระบบ =====
-      {
-        path: 'settings/hospital-info',
-        name: 'settingsHospitalInfo',
-        // TODO: สร้าง HospitalInfo.vue component และเพิ่ม authorization (Admin only)
-        component: () => import('@/views/pages/Empty.vue'),
-      },
-      {
-        path: 'settings/users',
-        name: 'settingsUsers',
-        // TODO: สร้าง UserManagement.vue component และเพิ่ม authorization (Admin only)
-        component: () => import('@/views/pages/Empty.vue'),
-      },
-      {
-        path: 'settings/roles-permissions',
-        name: 'settingsRolesPermissions',
-        // TODO: สร้าง RolesPermissions.vue component และเพิ่ม authorization (Admin only)
-        component: () => import('@/views/pages/Empty.vue'),
-      },
-      {
-        path: 'settings/general',
-        name: 'settingsGeneral',
-        // TODO: สร้าง GeneralSettings.vue component และเพิ่ม authorization (Admin only)
-        component: () => import('@/views/pages/Empty.vue'),
-      },
-
-      // ===== ช่วยเหลือและสนับสนุน =====
-      {
-        path: 'help/guide',
-        name: 'helpGuide',
-        // TODO: สร้าง UserGuide.vue component
-        component: () => import('@/views/pages/Empty.vue'),
-      },
-      {
-        path: 'help/support',
-        name: 'helpSupport',
-        // TODO: สร้าง Support.vue component
-        component: () => import('@/views/pages/Empty.vue'),
-      },
-      {
-        path: 'help/about',
-        name: 'helpAbout',
-        // TODO: สร้าง AboutSystem.vue component
-        component: () => import('@/views/pages/Empty.vue'),
-      },
+      // ===== การอนุมัติ =====
+      { path: 'approve-purchase', name: 'approvePurchase', component: () => import('@/views/pages/Empty.vue') },
     ],
   },
   {

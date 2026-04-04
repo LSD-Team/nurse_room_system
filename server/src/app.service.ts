@@ -10,7 +10,7 @@ export class AppService {
   getHello(): string {
     const appName =
       this.configService.get<string>('APP_NAME') || 'Template Web Stack 2025';
-    
+
     // Create a beautiful HTML welcome page
     return `
 <!DOCTYPE html>

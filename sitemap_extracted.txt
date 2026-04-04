@@ -1,0 +1,93 @@
+Nurse Room System
+Dashboard
+การรักษาพยาบาล
+พนักงานประจำ/บุคคลภายนอก
+บันทึกการรักษาพยาบาล
+ประวัติการรักษา
+ประวัติการรักษาทั่วไป
+ประวัติการ Refer
+ประวัติ&lt;span style=&quot;text-wrap-mode: nowrap;&quot;&gt;โรคทึ่คาดว่าเกิดจากการทำงาน&lt;/span&gt;
+ประวัติ&lt;span style=&quot;text-wrap-mode: nowrap;&quot;&gt;โรคเจ็บป่วยเรื้อรังเฉพาะ&lt;/span&gt;
+&lt;div&gt;ประวัติเจ็บป่วยจากโรงพยาบาล&lt;/div&gt;
+&lt;div&gt;ประวัติการเกิดอุบัติเหตุในงาน&lt;/div&gt;
+&lt;div&gt;ผลตรวจสุขภาพ&lt;/div&gt;
+&lt;div&gt;ผลตรวจสุขภาพเข้างานใหม่&lt;/div&gt;
+&lt;div&gt;ผลตรวจสุขภาพประจำปี&lt;/div&gt;
+&lt;div&gt;ผลตรวจสุขภาพกรณีโยกย้ายงาน&lt;/div&gt;
+วันที่และเวลารักษา
+กะทำงาน
+อาการ
+กลุ่มโรค
+ประเภทโรค
+ประเภทการรักษา
+โรคที่คาดว่าเกิดจากการทำงาน
+Accident in Work
+Refer
+หยุดงาน, นอนพัก, ทำงานต่อได้, ส่งโรงพยาบาล
+Emergency Refer, Rest &amp;amp; Refer, Accident In Work &amp;amp; Refer, Dressing &amp;amp; Refer
+อุณภูมิ, อัตราการเต้นของหัวใจ, อัตราการหายใจ, ความดัน สูง/ต่ำ, น้ำหนัก, BMI (Optional)
+คำแนะนำจากพยาบาล
+ยาที่ใช้
+เวชภัณฑ์ที่ใช้
+ข้อมูลส่วนตัวพนักงาน,จำนวนครั้งที่มารักษา, ยาที่แพ้, โรคประจำตัว, ข้อมูลประกันสังคม
+Update, Delete
+[Add, Update, Delete]
+[Update, Delete]
+ผลตรวจมะเร็งปากมดลูก
+ข้อมูลพยาบาลและคลังยา (Nursing &amp;amp; Pharmacy Inventory)
+&lt;div&gt;ข้อมูลพยาบาล&lt;/div&gt;
+&lt;div&gt;รายชื่อพยาบาล&lt;/div&gt;
+&lt;div&gt;ทีมพยาบาล&lt;/div&gt;
+&lt;div&gt;สัญญาจ้างงานพยาบาล&lt;/div&gt;
+&lt;div&gt;รายการ ยา/เวชภัณฑ์&lt;/div&gt;
+&lt;div&gt;หน่วยนับ&lt;/div&gt;
+&lt;div&gt;ราคา ยา/เวชภัณฑ์&lt;/div&gt;
+&lt;div&gt;จัดซื้อ &amp;amp; ยืม ยา/เวชภัณฑ์ (Procurement &amp;amp; Borrowing)&lt;/div&gt;
+สั่งซื้อ
+รับเข้า
+ยืม
+&lt;div&gt;คลัง / สต็อก ยา/เวชภัณฑ์ (Inventory)&lt;/div&gt;
+สถานะสต็อก
+บันทึกเคลื่อนไหว
+ปรับยอด
+&lt;div&gt;ข้อมูลหลัก (Master Data)&lt;/div&gt;
+&lt;div&gt;ผู้จัดจำหน่าย&lt;/div&gt;
+&lt;div&gt;ประเภทการรักษา&lt;/div&gt;
+&lt;div&gt;ประเภทการ Refer&lt;/div&gt;
+กลุ่มโรคและประเภทของโรค
+สถานพยาบาล
+&lt;div&gt;ข้อมูลตรวจสุขภาพประจำปี&lt;/div&gt;
+นำเข้าไฟล์ Excel&lt;div&gt;*OP-S4&lt;/div&gt;&lt;div&gt;*E1+&lt;/div&gt;
+รายงาน
+อนุมัติการสั่งซื้อยา
+All
+Nurse
+Admin Nurse
+HR GL
+&lt;font style=&quot;color: rgb(0, 0, 0);&quot;&gt;HR&amp;nbsp;&lt;/font&gt;&lt;span style=&quot;color: rgb(0, 0, 0);&quot;&gt;Manager&amp;nbsp;&lt;/span&gt;
+HR&amp;nbsp;Department
+ข้อมูลพนักงานทำงานวันหยุด
+&lt;div&gt;อัพเดทข้อมูลประกันสังคมพนักงาน&lt;/div&gt;
+&lt;div&gt;อัพเดทข้อมูลมะเร็งปากมดลูก&lt;/div&gt;
+ประวัติ&lt;span style=&quot;text-wrap-mode: nowrap;&quot;&gt;โรคเจ็บป่วยเรื้อรังปกติ&lt;/span&gt;
+เบิกยากรณีพิเศษ
+&lt;div&gt;พนักงานทำงานวันหยุดและอัพเดทข้อมูลประจำปี&lt;/div&gt;
+รายงาน การรักษาพยาบาลทั่วไป พนักงาน/บุคคลภายนอก
+รายงาน ประวัติการ Refer
+รายงาน&amp;nbsp;&lt;span style=&quot;text-wrap-mode: wrap;&quot;&gt;ประวัติการเกิดอุบัติเหตุในงาน&lt;/span&gt;
+รายงาน ประวัติ&lt;span style=&quot;text-wrap-mode: nowrap;&quot;&gt;โรคทึ่คาดว่าเกิดจากการทำงาน&lt;/span&gt;
+รายงาน ประวัติเจ็บป่วยจากโรงพยาบาล&amp;nbsp;
+รายงาน ประวัติ&lt;span style=&quot;text-wrap-mode: nowrap;&quot;&gt;โรคเจ็บป่วยเรื้อรังปกติ&lt;/span&gt;&amp;nbsp;
+รายงาน ผลตรวจสุขภาพเข้างานใหม่
+รายงาน ผลตรวจสุขภาพประจำปี E1+
+รายงาน ผลตรวจสุขภาพกรณีโยกย้ายงาน
+รายงาน ผลตรวจมะเร็งปากมดลูก
+รายงาน ข้อมูลพยาบาล
+รายงาน จัดซื้อยา/เวชภัณฑ์
+รายงาน ยืมยา/เวชภัณฑ์
+รายงาน สต็อก ยา/เวชภัณฑ์ รายเดือน
+รายงาน การใช้ ยา/เวชภัณฑ์ รายวัน
+รายงาน&amp;nbsp;&lt;span style=&quot;text-wrap-mode: nowrap;&quot;&gt;การรักษาพยาบาลรายโรค&lt;/span&gt;
+รายงาน สถานพยาบาลประกันสังคม
+รายงาน ผลตรวจสุขภาพประจำปี OP-S4
+รายงาน การเบิกยากรณีพิเศษ

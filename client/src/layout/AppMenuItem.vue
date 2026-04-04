@@ -73,23 +73,36 @@ function checkActiveRoute(item) {
 
 <template>
     <li :class="{ 'layout-root-menuitem': root, 'active-menuitem': isActiveMenu }">
-        <div v-if="root && item.visible !== false" class="layout-menuitem-root-text">{{ item.label }}</div>
+        <!-- <div v-if="root && item.visible !== false" class="layout-menuitem-root-text">Nurse Room System</div> -->
         <a v-if="(!item.to || item.items) && item.visible !== false" :href="item.url" @click="itemClick($event, item)" :class="item.class" :target="item.target" tabindex="0">
-            <i :class="item.icon" class="layout-menuitem-icon"></i>
+            <i :class="[item.icon, item.color]" class="layout-menuitem-icon"></i>
             <span class="layout-menuitem-text">{{ item.label }}</span>
             <i class="pi pi-fw pi-angle-down layout-submenu-toggler" v-if="item.items"></i>
         </a>
         <router-link v-if="item.to && !item.items && item.visible !== false" @click="itemClick($event, item)" :class="[item.class, { 'active-route': checkActiveRoute(item) }]" tabindex="0" :to="item.to">
-            <i :class="item.icon" class="layout-menuitem-icon"></i>
+            <i :class="[item.icon, item.color]" class="layout-menuitem-icon"></i>
             <span class="layout-menuitem-text">{{ item.label }}</span>
             <i class="pi pi-fw pi-angle-down layout-submenu-toggler" v-if="item.items"></i>
         </router-link>
         <Transition v-if="item.items && item.visible !== false" name="layout-submenu">
-            <ul v-show="root ? true : isActiveMenu" class="layout-submenu">
+            <ul v-show="root ? true : isActiveMenu" class="layout-submenu" :style="!root ? 'padding-left: 1.5rem;' : ''">
                 <app-menu-item v-for="(child, i) in item.items" :key="child" :index="i" :item="child" :parentItemKey="itemKeyString" :root="false"></app-menu-item>
             </ul>
         </Transition>
     </li>
 </template>
 
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+.layout-submenu {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+.layout-submenu > li {
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+li:not(.layout-root-menuitem) > .layout-menuitem-root-text {
+    padding-left: 1.5rem;
+}
+</style>

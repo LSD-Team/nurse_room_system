@@ -12,106 +12,107 @@ interface MenuItem {
     target?: string;
     class?: string;
     separator?: boolean;
+    color?: string;
 }
 
 const model = ref<MenuItem[]>([
     {
-        label: 'ระบบหลัก',
+        label: 'Nurse Room System',
         items: [
-            { label: 'แดชบอร์ด', icon: 'pi pi-fw pi-home', to: '/dashboard' }
-        ]
-    },
-    {
-        label: 'การจัดการห้องพยาบาล',
-        icon: 'pi pi-fw pi-building',
-        items: [
-            { label: 'ข้อมูลห้องพยาบาล', icon: 'pi pi-fw pi-th-large', to: '/dashboard/nurse-rooms' },
-            { label: 'การจัดสถานะห้อง', icon: 'pi pi-fw pi-check-circle', to: '/dashboard/room-status' },
-            { label: 'ประเมินความสะอาด', icon: 'pi pi-fw pi-book', to: '/dashboard/room-inspection' }
-            // TODO: เพิ่ม권한 validation ที่นี่ (ตรวจสอบ role)
-        ]
-    },
-    {
-        label: 'การจัดการพยาบาล',
-        icon: 'pi pi-fw pi-users',
-        items: [
-            { label: 'ข้อมูลพยาบาล', icon: 'pi pi-fw pi-list', to: '/dashboard/nurses' },
-            { label: 'การจัดเวรพยาบาล', icon: 'pi pi-fw pi-calendar', to: '/dashboard/nurse-schedule' },
-            { label: 'ประวัติการทำงาน', icon: 'pi pi-fw pi-history', to: '/dashboard/nurse-history' }
-            // TODO: เพิ่ม권한 validation ที่นี่
-        ]
-    },
-    {
-        label: 'การจัดการผู้ป่วย',
-        icon: 'pi pi-fw pi-heart',
-        items: [
-            { label: 'ลงทะเบียนผู้ป่วย', icon: 'pi pi-fw pi-user-plus', to: '/dashboard/patient-registration' },
-            { label: 'ข้อมูลผู้ป่วย', icon: 'pi pi-fw pi-id-card', to: '/dashboard/patients' },
-            { label: 'การจัดสรรห้อง', icon: 'pi pi-fw pi-arrows-h', to: '/dashboard/patient-room-allocation' },
-            { label: 'ประวัติการรักษา', icon: 'pi pi-fw pi-file-edit', to: '/dashboard/patient-treatment-history' }
-            // TODO: เพิ่ม권한 validation ที่นี่
-        ]
-    },
-    {
-        label: 'การจัดการอุปกรณ์',
-        icon: 'pi pi-fw pi-toolbox',
-        items: [
-            { label: 'สินค้าและอุปกรณ์', icon: 'pi pi-fw pi-box', to: '/dashboard/items' },
-            { label: 'ระดับคลัง', icon: 'pi pi-fw pi-chart-bar', to: '/dashboard/inventory' },
-            { label: 'การขอยืมอุปกรณ์', icon: 'pi pi-fw pi-share', to: '/dashboard/equipment-borrow' },
-            { label: 'การคืนอุปกรณ์', icon: 'pi pi-fw pi-reply', to: '/dashboard/equipment-return' }
-            // TODO: เพิ่ม권한 validation ที่นี่
-        ]
-    },
-    {
-        label: 'การจัดการซื้อ-ขาย',
-        icon: 'pi pi-fw pi-shopping-cart',
-        items: [
-            { label: 'Purchase Order', icon: 'pi pi-fw pi-list', to: '/dashboard/purchase-orders' },
-            { label: 'การรับสินค้า', icon: 'pi pi-fw pi-inbox', to: '/dashboard/goods-receipt' },
-            { label: 'การอนุมัติ', icon: 'pi pi-fw pi-check-square', to: '/dashboard/approvals' }
-            // TODO: เพิ่ม권한 validation ที่นี่
-        ]
-    },
-    {
-        label: 'การจัดการโรค',
-        icon: 'pi pi-fw pi-exclamation-triangle',
-        items: [
-            { label: 'กลุ่มโรค', icon: 'pi pi-fw pi-folder', to: '/dashboard/disease-groups' },
-            { label: 'โรคเฉพาะ', icon: 'pi pi-fw pi-file', to: '/dashboard/disease-sub-groups' },
-            { label: 'ความรุนแรงอุบัติเหตุ', icon: 'pi pi-fw pi-flag', to: '/dashboard/accident-severity' }
-            // TODO: เพิ่ม권한 validation ที่นี่
-        ]
-    },
-    {
-        label: 'รายงานและวิเคราะห์',
-        icon: 'pi pi-fw pi-chart-line',
-        items: [
-            { label: 'รายงานการใช้ห้อง', icon: 'pi pi-fw pi-chart-bar', to: '/dashboard/reports/room-usage' },
-            { label: 'รายงานคลัง', icon: 'pi pi-fw pi-chart-pie', to: '/dashboard/reports/inventory' },
-            { label: 'รายงานงบประมาณ', icon: 'pi pi-fw pi-dollar', to: '/dashboard/reports/budget' },
-            { label: 'วิเคราะห์ประสิทธิภาพ', icon: 'pi pi-fw pi-chart-area', to: '/dashboard/analytics/performance' }
-            // TODO: เพิ่ม권한 validation ที่นี่
-        ]
-    },
-    {
-        label: 'ตั้งค่าระบบ',
-        icon: 'pi pi-fw pi-cog',
-        items: [
-            { label: 'ข้อมูลหน่วยงาน', icon: 'pi pi-fw pi-building', to: '/dashboard/settings/hospital-info' },
-            { label: 'การจัดการผู้ใช้', icon: 'pi pi-fw pi-users', to: '/dashboard/settings/users' },
-            { label: 'บทบาทและสิทธิ์', icon: 'pi pi-fw pi-shield', to: '/dashboard/settings/roles-permissions' },
-            { label: 'ตั้งค่าทั่วไป', icon: 'pi pi-fw pi-sliders-v', to: '/dashboard/settings/general' }
-            // TODO: เพิ่ม권한 validation ที่นี่
-        ]
-    },
-    {
-        label: 'ช่วยเหลือและสนับสนุน',
-        icon: 'pi pi-fw pi-question-circle',
-        items: [
-            { label: 'คู่มือการใช้งาน', icon: 'pi pi-fw pi-book', to: '/dashboard/help/guide' },
-            { label: 'ติดต่อสนับสนุน', icon: 'pi pi-fw pi-envelope', to: '/dashboard/help/support' },
-            { label: 'ข้อมูลระบบ', icon: 'pi pi-fw pi-info-circle', to: '/dashboard/help/about' }
+            { label: 'Dashboard', icon: 'pi pi-fw pi-home', color: 'text-blue-400', to: '/' },
+            { label: 'บันทึกการรักษาพยาบาล', icon: 'pi pi-fw pi-pencil', color: 'text-red-300', to: '/treatment-record' },
+            // ...removed 'การรักษาพยาบาล' and its submenus...
+            {
+                label: 'ข้อมูลพยาบาลและคลังยา',
+                icon: 'pi pi-fw pi-box',
+                color: 'text-emerald-400',
+                items: [
+                    {
+                        label: 'ข้อมูลพยาบาล',
+                        icon: 'pi pi-fw pi-id-card',
+                        color: 'text-emerald-300',
+                        items: [
+                            { label: 'รายชื่อพยาบาล', icon: 'pi pi-fw pi-user-edit', color: 'text-emerald-300', to: '/nurses-list' },
+                            { label: 'ทีมพยาบาล', icon: 'pi pi-fw pi-users', color: 'text-emerald-300', to: '/nurse-teams' },
+                            { label: 'สัญญาจ้างงานพยาบาล', icon: 'pi pi-fw pi-file', color: 'text-emerald-300', to: '/nurse-contracts' }
+                        ]
+                    },
+                    {
+                        label: 'จัดซื้อ & ยืม ยา/เวชภัณฑ์',
+                        icon: 'pi pi-fw pi-shopping-cart',
+                        color: 'text-cyan-300',
+                        items: [
+                            { label: 'รายการยา/เวชภัณฑ์', icon: 'pi pi-fw pi-list', color: 'text-teal-300', to: '/medicine-items' },
+                            { label: 'หน่วยนับ', icon: 'pi pi-fw pi-sort-numeric-up', color: 'text-teal-300', to: '/units' },
+                            { label: 'ราคายา/เวชภัณฑ์', icon: 'pi pi-fw pi-dollar', color: 'text-teal-300', to: '/medicine-prices' },
+                            { label: 'สั่งซื้อ', icon: 'pi pi-fw pi-shopping-cart', color: 'text-cyan-300', to: '/purchase-orders' },
+                            { label: 'รับเข้า', icon: 'pi pi-fw pi-inbox', color: 'text-cyan-300', to: '/goods-receipt' },
+                            { label: 'ยืม', icon: 'pi pi-fw pi-share-alt', color: 'text-cyan-300', to: '/borrow-medicines' }
+                        ]
+                    },
+                    {
+                        label: 'คลัง/สต็อก ยา/เวชภัณฑ์',
+                        icon: 'pi pi-fw pi-database',
+                        color: 'text-sky-300',
+                        items: [
+                            { label: 'สถานะสต็อก', icon: 'pi pi-fw pi-check-circle', color: 'text-sky-300', to: '/stock-status' },
+                            { label: 'บันทึกเคลื่อนไหว', icon: 'pi pi-fw pi-refresh', color: 'text-sky-300', to: '/movement-records' },
+                            { label: 'ปรับยอด', icon: 'pi pi-fw pi-pencil', color: 'text-sky-300', to: '/stock-adjustment' }
+                        ]
+                    },
+                    {
+                        label: 'ข้อมูลหลัก (Master Data)',
+                        icon: 'pi pi-fw pi-cog',
+                        color: 'text-purple-300',
+                        items: [
+                            { label: 'ผู้จัดจำหน่าย', icon: 'pi pi-fw pi-truck', color: 'text-purple-300', to: '/suppliers' },
+                            { label: 'ประเภทการรักษา', icon: 'pi pi-fw pi-check', color: 'text-purple-300', to: '/treatment-types' },
+                            { label: 'ประเภทการ Refer', icon: 'pi pi-fw pi-share-alt', color: 'text-purple-300', to: '/refer-types' },
+                            { label: 'กลุ่มโรคและประเภทของโรค', icon: 'pi pi-fw pi-folder', color: 'text-purple-300', to: '/disease-master-data' },
+                            { label: 'สถานพยาบาล', icon: 'pi pi-fw pi-building', color: 'text-purple-300', to: '/medical-facilities' }
+                        ]
+                    }
+                ]
+            },
+            {
+                label: 'พนักงานทำงานวันหยุดและอัพเดทข้อมูลประจำปี',
+                icon: 'pi pi-fw pi-users',
+                color: 'text-indigo-400',
+                items: [
+                    { label: 'ข้อมูลตรวจสุขภาพประจำปี', icon: 'pi pi-fw pi-file', color: 'text-orange-300', to: '/annual-health-data' },
+                    { label: 'อัพเดทข้อมูลประกันสังคมพนักงาน', icon: 'pi pi-fw pi-refresh', color: 'text-indigo-300', to: '/social-security-update' },
+                    { label: 'อัพเดทข้อมูลมะเร็งปากมดลูก', icon: 'pi pi-fw pi-refresh', color: 'text-indigo-300', to: '/cervical-cancer-update' },
+                    { label: 'ข้อมูลพนักงานทำงานวันหยุด', icon: 'pi pi-fw pi-calendar', color: 'text-indigo-300', to: '/employee-holiday-update' }
+                ]
+            },
+            { label: 'อนุมัติการสั่งซื้อยา', icon: 'pi pi-fw pi-check-square', color: 'text-lime-400', to: '/approve-purchase' },
+            { label: 'เบิกยากรณีพิเศษ', icon: 'pi pi-fw pi-exclamation-triangle', color: 'text-yellow-400', to: '/special-medicine-request' },
+            {
+                label: 'รายงาน',
+                icon: 'pi pi-fw pi-file-pdf',
+                color: 'text-rose-400',
+                items: [
+                    { label: 'รายงาน การรักษาพยาบาล', icon: 'pi pi-fw pi-file', color: 'text-rose-300', to: '/report-treatment' },
+                    { label: 'รายงาน ประวัติการ Refer', icon: 'pi pi-fw pi-file', color: 'text-rose-300', to: '/report-refer' },
+                    { label: 'รายงาน ประวัติการเกิดอุบัติเหตุในงาน', icon: 'pi pi-fw pi-file', color: 'text-rose-300', to: '/report-accident' },
+                    { label: 'รายงาน ประวัติโรคที่คาดว่าเกิดจากการทำงาน', icon: 'pi pi-fw pi-file', color: 'text-rose-300', to: '/report-occupational-disease' },
+                    { label: 'รายงาน ประวัติเจ็บป่วยจากโรงพยาบาล', icon: 'pi pi-fw pi-file', color: 'text-rose-300', to: '/report-hospital-treatment' },
+                    { label: 'รายงาน ประวัติโรคเจ็บป่วยเรื้อรัง', icon: 'pi pi-fw pi-file', color: 'text-rose-300', to: '/report-chronic-disease' },
+                    { label: 'รายงาน ผลตรวจสุขภาพเข้างานใหม่', icon: 'pi pi-fw pi-file', color: 'text-rose-300', to: '/report-health-check-new' },
+                    { label: 'รายงาน ผลตรวจสุขภาพประจำปี E1+', icon: 'pi pi-fw pi-file', color: 'text-rose-300', to: '/report-health-check-annual' },
+                    { label: 'รายงาน ผลตรวจสุขภาพกรณีโยกย้ายงาน', icon: 'pi pi-fw pi-file', color: 'text-rose-300', to: '/report-health-check-transfer' },
+                    { label: 'รายงาน ผลตรวจมะเร็งปากมดลูก', icon: 'pi pi-fw pi-file', color: 'text-rose-300', to: '/report-cervical-cancer' },
+                    { label: 'รายงาน ข้อมูลพยาบาล', icon: 'pi pi-fw pi-file', color: 'text-rose-300', to: '/report-nurses' },
+                    { label: 'รายงาน จัดซื้อยา/เวชภัณฑ์', icon: 'pi pi-fw pi-file', color: 'text-rose-300', to: '/report-purchase' },
+                    { label: 'รายงาน ยืมยา/เวชภัณฑ์', icon: 'pi pi-fw pi-file', color: 'text-rose-300', to: '/report-borrow' },
+                    { label: 'รายงาน สต็อก ยา/เวชภัณฑ์ รายเดือน', icon: 'pi pi-fw pi-file', color: 'text-rose-300', to: '/report-stock-monthly' },
+                    { label: 'รายงาน การใช้ ยา/เวชภัณฑ์ รายวัน', icon: 'pi pi-fw pi-file', color: 'text-rose-300', to: '/report-usage-daily' },
+                    { label: 'รายงาน การรักษาพยาบาลรายโรค', icon: 'pi pi-fw pi-file', color: 'text-rose-300', to: '/report-treatment-by-disease' },
+                    { label: 'รายงาน สถานพยาบาลประกันสังคม', icon: 'pi pi-fw pi-file', color: 'text-rose-300', to: '/report-social-security' },
+                    { label: 'รายงาน ผลตรวจสุขภาพประจำปี OP-S4', icon: 'pi pi-fw pi-file', color: 'text-rose-300', to: '/report-health-check-ops4' },
+                    { label: 'รายงาน การเบิกยากรณีพิเศษ', icon: 'pi pi-fw pi-file', color: 'text-rose-300', to: '/report-special-medicine' }
+                ]
+            }
         ]
     }
 ]);
