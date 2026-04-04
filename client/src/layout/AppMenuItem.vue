@@ -99,8 +99,8 @@ function checkActiveRoute(item) {
     padding: 0;
 }
 .layout-submenu > li {
-    margin-top: 10px;
-    margin-bottom: 10px;
+    margin-top: 20px;
+    margin-bottom: 20px;
 }
 li:not(.layout-root-menuitem) > .layout-menuitem-root-text {
     padding-left: 1.5rem;
