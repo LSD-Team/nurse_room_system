@@ -26,7 +26,7 @@ const title = import.meta.env.VITE_APP_TITLE || 'Vue PrimeAdmin';
       <button class="layout-menu-button layout-topbar-action" @click="onMenuToggle">
         <i class="pi pi-bars"></i>
       </button>
-      <router-link to="/" class="layout-topbar-logo">
+      <router-link to="/dashboard" class="layout-topbar-logo">
         <img src="@/assets/icon.png" alt="logo" />
         <span>{{ title }}</span>
       </router-link>

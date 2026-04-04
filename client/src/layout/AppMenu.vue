@@ -18,26 +18,26 @@ interface MenuItem {
 const model = ref<MenuItem[]>([
     {
         label: 'Home',
-        items: [{ label: 'Dashboard', icon: 'pi pi-fw pi-home', to: '/' }]
+        items: [{ label: 'Dashboard', icon: 'pi pi-fw pi-home', to: '/dashboard' }]
     },
     {
         label: 'UI Components',
         items: [
-            { label: 'Form Layout', icon: 'pi pi-fw pi-id-card', to: '/uikit/formlayout' },
-            { label: 'Input', icon: 'pi pi-fw pi-check-square', to: '/uikit/input' },
-            { label: 'Button', icon: 'pi pi-fw pi-mobile', to: '/uikit/button', class: 'rotated-icon' },
-            { label: 'Table', icon: 'pi pi-fw pi-table', to: '/uikit/table' },
-            { label: 'List', icon: 'pi pi-fw pi-list', to: '/uikit/list' },
-            { label: 'Tree', icon: 'pi pi-fw pi-share-alt', to: '/uikit/tree' },
-            { label: 'Panel', icon: 'pi pi-fw pi-tablet', to: '/uikit/panel' },
-            { label: 'Overlay', icon: 'pi pi-fw pi-clone', to: '/uikit/overlay' },
-            { label: 'Media', icon: 'pi pi-fw pi-image', to: '/uikit/media' },
-            { label: 'Menu', icon: 'pi pi-fw pi-bars', to: '/uikit/menu' },
-            { label: 'Message', icon: 'pi pi-fw pi-comment', to: '/uikit/message' },
-            { label: 'File', icon: 'pi pi-fw pi-file', to: '/uikit/file' },
-            { label: 'Chart', icon: 'pi pi-fw pi-chart-bar', to: '/uikit/charts' },
-            { label: 'Timeline', icon: 'pi pi-fw pi-calendar', to: '/uikit/timeline' },
-            { label: 'Misc', icon: 'pi pi-fw pi-circle', to: '/uikit/misc' }
+            { label: 'Form Layout', icon: 'pi pi-fw pi-id-card', to: '/dashboard/uikit/formlayout' },
+            { label: 'Input', icon: 'pi pi-fw pi-check-square', to: '/dashboard/uikit/input' },
+            { label: 'Button', icon: 'pi pi-fw pi-mobile', to: '/dashboard/uikit/button', class: 'rotated-icon' },
+            { label: 'Table', icon: 'pi pi-fw pi-table', to: '/dashboard/uikit/table' },
+            { label: 'List', icon: 'pi pi-fw pi-list', to: '/dashboard/uikit/list' },
+            { label: 'Tree', icon: 'pi pi-fw pi-share-alt', to: '/dashboard/uikit/tree' },
+            { label: 'Panel', icon: 'pi pi-fw pi-tablet', to: '/dashboard/uikit/panel' },
+            { label: 'Overlay', icon: 'pi pi-fw pi-clone', to: '/dashboard/uikit/overlay' },
+            { label: 'Media', icon: 'pi pi-fw pi-image', to: '/dashboard/uikit/media' },
+            { label: 'Menu', icon: 'pi pi-fw pi-bars', to: '/dashboard/uikit/menu' },
+            { label: 'Message', icon: 'pi pi-fw pi-comment', to: '/dashboard/uikit/message' },
+            { label: 'File', icon: 'pi pi-fw pi-file', to: '/dashboard/uikit/file' },
+            { label: 'Chart', icon: 'pi pi-fw pi-chart-bar', to: '/dashboard/uikit/charts' },
+            { label: 'Timeline', icon: 'pi pi-fw pi-calendar', to: '/dashboard/uikit/timeline' },
+            { label: 'Misc', icon: 'pi pi-fw pi-circle', to: '/dashboard/uikit/misc' }
         ]
     },
     {
@@ -48,7 +48,7 @@ const model = ref<MenuItem[]>([
             {
                 label: 'Landing',
                 icon: 'pi pi-fw pi-globe',
-                to: '/landing'
+                to: '/'
             },
             {
                 label: 'Auth',
@@ -74,7 +74,7 @@ const model = ref<MenuItem[]>([
             {
                 label: 'Crud',
                 icon: 'pi pi-fw pi-pencil',
-                to: '/pages/crud'
+                to: '/dashboard/pages/crud'
             },
             {
                 label: 'Not Found',
@@ -84,7 +84,7 @@ const model = ref<MenuItem[]>([
             {
                 label: 'Empty',
                 icon: 'pi pi-fw pi-circle-off',
-                to: '/pages/empty'
+                to: '/dashboard/pages/empty'
             }
         ]
     },
