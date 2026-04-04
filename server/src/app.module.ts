@@ -5,6 +5,7 @@ import { APP_GUARD } from '@nestjs/core';
 
 //  ----- 📦 Modules 📦 -----
 import { EmployeesModule } from '@/src/apis/employees/employees.module';
+import { StockModule } from '@/src/apis/stock/stock.module';
 import { AuthModule } from '@/src/auth/auth.module';
 import { DatabaseModule } from '@/src/database/database.module';
 
@@ -24,6 +25,7 @@ import { AppController } from '@/src/app.controller';
     AuthModule,
     DatabaseModule,
     EmployeesModule,
+    StockModule,
   ],
   controllers: [AppController],
   providers: [
