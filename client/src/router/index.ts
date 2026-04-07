@@ -32,7 +32,7 @@ const routes: RouteRecordRaw[] = [
       { path: 'medicine-prices', name: 'medicinePrices', component: () => import('@/views/pages/Empty.vue') },
       { path: 'purchase-orders', name: 'purchaseOrders', component: () => import('@/views/pages/Empty.vue') },
       { path: 'goods-receipt', name: 'goodsReceipt', component: () => import('@/views/pages/Empty.vue') },
-      { path: 'borrow-medicines', name: 'borrowMedicines', component: () => import('@/views/pages/Empty.vue') },
+      { path: 'borrow-medicines', name: 'borrowMedicines', component: () => import('@/views/pages/BorrowMedicines.vue') },
       { path: 'stock-status', name: 'stockStatus', component: () => import('@/views/pages/StockStatus.vue') },
       { path: 'movement-records', name: 'movementRecords', component: () => import('@/views/pages/Empty.vue') },
       { path: 'stock-adjustment', name: 'stockAdjustment', component: () => import('@/views/pages/Empty.vue') },
@@ -78,7 +78,7 @@ const routes: RouteRecordRaw[] = [
       { path: 'report-special-medicine', name: 'reportSpecialMedicine', component: () => import('@/views/pages/Empty.vue') },
 
       // ===== การอนุมัติ =====
-      { path: 'approve-purchase', name: 'approvePurchase', component: () => import('@/views/pages/Empty.vue') },
+      { path: 'approve-purchase', name: 'approvePurchase', component: () => import('@/views/pages/ApprovePurchase.vue') },
     ],
   },
   {

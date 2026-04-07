@@ -4,6 +4,8 @@ import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 
 //  ----- 📦 Modules 📦 -----
+import { ApprovalModule } from '@/src/apis/approval/approval.module';
+import { BorrowModule } from '@/src/apis/borrow/borrow.module';
 import { EmployeesModule } from '@/src/apis/employees/employees.module';
 import { StockModule } from '@/src/apis/stock/stock.module';
 import { AuthModule } from '@/src/auth/auth.module';
@@ -24,6 +26,8 @@ import { AppController } from '@/src/app.controller';
     }),
     AuthModule,
     DatabaseModule,
+    ApprovalModule,
+    BorrowModule,
     EmployeesModule,
     StockModule,
   ],
