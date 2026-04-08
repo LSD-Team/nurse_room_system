@@ -7,7 +7,7 @@
 
 <template>
   <div class="px-7 layout-footer mt-5">
-    <span class="text-white ml-2">
+    <span class="ml-2">
       © {{ create_year }} : {{ title }}
       <u>v.{{ app_version }}</u>
       by IT Section/LSD
