@@ -10,12 +10,12 @@ export function compileScss(source, filename) {
       sourceMap: true,
       sourceMapIncludeSources: true,
       style: 'expanded',
-      url: new URL(`file://${filename}`)
+      url: new URL(`file://${filename}`),
     });
-    
+
     return {
       code: result.css,
-      map: result.sourceMap
+      map: result.sourceMap,
     };
   } catch (error) {
     console.error('Sass compilation error:', error);

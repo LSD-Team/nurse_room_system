@@ -1,29 +1,34 @@
 <script setup lang="ts">
-import { useLayout } from '@/layout/composables/layout';
-import { onMounted } from 'vue';
-import AppConfigurator from './AppConfigurator.vue';
-import { employeeImageUrl } from '@/utils/employee-image.utils';
-import { useMainStore } from '@/stores/main.store';
+  import { useLayout } from '@/layout/composables/layout';
+  import { onMounted } from 'vue';
+  import AppConfigurator from './AppConfigurator.vue';
+  import { employeeImageUrl } from '@/utils/employee-image.utils';
+  import { useMainStore } from '@/stores/main.store';
 
-const mainStore = useMainStore();
+  const mainStore = useMainStore();
 
-const { onMenuToggle, toggleDarkMode, isDarkTheme } = useLayout();
+  const { onMenuToggle, toggleDarkMode, isDarkTheme } = useLayout();
 
-onMounted(() => {
-  // auto toggle darkmode if system is darkmode
-  const prefersDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
-  if (prefersDarkMode && !isDarkTheme.value) {
-    toggleDarkMode();
-  }
-});
+  onMounted(() => {
+    // auto toggle darkmode if system is darkmode
+    const prefersDarkMode = window.matchMedia(
+      '(prefers-color-scheme: dark)'
+    ).matches;
+    if (prefersDarkMode && !isDarkTheme.value) {
+      toggleDarkMode();
+    }
+  });
 
-const title = import.meta.env.VITE_APP_TITLE || 'Vue PrimeAdmin';
+  const title = import.meta.env.VITE_APP_TITLE || 'Vue PrimeAdmin';
 </script>
 
 <template>
   <div class="layout-topbar">
     <div class="layout-topbar-logo-container">
-      <button class="layout-menu-button layout-topbar-action" @click="onMenuToggle">
+      <button
+        class="layout-menu-button layout-topbar-action"
+        @click="onMenuToggle"
+      >
         <i class="pi pi-bars"></i>
       </button>
       <router-link to="/" class="layout-topbar-logo">
@@ -34,8 +39,14 @@ const title = import.meta.env.VITE_APP_TITLE || 'Vue PrimeAdmin';
 
     <div class="layout-topbar-actions">
       <div class="layout-config-menu">
-        <button type="button" class="layout-topbar-action" @click="toggleDarkMode">
-          <i :class="['pi', { 'pi-moon': isDarkTheme, 'pi-sun': !isDarkTheme }]"></i>
+        <button
+          type="button"
+          class="layout-topbar-action"
+          @click="toggleDarkMode"
+        >
+          <i
+            :class="['pi', { 'pi-moon': isDarkTheme, 'pi-sun': !isDarkTheme }]"
+          ></i>
         </button>
         <div class="relative">
           <button
@@ -81,7 +92,10 @@ const title = import.meta.env.VITE_APP_TITLE || 'Vue PrimeAdmin';
             <span>Messages</span>
           </button>
           <!-- User Profile Section -->
-          <div class="flex align-items-center gap-2 mr-4" v-tooltip.top="JSON.stringify(mainStore._userInfo)">
+          <div
+            class="flex align-items-center gap-2 mr-4"
+            v-tooltip.top="JSON.stringify(mainStore._userInfo)"
+          >
             <img
               :src="employeeImageUrl(mainStore._userInfo.cardcode)"
               alt="user profile"
@@ -100,13 +114,13 @@ const title = import.meta.env.VITE_APP_TITLE || 'Vue PrimeAdmin';
   </div>
 </template>
 <style lang="scss" scoped>
-.layout-topbar {
-  .user-image {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 2px solid var(--surface-border);
+  .layout-topbar {
+    .user-image {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid var(--surface-border);
+    }
   }
-}
 </style>

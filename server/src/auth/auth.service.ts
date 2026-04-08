@@ -2,7 +2,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 
 //  ----- ⚙️ Providers & Services ⚙️ -----
-import { DatabaseService } from 'src/database/database.service';
+import { DatabaseService } from '@/src/database/database.service';
 
 //  ----- ➕ Interfaces ➕ -----
 import { ISpAuthorizeApplication } from '@/shared/lsd-system-center/application.interface';
@@ -51,14 +51,14 @@ export class AuthService {
         procedureName,
         params,
       );
-    const findResult = AuthorizeApplication.find((app) => app.AppID === AppID); 
+    const findResult = AuthorizeApplication.find((app) => app.AppID === AppID);
     if (findResult !== undefined) {
       if (!AuthLevelID) {
         //  If AuthLevelID is not provided, just check if the application exists
         data.status = true;
         return data;
       }
-      if (findResult.AppAuthLevelID === AuthLevelID) {
+      if (String(findResult.AppAuthLevelID) === String(AuthLevelID)) {
         //  If AuthLevelID is provided, check if it matches the application's auth level
         data.status = true;
       }

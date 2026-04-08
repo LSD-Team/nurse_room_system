@@ -49,7 +49,10 @@ export class EmployeesService {
     if (myData.length > 0) {
       viewEmployee = myData[0];
     } else {
-      throw new HttpException('Not found employee, Not authorized', HttpStatus.FORBIDDEN);
+      throw new HttpException(
+        'Not found employee, Not authorized',
+        HttpStatus.FORBIDDEN,
+      );
     }
     return viewEmployee;
   }

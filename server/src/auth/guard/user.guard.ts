@@ -7,10 +7,10 @@ import {
 } from '@nestjs/common';
 
 //  ----- ⚙️ Providers & Services ⚙️ -----
-import { AuthService } from 'src/auth/auth.service';
+import { AuthService } from '@/src/auth/auth.service';
 
 //  ----- 🐉 Guard 🐉 -----
-import { JwtAuthGuard } from 'src/auth/guard/jwt-auth.guard';
+import { JwtAuthGuard } from '@/src/auth/guard/jwt-auth.guard';
 
 //  ----- 📝 Custom 📝 -----
 import { CustomForbiddenException } from '@/src/custom/exception.custom';

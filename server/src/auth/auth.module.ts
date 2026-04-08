@@ -6,13 +6,13 @@ import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 
 //  ----- 🔗 Controllers 🔗 -----
-import { AuthController } from 'src/auth/auth.controller';
+import { AuthController } from '@/src/auth/auth.controller';
 
 //  ----- ⚙️ Providers & Services ⚙️ -----
-import { AuthService } from 'src/auth/auth.service';
-import { DatabaseService } from 'src/database/database.service';
-import { JwtStrategy } from 'src/auth/guard/jwt.strategy';
-import { EmployeesModule } from '../apis/employees/employees.module';
+import { AuthService } from '@/src/auth/auth.service';
+import { DatabaseService } from '@/src/database/database.service';
+import { JwtStrategy } from '@/src/auth/guard/jwt.strategy';
+import { EmployeesModule } from '@/src/apis/employees/employees.module';
 
 @Module({
   imports: [

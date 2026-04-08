@@ -47,11 +47,11 @@ const default_state: IMainStoreState = {
 export const useMainStore = defineStore('main', {
   state: (): IMainStoreState => ({ ...default_state }),
   getters: {
-    _loading: (state) => state.loading,
-    _loadingMessage: (state) => state.loadingMessage,
-    _isSilder: (state) => state.isSilder,
-    _userInfo: (state) => state.userInfo,
-    _employees: (state) => state.employees,
+    _loading: state => state.loading,
+    _loadingMessage: state => state.loadingMessage,
+    _isSilder: state => state.isSilder,
+    _userInfo: state => state.userInfo,
+    _employees: state => state.employees,
   },
   actions: {
     async setLoading(status: boolean, message?: string) {

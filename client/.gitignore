@@ -13,4 +13,6 @@ dist
 api-generator/typedoc.json
 **/.DS_Store
 
+*.tsbuildinfo
+
 components.d.ts

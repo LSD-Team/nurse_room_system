@@ -7,7 +7,10 @@ export class Api {
   // private static mainStore = useMainStore();
   private static defaultDelay = 0; // ค่า delay เริ่มต้น 300ms
 
-  private static async handleLoading(show: boolean, options?: LoadingOptions): Promise<void> {
+  private static async handleLoading(
+    show: boolean,
+    options?: LoadingOptions
+  ): Promise<void> {
     // console.info('handleLoading => ', show, options);
     const mainStore = useMainStore();
     if (show) {
@@ -15,7 +18,7 @@ export class Api {
       await mainStore.setLoading(true, message);
     } else {
       if (options?.delay) {
-        await new Promise((resolve) => setTimeout(resolve, options.delay));
+        await new Promise(resolve => setTimeout(resolve, options.delay));
       }
       await mainStore.setLoading(false);
     }
@@ -24,7 +27,7 @@ export class Api {
   static async get<T>(
     url: string,
     config?: AxiosRequestConfig,
-    loadingOptions?: LoadingOptions,
+    loadingOptions?: LoadingOptions
   ): Promise<T> {
     try {
       await this.handleLoading(true, loadingOptions);
@@ -44,7 +47,7 @@ export class Api {
     url: string,
     data?: any,
     config?: AxiosRequestConfig,
-    loadingOptions?: LoadingOptions,
+    loadingOptions?: LoadingOptions
   ): Promise<T> {
     try {
       await this.handleLoading(true, loadingOptions);
@@ -63,7 +66,7 @@ export class Api {
     url: string,
     data?: any,
     config?: AxiosRequestConfig,
-    loadingOptions?: LoadingOptions,
+    loadingOptions?: LoadingOptions
   ): Promise<T> {
     try {
       await this.handleLoading(true, loadingOptions);
@@ -83,7 +86,7 @@ export class Api {
     url: string,
     data?: any,
     config?: AxiosRequestConfig,
-    loadingOptions?: LoadingOptions,
+    loadingOptions?: LoadingOptions
   ): Promise<T> {
     try {
       await this.handleLoading(true, loadingOptions);
@@ -102,7 +105,7 @@ export class Api {
   static async delete<T>(
     url: string,
     config?: AxiosRequestConfig,
-    loadingOptions?: LoadingOptions,
+    loadingOptions?: LoadingOptions
   ): Promise<T> {
     try {
       await this.handleLoading(true, loadingOptions);

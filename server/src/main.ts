@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-floating-promises */
 //  ----- 📖 Library 📖 -----
 import { AppModule } from '@/src/app.module';
 import { NestFactory } from '@nestjs/core';
@@ -21,7 +22,7 @@ async function bootstrap() {
 
   const config = new DocumentBuilder()
     .setTitle(app_name)
-    .setDescription('The Web Stack 2025 API description')
+    .setDescription(`${app_name} API description`)
     .setVersion(app_version)
     .build();
 
@@ -31,7 +32,7 @@ async function bootstrap() {
     origin: '*', // ให้ทุก domain สามารถเข้าถึง API ได้
   });
 
-  await app.listen(process.env.PORT ?? 3000).then(() => {
+  await app.listen(port).then(() => {
     const logger = new Logger();
     logger.verbose(`Version :: ${app_version}`);
     logger.verbose(`Port :: ${port}`);

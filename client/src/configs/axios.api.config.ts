@@ -12,14 +12,15 @@ const API = axios.create({
   baseURL: import.meta.env.VITE_APP_API_URL,
 });
 
-API.defaults.headers.common['Content-Type'] = 'application/x-www-form-urlencoded';
+API.defaults.headers.common['Content-Type'] =
+  'application/x-www-form-urlencoded';
 
 const loginUrl = decodeURIComponent(import.meta.env.VITE_APP_LSDSC);
 const mainUrl = decodeURIComponent(import.meta.env.VITE_APP_LSDSC_SYSTEM);
 
 // Axios Before Request
 API.interceptors.request.use(
-  async (config) => {
+  async config => {
     try {
       let token = localStorage.getItem('token');
       // Check if the environment is development
@@ -37,14 +38,14 @@ API.interceptors.request.use(
       return Promise.reject(error);
     }
   },
-  (error) => {
+  error => {
     return Promise.reject(error);
-  },
+  }
 );
 
 // Axios After response
 API.interceptors.response.use(
-  async (config) => {
+  async config => {
     try {
       //  Loading Overlay
       const mainStore = useMainStore();
@@ -56,7 +57,7 @@ API.interceptors.response.use(
       return Promise.reject(error);
     }
   },
-  async (error) => {
+  async error => {
     try {
       //  Loading Overlay
       const mainStore = useMainStore();
@@ -73,10 +74,15 @@ API.interceptors.response.use(
         message = errorData.message;
       }
       // message = message+ apiroute
-      console.error('Interceptors Error:', { ...error }.response.config.url, { ...error }.response);
+      console.error(
+        'Interceptors Error:',
+        { ...error }.response.config.url,
+        { ...error }.response
+      );
       const title = errorData.statusCode === 500 ? 'Server Error' : 'Error';
       const html = message;
-      const icon: SweetAlertIcon = errorData.statusCode === 500 ? 'error' : 'warning';
+      const icon: SweetAlertIcon =
+        errorData.statusCode === 500 ? 'error' : 'warning';
       await Swal.fire(title, html, icon);
 
       // get current href url
@@ -105,7 +111,7 @@ API.interceptors.response.use(
     } catch (error) {
       return Promise.reject(error);
     }
-  },
+  }
 );
 
 export default API;

@@ -4,7 +4,6 @@ import { EmployeesService } from './employees.service';
 
 import { AdminGuard } from '@/src/auth/guard';
 
-
 /**
  * how to use guard
  * Global AppGuard is applied to all routes by default

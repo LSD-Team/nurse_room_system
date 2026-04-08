@@ -7,30 +7,30 @@ import vueDevTools from 'vite-plugin-vue-devtools';
 
 // https://vitejs.dev/config/
 export default defineConfig({
-    optimizeDeps: {
-        noDiscovery: true
+  optimizeDeps: {
+    noDiscovery: true,
+  },
+  plugins: [
+    vue({}) as any,
+    vueDevTools(),
+    Components({
+      resolvers: [PrimeVueResolver()],
+    }),
+  ],
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, 'src'),
     },
-    plugins: [
-        vue({}) as any,
-        vueDevTools(),
-        Components({
-            resolvers: [PrimeVueResolver()]
-        })
-    ],
-    resolve: {
-        alias: {
-            '@': path.resolve(__dirname, 'src')
-        }
+  },
+  css: {
+    preprocessorOptions: {
+      scss: {
+        // Silence the deprecation warnings for legacy JS API
+        sassOptions: {
+          silenceDeprecations: ['legacy-js-api'],
+        },
+        includePaths: [path.resolve(__dirname, 'src/assets')],
+      },
     },
-    css: {
-        preprocessorOptions: {
-            scss: {
-                // Silence the deprecation warnings for legacy JS API
-                sassOptions: {
-                    silenceDeprecations: ['legacy-js-api']
-                },
-                includePaths: [path.resolve(__dirname, 'src/assets')]
-            }
-        }
-    }
+  },
 });

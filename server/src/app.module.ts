@@ -20,7 +20,8 @@ import { AppController } from '@/src/app.controller';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: process.env. NODE_ENV === 'production' ? '.env.production' : '.env',
+      envFilePath:
+        process.env.NODE_ENV === 'production' ? '.env.production' : '.env',
     }),
     AuthModule,
     DatabaseModule,

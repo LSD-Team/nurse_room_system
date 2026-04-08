@@ -14,11 +14,10 @@
   //   }
   // ],
   "compilerOptions": {
-    "ignoreDeprecations": "6.0",
     "strict": false,
     "rootDir": "../",
     "composite": true,
-    "baseUrl": ".",
+    "verbatimModuleSyntax": false,
     "paths": {
       "@/*": ["./src/*"],
       "@/shared/*": ["../server/shared/*"]

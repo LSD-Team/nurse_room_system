@@ -1,3 +1,7 @@
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
+/* eslint-disable @typescript-eslint/no-floating-promises */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+
 //  ----- 📖 Library 📖 -----
 import {
   BadRequestException,
@@ -5,15 +9,14 @@ import {
   InternalServerErrorException,
   Logger,
 } from '@nestjs/common';
-import * as sql from 'mssql';
 import { ConfigService } from '@nestjs/config';
+import * as sql from 'mssql';
 
 //  ----- 🔐 constant 🔐 -----
 import { databaseName } from '@/src/database/constant/database';
 
 //  ----- ➕ Interfaces ➕ -----
 import { JwtPayloadData } from '@/shared/lsd-system-center/auth.interface';
-import { config } from 'mssql';
 
 @Injectable()
 export class DatabaseService {
@@ -77,7 +80,8 @@ export class DatabaseService {
       },
     };
 
-    const config = database === 'LSD_SYSTEM_CENTER' ? authConfig : defaultConfig;
+    const config =
+      database === 'LSD_SYSTEM_CENTER' ? authConfig : defaultConfig;
     // เลือก config ตามชื่อฐานข้อมูล
     return config;
   };
@@ -103,7 +107,7 @@ export class DatabaseService {
       if (pool) {
         try {
           await pool.close();
-        } catch (closeError) {
+        } catch (closeError: any) {
           this.logger.warn(
             `Error closing stale connection: ${closeError.message}`,
           );
@@ -177,7 +181,7 @@ export class DatabaseService {
       pool.close(); // ปิดการเชื่อมต่อหลังใช้งาน
       // this.closeConnections(); // ปิดการเชื่อมต่อทั้งหมดหลังการ Execute
       return result;
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error(`SQL Execute Error for database ${database}:`, error);
 
       // ตรวจสอบว่าเป็นปัญหาเกี่ยวกับการเชื่อมต่อหรือไม่
@@ -236,7 +240,7 @@ export class DatabaseService {
       pool.close(); // ปิดการเชื่อมต่อหลังใช้งาน
       // this.closeConnections(); // ปิดการเชื่อมต่อทั้งหมดหลังการ Execute
       return result.recordset as T;
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error(`Query Error for database ${database}:`, error);
 
       // ตรวจสอบว่าเป็นปัญหาเกี่ยวกับการเชื่อมต่อหรือไม่
@@ -273,7 +277,7 @@ export class DatabaseService {
       pool.close(); // ปิดการเชื่อมต่อหลังใช้งาน
       // this.closeConnections(); // ปิดการเชื่อมต่อทั้งหมดหลังการ Execute
       return result.recordset as T[];
-    } catch (error) {
+    } catch (error: any) {
       this.logger.error(
         `Stored Procedure Error for database ${database}:`,
         error,

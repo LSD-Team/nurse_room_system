@@ -15,12 +15,12 @@ const app = createApp(App);
 app.use(createPinia());
 app.use(router);
 app.use(PrimeVue as any, {
-    theme: {
-        preset: Aura,
-        options: {
-            darkModeSelector: '.app-dark'
-        }
-    }
+  theme: {
+    preset: Aura,
+    options: {
+      darkModeSelector: '.app-dark',
+    },
+  },
 });
 app.use(ToastService as any);
 app.use(ConfirmationService as any);

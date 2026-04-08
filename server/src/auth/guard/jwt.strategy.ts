@@ -20,7 +20,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
   //  function : return to req
-  async validate(jwtPayloadData: JwtPayloadData): Promise<JwtPayloadData> {
+  validate(jwtPayloadData: JwtPayloadData): JwtPayloadData {
     // Check token expiration
     // Check if the token has expired
     if (typeof jwtPayloadData.exp !== 'undefined') {
