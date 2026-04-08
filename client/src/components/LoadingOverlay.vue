@@ -4,7 +4,7 @@ const store = useMainStore();
 </script>
 
 <template>
-  <Transition >
+  <Transition>
     <div v-show="store._loading">
       <div class="loading-overlay">
         <div class="loading-content">

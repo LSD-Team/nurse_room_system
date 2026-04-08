@@ -81,7 +81,10 @@ const title = import.meta.env.VITE_APP_TITLE || 'Vue PrimeAdmin';
             <span>Messages</span>
           </button>
           <!-- User Profile Section -->
-          <div class="flex align-items-center gap-2 mr-4" v-tooltip.top="JSON.stringify(mainStore._userInfo)">
+          <div
+            class="flex align-items-center gap-2 mr-4"
+            v-tooltip.top="JSON.stringify(mainStore._userInfo)"
+          >
             <img
               :src="employeeImageUrl(mainStore._userInfo.cardcode)"
               alt="user profile"

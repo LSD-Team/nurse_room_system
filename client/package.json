@@ -5,10 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host",
-    "build": "vue-tsc --noEmit && vite build",
+    "build": "run-p type-check \"build-only {@}\" --",
     "preview": "vite preview",
-    "lint": "eslint --fix . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx --fix --ignore-path .gitignore",
-    "type-check": "vue-tsc --noEmit"
+    "build-only": "vite build",
+    "type-check": "vue-tsc --build --force",
+    "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore",
+    "format": "prettier --write src/"
   },
   "dependencies": {
     "@primeuix/themes": "^1.0.0",
@@ -42,6 +44,7 @@
     "@vue/eslint-config-typescript": "^14.6.0",
     "@vue/tsconfig": "^0.8.1",
     "autoprefixer": "^10.4.19",
+    "baseline-browser-mapping": "^2.10.16",
     "eslint": "^9.10.0",
     "eslint-plugin-vue": "^9.23.0",
     "postcss": "^8.4.40",

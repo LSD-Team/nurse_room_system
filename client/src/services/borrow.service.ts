@@ -28,19 +28,18 @@ export class BorrowService {
   }
 
   // โ”€โ”€โ”€ เธชเธฃเนเธฒเธเนเธเธขเธทเธก โ”€โ”€โ”€
-  static async createBorrow(data: {
-    JsonLines: string;
-    SupplierId: string;
-    Note?: string;
-  }) {
+  static async createBorrow(data: { JsonLines: string; SupplierId: string; Note?: string }) {
     return Api.post('/borrow', data);
   }
 
   // โ”€โ”€โ”€ เนเธเนเนเธเนเธเธขเธทเธก โ”€โ”€โ”€
-  static async updateBorrow(borrowId: number, data: {
-    JsonLines?: string;
-    Note?: string;
-  }) {
+  static async updateBorrow(
+    borrowId: number,
+    data: {
+      JsonLines?: string;
+      Note?: string;
+    },
+  ) {
     return Api.put(`/borrow/${borrowId}`, data);
   }
 
@@ -50,10 +49,13 @@ export class BorrowService {
   }
 
   // โ”€โ”€โ”€ เธญเธเธธเธกเธฑเธ•เธด/เธเธเธดเน€เธชเธ/เธชเนเธเธเธฅเธฑเธ โ”€โ”€โ”€
-  static async approveBorrow(borrowId: number, data: {
-    Action: 'APPROVE' | 'REJECT' | 'REWORK';
-    Remark?: string;
-  }) {
+  static async approveBorrow(
+    borrowId: number,
+    data: {
+      Action: 'APPROVE' | 'REJECT' | 'REWORK';
+      Remark?: string;
+    },
+  ) {
     return Api.post(`/borrow/${borrowId}/approve`, data);
   }
 

@@ -14,11 +14,9 @@
   //   }
   // ],
   "compilerOptions": {
-    "ignoreDeprecations": "6.0",
     "strict": false,
     "rootDir": "../",
     "composite": true,
-    "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
       "@/shared/*": ["../server/shared/*"]

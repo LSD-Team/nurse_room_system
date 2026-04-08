@@ -18,20 +18,12 @@ export class ApprovalService {
     return Api.get<any>(`/approval/po/${poId}`);
   }
 
-  static async getBorrowApprovalHistory(
-    borrowId: number,
-  ): Promise<IApprovalHistory[]> {
-    return Api.get<IApprovalHistory[]>(
-      `/approval/borrow/${borrowId}/history`,
-    );
+  static async getBorrowApprovalHistory(borrowId: number): Promise<IApprovalHistory[]> {
+    return Api.get<IApprovalHistory[]>(`/approval/borrow/${borrowId}/history`);
   }
 
-  static async getBorrowApprovalLogs(
-    borrowId: number,
-  ): Promise<IBorrowApprovalLog[]> {
-    return Api.get<IBorrowApprovalLog[]>(
-      `/approval/borrow/${borrowId}/logs`,
-    );
+  static async getBorrowApprovalLogs(borrowId: number): Promise<IBorrowApprovalLog[]> {
+    return Api.get<IBorrowApprovalLog[]>(`/approval/borrow/${borrowId}/logs`);
   }
 
   static async approvePo(

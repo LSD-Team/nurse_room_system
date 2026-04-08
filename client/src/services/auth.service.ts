@@ -20,8 +20,8 @@ export class AuthService {
     const url: string = '/auth/check-admin';
     const config = undefined;
     const loadingOptions: LoadingOptions = {
-        message: 'Checking admin status...',
-        delay: 300,
+      message: 'Checking admin status...',
+      delay: 300,
     };
     return await Api.get<BooleanStatus>(url, config, loadingOptions);
   }

@@ -51,13 +51,17 @@ const features = [
 </script>
 
 <template>
-  <div class="landing-page bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 min-h-screen text-white">
+  <div
+    class="landing-page bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 min-h-screen text-white"
+  >
     <!-- Navigation Bar -->
     <nav class="sticky top-0 z-50 bg-slate-900/80 backdrop-blur-md border-b border-slate-700">
       <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
         <div class="flex items-center gap-2 text-2xl font-bold">
           <span class="text-3xl">🏥</span>
-          <span class="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">Nurse Room</span>
+          <span class="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent"
+            >Nurse Room</span
+          >
         </div>
         <Button
           label="เข้าสู่ระบบ"
@@ -71,11 +75,14 @@ const features = [
     <section class="max-w-7xl mx-auto px-6 py-20 text-center">
       <div class="mb-8 animate-pulse">
         <div class="text-6xl mb-4">🏥</div>
-        <h1 class="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-400 bg-clip-text text-transparent">
+        <h1
+          class="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-400 bg-clip-text text-transparent"
+        >
           Nurse Room Management System
         </h1>
         <p class="text-xl text-slate-300 mb-8 max-w-2xl mx-auto leading-relaxed">
-          ระบบจัดการห้องพยาบาลแบบครบถ้วน ช่วยให้การบริหารและจัดการห้องพยาบาล และพยาบาลทำงานได้อย่างมีประสิทธิภาพสูงสุด
+          ระบบจัดการห้องพยาบาลแบบครบถ้วน ช่วยให้การบริหารและจัดการห้องพยาบาล
+          และพยาบาลทำงานได้อย่างมีประสิทธิภาพสูงสุด
         </p>
       </div>
 
@@ -100,7 +107,9 @@ const features = [
       <div class="grid grid-cols-3 gap-6 mb-16">
         <Card class="!bg-slate-800 !border-slate-700">
           <template #content>
-            <div class="text-4xl font-bold text-blue-400 mb-2">{{ mainStore._employees?.length || 0 }}</div>
+            <div class="text-4xl font-bold text-blue-400 mb-2">
+              {{ mainStore._employees?.length || 0 }}
+            </div>
             <div class="text-slate-400">พยาบาลที่ลงทะเบียน</div>
           </template>
         </Card>
@@ -121,7 +130,9 @@ const features = [
 
     <!-- Features Section -->
     <section class="max-w-7xl mx-auto px-6 py-20">
-      <h2 class="text-4xl font-bold text-center mb-16 bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
+      <h2
+        class="text-4xl font-bold text-center mb-16 bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent"
+      >
         ฟีเจอร์หลัก
       </h2>
 
@@ -142,14 +153,18 @@ const features = [
 
     <!-- How to Use Section -->
     <section class="max-w-7xl mx-auto px-6 py-20">
-      <h2 class="text-4xl font-bold text-center mb-16 bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
+      <h2
+        class="text-4xl font-bold text-center mb-16 bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent"
+      >
         วิธีการใช้งาน
       </h2>
 
       <div class="space-y-8">
         <div class="flex gap-6 items-start group">
           <div class="flex-shrink-0">
-            <div class="flex items-center justify-center h-12 w-12 rounded-lg bg-blue-600 group-hover:bg-blue-500 transition-colors">
+            <div
+              class="flex items-center justify-center h-12 w-12 rounded-lg bg-blue-600 group-hover:bg-blue-500 transition-colors"
+            >
               <span class="text-white font-bold text-lg">1</span>
             </div>
           </div>
@@ -161,7 +176,9 @@ const features = [
 
         <div class="flex gap-6 items-start group">
           <div class="flex-shrink-0">
-            <div class="flex items-center justify-center h-12 w-12 rounded-lg bg-blue-600 group-hover:bg-blue-500 transition-colors">
+            <div
+              class="flex items-center justify-center h-12 w-12 rounded-lg bg-blue-600 group-hover:bg-blue-500 transition-colors"
+            >
               <span class="text-white font-bold text-lg">2</span>
             </div>
           </div>
@@ -173,7 +190,9 @@ const features = [
 
         <div class="flex gap-6 items-start group">
           <div class="flex-shrink-0">
-            <div class="flex items-center justify-center h-12 w-12 rounded-lg bg-blue-600 group-hover:bg-blue-500 transition-colors">
+            <div
+              class="flex items-center justify-center h-12 w-12 rounded-lg bg-blue-600 group-hover:bg-blue-500 transition-colors"
+            >
               <span class="text-white font-bold text-lg">3</span>
             </div>
           </div>
@@ -189,7 +208,9 @@ const features = [
     <section class="max-w-7xl mx-auto px-6 py-20">
       <div class="bg-gradient-to-r from-blue-600 to-cyan-600 rounded-lg p-12 text-center">
         <h2 class="text-3xl font-bold mb-4">พร้อมที่จะเริ่มต้นหรือยัง?</h2>
-        <p class="text-lg mb-8 opacity-90">เข้าใช้งานระบบ Nurse Room Management ทันทีและเพิ่มประสิทธิภาพการทำงานของคุณ</p>
+        <p class="text-lg mb-8 opacity-90">
+          เข้าใช้งานระบบ Nurse Room Management ทันทีและเพิ่มประสิทธิภาพการทำงานของคุณ
+        </p>
         <Button
           label="เข้าใช้งานตอนนี้"
           @click="navigateToDashboard"
@@ -231,7 +252,8 @@ const features = [
 
 <style scoped>
 @keyframes pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
   }
   50% {

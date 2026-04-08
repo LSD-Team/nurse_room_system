@@ -23,7 +23,7 @@ import FloatingConfigurator from '@/components/FloatingConfigurator.vue';
         >
           <img src="@/assets/shindengen-logo.svg" alt="Logo" class="logo-image" />
           <!-- horizontal line tailwindcss -->
-            <div class="border-t border-surface-300 dark:border-surface-500 w-full my-8"></div>
+          <div class="border-t border-surface-300 dark:border-surface-500 w-full my-8"></div>
           <h1 class="text-surface-900 dark:text-surface-0 font-bold text-3xl lg:text-3xl mb-2">
             404 : Not Found
           </h1>

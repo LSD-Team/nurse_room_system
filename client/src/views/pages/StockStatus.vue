@@ -46,9 +46,9 @@ function exportExcel() {
     'Item Code': item.item_code,
     'Item Name': item.item_name_en,
     'Item Name Thai': item.item_name_th,
-    'QTY': item.qty_base ?? 0,
-    'MIN': item.item_min ?? '-',
-    'MAX': item.item_max ?? '-',
+    QTY: item.qty_base ?? 0,
+    MIN: item.item_min ?? '-',
+    MAX: item.item_max ?? '-',
   }));
 
   const ws = XLSX.utils.json_to_sheet(data);
@@ -93,10 +93,12 @@ function exportExcel() {
       scrollable
       scrollHeight="600px"
       :globalFilterFields="['item_code', 'item_name_en', 'item_name_th']"
-      :rowClass="(row) => ({
-        'bg-red-50 dark:bg-red-950': stockStatus(row) === 'low',
-        'bg-yellow-50 dark:bg-yellow-950': stockStatus(row) === 'high',
-      })"
+      :rowClass="
+        (row) => ({
+          'bg-red-50 dark:bg-red-950': stockStatus(row) === 'low',
+          'bg-yellow-50 dark:bg-yellow-950': stockStatus(row) === 'high',
+        })
+      "
       class="p-datatable-sm"
     >
       <template #header>
@@ -159,15 +161,9 @@ function exportExcel() {
             value="เกิน MAX"
             icon="pi pi-arrow-up"
           />
-          <Tag
-            v-else
-            severity="success"
-            value="ปกติ"
-            icon="pi pi-check"
-          />
+          <Tag v-else severity="success" value="ปกติ" icon="pi pi-check" />
         </template>
       </Column>
-
     </DataTable>
   </div>
 </template>

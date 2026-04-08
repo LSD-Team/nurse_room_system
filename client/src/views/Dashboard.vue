@@ -9,20 +9,16 @@ import { useMainStore } from '@/stores/main.store';
 import { onMounted } from 'vue';
 const mainStore = useMainStore();
 
-
 onMounted(async () => {
   await mainStore.getEmployees();
 });
-
 </script>
 
 <template>
   <div class="grid grid-cols-12 gap-8">
     <StatsWidget />
 
-
     <div class="col-span-12 xl:col-span-6">
-          <pre>{{ mainStore._employees }}</pre>
       <RecentSalesWidget />
       <BestSellingWidget />
     </div>
