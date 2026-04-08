@@ -109,7 +109,11 @@ importers:
         specifier: ^10.4.19
         version: 10.4.21(postcss@8.5.6)
       baseline-browser-mapping:
+<<<<<<< HEAD
         specifier: ^2.9.19
+=======
+        specifier: ^2.10.16
+>>>>>>> dev_borrow
         version: 2.10.16
       eslint:
         specifier: ^8.57.0
@@ -1038,10 +1042,13 @@ packages:
   balanced-match@1.0.2:
     resolution: {integrity: sha512-3oSeUO0TMV67hN1AmbXsK4yaqU7tjiHlbxRDZOpH0KW9+CeX4bRAaX0Anxt0tx2MrpRpWwQaPwIlISEJhYU5Pw==}
 
+<<<<<<< HEAD
   balanced-match@4.0.4:
     resolution: {integrity: sha512-BLrgEcRTwX2o6gGxGOCNyMvGSp35YofuYzw9h1IMTRmKqttAZZVU67bdb9Pr2vUHA8+j3i2tJfjO6C6+4myGTA==}
     engines: {node: 18 || 20 || >=22}
 
+=======
+>>>>>>> dev_borrow
   baseline-browser-mapping@2.10.16:
     resolution: {integrity: sha512-Lyf3aK28zpsD1yQMiiHD4RvVb6UdMoo8xzG2XzFIfR9luPzOpcBlAsT/qfB1XWS1bxWT+UtE4WmQgsp297FYOA==}
     engines: {node: '>=6.0.0'}
@@ -3350,8 +3357,11 @@ snapshots:
 
   balanced-match@1.0.2: {}
 
+<<<<<<< HEAD
   balanced-match@4.0.4: {}
 
+=======
+>>>>>>> dev_borrow
   baseline-browser-mapping@2.10.16: {}
 
   binary-extensions@2.3.0: {}

@@ -1,6 +1,7 @@
 <template>
   <div id="pricing" class="py-6 px-6 lg:px-20 my-2 md:my-6">
     <div class="text-center mb-6">
+<<<<<<< HEAD
       <div
         class="text-surface-900 dark:text-surface-0 font-normal mb-2 text-4xl"
       >
@@ -9,6 +10,12 @@
       <span class="text-muted-color text-2xl">
         Amet consectetur adipiscing elit...
       </span>
+=======
+      <div class="text-surface-900 dark:text-surface-0 font-normal mb-2 text-4xl">
+        Matchless Pricing
+      </div>
+      <span class="text-muted-color text-2xl">Amet consectetur adipiscing elit...</span>
+>>>>>>> dev_borrow
     </div>
 
     <div class="grid grid-cols-12 gap-4 justify-between mt-20 md:mt-0">
@@ -17,6 +24,7 @@
           class="p-4 flex flex-col border-surface-200 dark:border-surface-600 pricing-card cursor-pointer border-2 hover:border-primary duration-300 transition-all"
           style="border-radius: 10px"
         >
+<<<<<<< HEAD
           <div
             class="text-surface-900 dark:text-surface-0 text-center my-8 text-3xl"
           >
@@ -37,6 +45,14 @@
               <span class="text-surface-600 dark:text-surface-200">
                 per month
               </span>
+=======
+          <div class="text-surface-900 dark:text-surface-0 text-center my-8 text-3xl">Free</div>
+          <img src="/demo/images/landing/free.svg" class="w-10/12 mx-auto" alt="free" />
+          <div class="my-8 flex flex-col items-center gap-4">
+            <div class="flex items-center">
+              <span class="text-5xl font-bold mr-2 text-surface-900 dark:text-surface-0">$0</span>
+              <span class="text-surface-600 dark:text-surface-200">per month</span>
+>>>>>>> dev_borrow
             </div>
             <Button
               label="Get Started"
@@ -44,18 +60,26 @@
             ></Button>
           </div>
           <Divider class="w-full bg-surface-200"></Divider>
+<<<<<<< HEAD
           <ul
             class="my-8 list-none p-0 flex text-surface-900 dark:text-surface-0 flex-col px-8"
           >
+=======
+          <ul class="my-8 list-none p-0 flex text-surface-900 dark:text-surface-0 flex-col px-8">
+>>>>>>> dev_borrow
             <li class="py-2">
               <i class="pi pi-fw pi-check text-xl text-cyan-500 mr-2"></i>
               <span class="text-xl leading-normal">Responsive Layout</span>
             </li>
             <li class="py-2">
               <i class="pi pi-fw pi-check text-xl text-cyan-500 mr-2"></i>
+<<<<<<< HEAD
               <span class="text-xl leading-normal">
                 Unlimited Push Messages
               </span>
+=======
+              <span class="text-xl leading-normal">Unlimited Push Messages</span>
+>>>>>>> dev_borrow
             </li>
             <li class="py-2">
               <i class="pi pi-fw pi-check text-xl text-cyan-500 mr-2"></i>
@@ -74,6 +98,7 @@
           class="p-4 flex flex-col border-surface-200 dark:border-surface-600 pricing-card cursor-pointer border-2 hover:border-primary duration-300 transition-all"
           style="border-radius: 10px"
         >
+<<<<<<< HEAD
           <div
             class="text-surface-900 dark:text-surface-0 text-center my-8 text-3xl"
           >
@@ -94,6 +119,14 @@
               <span class="text-surface-600 dark:text-surface-200">
                 per month
               </span>
+=======
+          <div class="text-surface-900 dark:text-surface-0 text-center my-8 text-3xl">Startup</div>
+          <img src="/demo/images/landing/startup.svg" class="w-10/12 mx-auto" alt="startup" />
+          <div class="my-8 flex flex-col items-center gap-4">
+            <div class="flex items-center">
+              <span class="text-5xl font-bold mr-2 text-surface-900 dark:text-surface-0">$1</span>
+              <span class="text-surface-600 dark:text-surface-200">per month</span>
+>>>>>>> dev_borrow
             </div>
             <Button
               label="Get Started"
@@ -101,18 +134,26 @@
             ></Button>
           </div>
           <Divider class="w-full bg-surface-200"></Divider>
+<<<<<<< HEAD
           <ul
             class="my-8 list-none p-0 flex text-surface-900 dark:text-surface-0 flex-col px-8"
           >
+=======
+          <ul class="my-8 list-none p-0 flex text-surface-900 dark:text-surface-0 flex-col px-8">
+>>>>>>> dev_borrow
             <li class="py-2">
               <i class="pi pi-fw pi-check text-xl text-cyan-500 mr-2"></i>
               <span class="text-xl leading-normal">Responsive Layout</span>
             </li>
             <li class="py-2">
               <i class="pi pi-fw pi-check text-xl text-cyan-500 mr-2"></i>
+<<<<<<< HEAD
               <span class="text-xl leading-normal">
                 Unlimited Push Messages
               </span>
+=======
+              <span class="text-xl leading-normal">Unlimited Push Messages</span>
+>>>>>>> dev_borrow
             </li>
             <li class="py-2">
               <i class="pi pi-fw pi-check text-xl text-cyan-500 mr-2"></i>
@@ -131,6 +172,7 @@
           class="p-4 flex flex-col border-surface-200 dark:border-surface-600 pricing-card cursor-pointer border-2 hover:border-primary duration-300 transition-all"
           style="border-radius: 10px"
         >
+<<<<<<< HEAD
           <div
             class="text-surface-900 dark:text-surface-0 text-center my-8 text-3xl"
           >
@@ -151,6 +193,16 @@
               <span class="text-surface-600 dark:text-surface-200">
                 per month
               </span>
+=======
+          <div class="text-surface-900 dark:text-surface-0 text-center my-8 text-3xl">
+            Enterprise
+          </div>
+          <img src="/demo/images/landing/enterprise.svg" class="w-10/12 mx-auto" alt="enterprise" />
+          <div class="my-8 flex flex-col items-center gap-4">
+            <div class="flex items-center">
+              <span class="text-5xl font-bold mr-2 text-surface-900 dark:text-surface-0">$5</span>
+              <span class="text-surface-600 dark:text-surface-200">per month</span>
+>>>>>>> dev_borrow
             </div>
             <Button
               label="Get Started"
@@ -158,18 +210,26 @@
             ></Button>
           </div>
           <Divider class="w-full bg-surface-200"></Divider>
+<<<<<<< HEAD
           <ul
             class="my-8 list-none p-0 flex text-surface-900 dark:text-surface-0 flex-col px-8"
           >
+=======
+          <ul class="my-8 list-none p-0 flex text-surface-900 dark:text-surface-0 flex-col px-8">
+>>>>>>> dev_borrow
             <li class="py-2">
               <i class="pi pi-fw pi-check text-xl text-cyan-500 mr-2"></i>
               <span class="text-xl leading-normal">Responsive Layout</span>
             </li>
             <li class="py-2">
               <i class="pi pi-fw pi-check text-xl text-cyan-500 mr-2"></i>
+<<<<<<< HEAD
               <span class="text-xl leading-normal">
                 Unlimited Push Messages
               </span>
+=======
+              <span class="text-xl leading-normal">Unlimited Push Messages</span>
+>>>>>>> dev_borrow
             </li>
             <li class="py-2">
               <i class="pi pi-fw pi-check text-xl text-cyan-500 mr-2"></i>

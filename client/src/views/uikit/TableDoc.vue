@@ -10,6 +10,7 @@
     DataTableFilterMetaData,
   } from 'primevue/datatable';
 
+<<<<<<< HEAD
   interface CustomerWithDate extends Omit<Customer, 'date'> {
     date: Date;
   }
@@ -188,15 +189,195 @@
         if (customer.representative.name === name) {
           total++;
         }
+=======
+interface CustomerWithDate extends Omit<Customer, 'date'> {
+  date: Date;
+}
+
+const customers1 = ref<CustomerWithDate[] | null>(null);
+const customers2 = ref<Customer[] | null>(null);
+const customers3 = ref<Customer[] | null>(null);
+const filters1 = ref<DataTableFilterMeta>({});
+const loading1 = ref<boolean>(false);
+const balanceFrozen = ref(false);
+const products = ref<(Product & { orders: ProductOrder[] })[] | null>(null);
+const expandedRows = ref<Record<string, boolean>>({});
+const statuses = reactive([
+  'unqualified',
+  'qualified',
+  'new',
+  'negotiation',
+  'renewal',
+  'proposal',
+]);
+const representatives = reactive([
+  { name: 'Amy Elsner', image: 'amyelsner.png' },
+  { name: 'Anna Fali', image: 'annafali.png' },
+  { name: 'Asiya Javayant', image: 'asiyajavayant.png' },
+  { name: 'Bernardo Dominic', image: 'bernardodominic.png' },
+  { name: 'Elwin Sharvill', image: 'elwinsharvill.png' },
+  { name: 'Ioni Bowcher', image: 'ionibowcher.png' },
+  { name: 'Ivan Magalhaes', image: 'ivanmagalhaes.png' },
+  { name: 'Onyama Limba', image: 'onyamalimba.png' },
+  { name: 'Stephen Shaw', image: 'stephenshaw.png' },
+  { name: 'XuXue Feng', image: 'xuxuefeng.png' },
+]);
+
+function getOrderSeverity(order: ProductOrder): 'success' | 'danger' | 'warn' | 'info' {
+  switch (order.status) {
+    case 'DELIVERED':
+      return 'success';
+
+    case 'CANCELLED':
+      return 'danger';
+
+    case 'PENDING':
+      return 'warn';
+
+    case 'RETURNED':
+      return 'info';
+
+    default:
+      return 'info';
+  }
+}
+
+function getSeverity(status: string): 'success' | 'danger' | 'warn' | 'info' {
+  switch (status) {
+    case 'unqualified':
+      return 'danger';
+
+    case 'qualified':
+      return 'success';
+
+    case 'new':
+      return 'info';
+
+    case 'negotiation':
+      return 'warn';
+
+    case 'renewal':
+      return 'info';
+
+    default:
+      return 'info';
+  }
+}
+
+function getStockSeverity(product: Product): 'success' | 'warn' | 'danger' {
+  switch (product.inventoryStatus) {
+    case 'INSTOCK':
+      return 'success';
+
+    case 'LOWSTOCK':
+      return 'warn';
+
+    case 'OUTOFSTOCK':
+      return 'danger';
+
+    default:
+      return 'danger';
+  }
+}
+
+onBeforeMount(() => {
+  ProductService.getProductsWithOrdersSmall().then((data) => (products.value = data));
+  CustomerService.getCustomersLarge().then((data) => {
+    customers1.value = data.map((customer) => ({
+      ...customer,
+      date: new Date(customer.date),
+    }));
+    loading1.value = false;
+  });
+  CustomerService.getCustomersLarge().then((data) => (customers2.value = data));
+  CustomerService.getCustomersMedium().then((data) => (customers3.value = data));
+
+  initFilters1();
+});
+
+function initFilters1() {
+  filters1.value = {
+    global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+    name: {
+      operator: FilterOperator.AND,
+      constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }],
+    },
+    'country.name': {
+      operator: FilterOperator.AND,
+      constraints: [{ value: null, matchMode: FilterMatchMode.STARTS_WITH }],
+    },
+    representative: { value: null, matchMode: FilterMatchMode.IN },
+    date: {
+      operator: FilterOperator.AND,
+      constraints: [{ value: null, matchMode: FilterMatchMode.DATE_IS }],
+    },
+    balance: {
+      operator: FilterOperator.AND,
+      constraints: [{ value: null, matchMode: FilterMatchMode.EQUALS }],
+    },
+    status: {
+      operator: FilterOperator.OR,
+      constraints: [{ value: null, matchMode: FilterMatchMode.EQUALS }],
+    },
+    activity: { value: [0, 100], matchMode: FilterMatchMode.BETWEEN },
+    verified: { value: null, matchMode: FilterMatchMode.EQUALS },
+  };
+}
+
+function expandAll() {
+  if (products.value) {
+    expandedRows.value = products.value.reduce(
+      (acc, p) => {
+        acc[p.id] = true;
+        return acc;
+      },
+      {} as Record<string, boolean>,
+    );
+  }
+}
+
+function collapseAll() {
+  expandedRows.value = {};
+}
+
+function formatCurrency(value: number) {
+  return value.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+}
+
+function formatDate(value: Date) {
+  return value.toLocaleDateString('en-US', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  });
+}
+
+function calculateCustomerTotal(name: string) {
+  let total = 0;
+  if (customers3.value) {
+    for (let customer of customers3.value) {
+      if (customer.representative.name === name) {
+        total++;
+>>>>>>> dev_borrow
       }
     }
+  }
 
+<<<<<<< HEAD
     return total;
   }
 
   function clearFilter() {
     initFilters1();
   }
+=======
+  return total;
+}
+
+function clearFilter() {
+  initFilters1();
+}
+>>>>>>> dev_borrow
 </script>
 
 <template>
@@ -211,6 +392,7 @@
       v-model:filters="filters1"
       filterDisplay="menu"
       :loading="loading1"
+<<<<<<< HEAD
       :globalFilterFields="[
         'name',
         'country.name',
@@ -218,6 +400,9 @@
         'balance',
         'status',
       ]"
+=======
+      :globalFilterFields="['name', 'country.name', 'representative.name', 'balance', 'status']"
+>>>>>>> dev_borrow
       showGridlines
     >
       <template #header>
@@ -240,13 +425,19 @@
           </IconField>
         </div>
       </template>
+<<<<<<< HEAD
       <template #empty>No customers found.</template>
       <template #loading>Loading customers data. Please wait.</template>
+=======
+      <template #empty> No customers found. </template>
+      <template #loading> Loading customers data. Please wait. </template>
+>>>>>>> dev_borrow
       <Column field="name" header="Name" style="min-width: 12rem">
         <template #body="{ data }">
           {{ data.name }}
         </template>
         <template #filter="{ filterModel }">
+<<<<<<< HEAD
           <InputText
             v-model="filterModel.value"
             type="text"
@@ -259,6 +450,12 @@
         filterField="country.name"
         style="min-width: 12rem"
       >
+=======
+          <InputText v-model="filterModel.value" type="text" placeholder="Search by name" />
+        </template>
+      </Column>
+      <Column header="Country" filterField="country.name" style="min-width: 12rem">
+>>>>>>> dev_borrow
         <template #body="{ data }">
           <div class="flex items-center gap-2">
             <img
@@ -271,11 +468,15 @@
           </div>
         </template>
         <template #filter="{ filterModel }">
+<<<<<<< HEAD
           <InputText
             v-model="filterModel.value"
             type="text"
             placeholder="Search by country"
           />
+=======
+          <InputText v-model="filterModel.value" type="text" placeholder="Search by country" />
+>>>>>>> dev_borrow
         </template>
         <template #filterclear="{ filterCallback }">
           <Button
@@ -331,16 +532,21 @@
           </MultiSelect>
         </template>
       </Column>
+<<<<<<< HEAD
       <Column
         header="Date"
         filterField="date"
         dataType="date"
         style="min-width: 10rem"
       >
+=======
+      <Column header="Date" filterField="date" dataType="date" style="min-width: 10rem">
+>>>>>>> dev_borrow
         <template #body="{ data }">
           {{ formatDate(data.date) }}
         </template>
         <template #filter="{ filterModel }">
+<<<<<<< HEAD
           <DatePicker
             v-model="filterModel.value"
             dateFormat="mm/dd/yy"
@@ -354,16 +560,26 @@
         dataType="numeric"
         style="min-width: 10rem"
       >
+=======
+          <DatePicker v-model="filterModel.value" dateFormat="mm/dd/yy" placeholder="mm/dd/yyyy" />
+        </template>
+      </Column>
+      <Column header="Balance" filterField="balance" dataType="numeric" style="min-width: 10rem">
+>>>>>>> dev_borrow
         <template #body="{ data }">
           {{ formatCurrency(data.balance) }}
         </template>
         <template #filter="{ filterModel }">
+<<<<<<< HEAD
           <InputNumber
             v-model="filterModel.value"
             mode="currency"
             currency="USD"
             locale="en-US"
           />
+=======
+          <InputNumber v-model="filterModel.value" mode="currency" currency="USD" locale="en-US" />
+>>>>>>> dev_borrow
         </template>
       </Column>
       <Column
@@ -383,10 +599,14 @@
             showClear
           >
             <template #option="slotProps">
+<<<<<<< HEAD
               <Tag
                 :value="slotProps.option"
                 :severity="getSeverity(slotProps.option)"
               />
+=======
+              <Tag :value="slotProps.option" :severity="getSeverity(slotProps.option)" />
+>>>>>>> dev_borrow
             </template>
           </Select>
         </template>
@@ -398,11 +618,15 @@
         style="min-width: 12rem"
       >
         <template #body="{ data }">
+<<<<<<< HEAD
           <ProgressBar
             :value="data.activity"
             :showValue="false"
             style="height: 6px"
           ></ProgressBar>
+=======
+          <ProgressBar :value="data.activity" :showValue="false" style="height: 6px"></ProgressBar>
+>>>>>>> dev_borrow
         </template>
         <template #filter="{ filterModel }">
           <Slider v-model="filterModel.value" range class="m-4"></Slider>
@@ -429,7 +653,11 @@
           ></i>
         </template>
         <template #filter="{ filterModel }">
+<<<<<<< HEAD
           <label for="verified-filter" class="font-bold">Verified</label>
+=======
+          <label for="verified-filter" class="font-bold"> Verified </label>
+>>>>>>> dev_borrow
           <Checkbox
             v-model="filterModel.value"
             :indeterminate="filterModel.value === null"
@@ -452,6 +680,7 @@
     />
 
     <DataTable :value="customers2" scrollable scrollHeight="400px" class="mt-6">
+<<<<<<< HEAD
       <Column
         field="name"
         header="Name"
@@ -483,6 +712,17 @@
         header="Representative"
         style="min-width: 200px"
       ></Column>
+=======
+      <Column field="name" header="Name" style="min-width: 200px" frozen class="font-bold"></Column>
+      <Column field="id" header="Id" style="min-width: 100px"></Column>
+      <Column field="name" header="Name" style="min-width: 200px"></Column>
+      <Column field="country.name" header="Country" style="min-width: 200px"></Column>
+      <Column field="date" header="Date" style="min-width: 200px"></Column>
+      <Column field="company" header="Company" style="min-width: 200px"></Column>
+      <Column field="status" header="Status" style="min-width: 200px"></Column>
+      <Column field="activity" header="Activity" style="min-width: 200px"></Column>
+      <Column field="representative.name" header="Representative" style="min-width: 200px"></Column>
+>>>>>>> dev_borrow
       <Column
         field="balance"
         header="Balance"
@@ -507,6 +747,7 @@
     >
       <template #header>
         <div class="flex flex-wrap justify-end gap-2">
+<<<<<<< HEAD
           <Button
             text
             icon="pi pi-plus"
@@ -519,6 +760,10 @@
             label="Collapse All"
             @click="collapseAll"
           />
+=======
+          <Button text icon="pi pi-plus" label="Expand All" @click="expandAll" />
+          <Button text icon="pi pi-minus" label="Collapse All" @click="collapseAll" />
+>>>>>>> dev_borrow
         </div>
       </template>
       <Column expander style="width: 5rem" />
@@ -622,6 +867,7 @@
           </div>
         </template>
       </Column>
+<<<<<<< HEAD
       <Column
         field="company"
         header="Company"
@@ -633,13 +879,23 @@
             :value="slotProps.data.status"
             :severity="getSeverity(slotProps.data.status)"
           />
+=======
+      <Column field="company" header="Company" style="min-width: 200px"></Column>
+      <Column field="status" header="Status" style="min-width: 200px">
+        <template #body="slotProps">
+          <Tag :value="slotProps.data.status" :severity="getSeverity(slotProps.data.status)" />
+>>>>>>> dev_borrow
         </template>
       </Column>
       <Column field="date" header="Date" style="min-width: 200px"></Column>
       <template #groupfooter="slotProps">
         <div class="flex justify-end font-bold w-full">
+<<<<<<< HEAD
           Total Customers:
           {{ calculateCustomerTotal(slotProps.data.representative.name) }}
+=======
+          Total Customers: {{ calculateCustomerTotal(slotProps.data.representative.name) }}
+>>>>>>> dev_borrow
         </div>
       </template>
     </DataTable>
@@ -647,6 +903,7 @@
 </template>
 
 <style scoped lang="scss">
+<<<<<<< HEAD
   :deep(.p-datatable-frozen-tbody) {
     font-weight: bold;
   }
@@ -654,4 +911,13 @@
   :deep(.p-datatable-scrollable .p-frozen-column) {
     font-weight: bold;
   }
+=======
+:deep(.p-datatable-frozen-tbody) {
+  font-weight: bold;
+}
+
+:deep(.p-datatable-scrollable .p-frozen-column) {
+  font-weight: bold;
+}
+>>>>>>> dev_borrow
 </style>

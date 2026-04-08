@@ -4,6 +4,7 @@
   import { useToast } from 'primevue/usetoast';
   import { onMounted, ref } from 'vue';
 
+<<<<<<< HEAD
   // Define interface for Product
   interface Product {
     id?: string;
@@ -77,8 +78,78 @@
           if (isInventoryStatusObject(product.value.inventoryStatus)) {
             product.value.inventoryStatus = product.value.inventoryStatus.value;
           }
-        }
+=======
+// Define interface for Product
+interface Product {
+  id?: string;
+  code?: string;
+  name?: string;
+  description?: string;
+  image?: string;
+  price?: number;
+  category?: string;
+  quantity?: number;
+  inventoryStatus?: string | { value: string; label: string };
+  rating?: number;
+}
 
+// Type guard for checking if inventoryStatus is an object with value property
+function isInventoryStatusObject(status: any): status is { value: string; label: string } {
+  return status && typeof status === 'object' && 'value' in status;
+}
+
+onMounted(() => {
+  ProductService.getProducts().then((data) => (products.value = data));
+});
+
+const toast = useToast();
+const dt = ref();
+const products = ref<Product[]>([]);
+const productDialog = ref(false);
+const deleteProductDialog = ref(false);
+const deleteProductsDialog = ref(false);
+const product = ref<Product>({});
+const selectedProducts = ref<Product[]>([]);
+const filters = ref({
+  global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+});
+const submitted = ref(false);
+const statuses = ref([
+  { label: 'INSTOCK', value: 'instock' },
+  { label: 'LOWSTOCK', value: 'lowstock' },
+  { label: 'OUTOFSTOCK', value: 'outofstock' },
+]);
+
+function formatCurrency(value: number | undefined) {
+  if (value) return value.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+  return;
+}
+
+function openNew() {
+  product.value = {};
+  submitted.value = false;
+  productDialog.value = true;
+}
+
+function hideDialog() {
+  productDialog.value = false;
+  submitted.value = false;
+}
+
+function saveProduct() {
+  submitted.value = true;
+
+  if (product?.value.name?.trim()) {
+    if (product.value.id) {
+      // Handle inventory status - check if it's an object with a value property
+      if (product.value.inventoryStatus !== undefined) {
+        if (isInventoryStatusObject(product.value.inventoryStatus)) {
+          product.value.inventoryStatus = product.value.inventoryStatus.value;
+>>>>>>> dev_borrow
+        }
+      }
+
+<<<<<<< HEAD
         products.value[findIndexById(product.value.id)] = product.value;
         toast.add({
           severity: 'success',
@@ -143,8 +214,70 @@
         index = i;
         break;
       }
+=======
+      products.value[findIndexById(product.value.id)] = product.value;
+      toast.add({
+        severity: 'success',
+        summary: 'Successful',
+        detail: 'Product Updated',
+        life: 3000,
+      });
+    } else {
+      product.value.id = createId();
+      product.value.code = createId();
+      product.value.image = 'product-placeholder.svg';
+
+      // Handle inventory status for new products
+      if (product.value.inventoryStatus !== undefined) {
+        if (isInventoryStatusObject(product.value.inventoryStatus)) {
+          product.value.inventoryStatus = product.value.inventoryStatus.value;
+        }
+      } else {
+        product.value.inventoryStatus = 'INSTOCK';
+      }
+
+      products.value.push(product.value);
+      toast.add({
+        severity: 'success',
+        summary: 'Successful',
+        detail: 'Product Created',
+        life: 3000,
+      });
     }
 
+    productDialog.value = false;
+    product.value = {};
+  }
+}
+
+function editProduct(prod: Product) {
+  product.value = { ...prod };
+  productDialog.value = true;
+}
+
+function confirmDeleteProduct(prod: Product) {
+  product.value = prod;
+  deleteProductDialog.value = true;
+}
+
+function deleteProduct() {
+  products.value = products.value.filter((val) => val.id !== product.value.id);
+  deleteProductDialog.value = false;
+  product.value = {};
+  toast.add({ severity: 'success', summary: 'Successful', detail: 'Product Deleted', life: 3000 });
+}
+
+function findIndexById(id: string) {
+  let index = -1;
+  for (let i = 0; i < products.value.length; i++) {
+    if (products.value[i].id === id) {
+      index = i;
+      break;
+>>>>>>> dev_borrow
+    }
+  }
+
+<<<<<<< HEAD
     return index;
   }
 
@@ -197,6 +330,50 @@
         return undefined;
     }
   }
+=======
+  return index;
+}
+
+function createId(): string {
+  let id = '';
+  var chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  for (var i = 0; i < 5; i++) {
+    id += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return id;
+}
+
+function exportCSV() {
+  dt.value.exportCSV();
+}
+
+function confirmDeleteSelected() {
+  deleteProductsDialog.value = true;
+}
+
+function deleteSelectedProducts() {
+  products.value = products.value.filter((val) => !selectedProducts.value.includes(val));
+  deleteProductsDialog.value = false;
+  selectedProducts.value = [];
+  toast.add({ severity: 'success', summary: 'Successful', detail: 'Products Deleted', life: 3000 });
+}
+
+function getStatusLabel(status: string): 'success' | 'warn' | 'danger' | undefined {
+  switch (status) {
+    case 'INSTOCK':
+      return 'success';
+
+    case 'LOWSTOCK':
+      return 'warn';
+
+    case 'OUTOFSTOCK':
+      return 'danger';
+
+    default:
+      return undefined;
+  }
+}
+>>>>>>> dev_borrow
 </script>
 
 <template>
@@ -221,12 +398,16 @@
         </template>
 
         <template #end>
+<<<<<<< HEAD
           <Button
             label="Export"
             icon="pi pi-upload"
             severity="secondary"
             @click="exportCSV"
           />
+=======
+          <Button label="Export" icon="pi pi-upload" severity="secondary" @click="exportCSV" />
+>>>>>>> dev_borrow
         </template>
       </Toolbar>
 
@@ -249,14 +430,19 @@
               <InputIcon>
                 <i class="pi pi-search" />
               </InputIcon>
+<<<<<<< HEAD
               <InputText
                 v-model="filters['global'].value"
                 placeholder="Search..."
               />
+=======
+              <InputText v-model="filters['global'].value" placeholder="Search..." />
+>>>>>>> dev_borrow
             </IconField>
           </div>
         </template>
 
+<<<<<<< HEAD
         <Column
           selectionMode="multiple"
           style="width: 3rem"
@@ -274,6 +460,11 @@
           sortable
           style="min-width: 16rem"
         ></Column>
+=======
+        <Column selectionMode="multiple" style="width: 3rem" :exportable="false"></Column>
+        <Column field="code" header="Code" sortable style="min-width: 12rem"></Column>
+        <Column field="name" header="Name" sortable style="min-width: 16rem"></Column>
+>>>>>>> dev_borrow
         <Column header="Image">
           <template #body="slotProps">
             <img
@@ -289,6 +480,7 @@
             {{ formatCurrency(slotProps.data.price) }}
           </template>
         </Column>
+<<<<<<< HEAD
         <Column
           field="category"
           header="Category"
@@ -301,16 +493,24 @@
           sortable
           style="min-width: 12rem"
         >
+=======
+        <Column field="category" header="Category" sortable style="min-width: 10rem"></Column>
+        <Column field="rating" header="Reviews" sortable style="min-width: 12rem">
+>>>>>>> dev_borrow
           <template #body="slotProps">
             <Rating :modelValue="slotProps.data.rating" :readonly="true" />
           </template>
         </Column>
+<<<<<<< HEAD
         <Column
           field="inventoryStatus"
           header="Status"
           sortable
           style="min-width: 12rem"
         >
+=======
+        <Column field="inventoryStatus" header="Status" sortable style="min-width: 12rem">
+>>>>>>> dev_borrow
           <template #body="slotProps">
             <Tag
               :value="slotProps.data.inventoryStatus"
@@ -362,6 +562,7 @@
             :invalid="submitted && !product.name"
             fluid
           />
+<<<<<<< HEAD
           <small v-if="submitted && !product.name" class="text-red-500">
             Name is required.
           </small>
@@ -370,6 +571,12 @@
           <label for="description" class="block font-bold mb-3">
             Description
           </label>
+=======
+          <small v-if="submitted && !product.name" class="text-red-500">Name is required.</small>
+        </div>
+        <div>
+          <label for="description" class="block font-bold mb-3">Description</label>
+>>>>>>> dev_borrow
           <Textarea
             id="description"
             v-model="product.description"
@@ -380,9 +587,13 @@
           />
         </div>
         <div>
+<<<<<<< HEAD
           <label for="inventoryStatus" class="block font-bold mb-3">
             Inventory Status
           </label>
+=======
+          <label for="inventoryStatus" class="block font-bold mb-3">Inventory Status</label>
+>>>>>>> dev_borrow
           <Select
             id="inventoryStatus"
             v-model="product.inventoryStatus"
@@ -449,12 +660,16 @@
           </div>
           <div class="col-span-6">
             <label for="quantity" class="block font-bold mb-3">Quantity</label>
+<<<<<<< HEAD
             <InputNumber
               id="quantity"
               v-model="product.quantity"
               integeronly
               fluid
             />
+=======
+            <InputNumber id="quantity" v-model="product.quantity" integeronly fluid />
+>>>>>>> dev_borrow
           </div>
         </div>
       </div>
@@ -473,6 +688,7 @@
     >
       <div class="flex items-center gap-4">
         <i class="pi pi-exclamation-triangle !text-3xl" />
+<<<<<<< HEAD
         <span v-if="product">
           Are you sure you want to delete
           <b>{{ product.name }}</b>
@@ -486,6 +702,15 @@
           text
           @click="deleteProductDialog = false"
         />
+=======
+        <span v-if="product"
+          >Are you sure you want to delete <b>{{ product.name }}</b
+          >?</span
+        >
+      </div>
+      <template #footer>
+        <Button label="No" icon="pi pi-times" text @click="deleteProductDialog = false" />
+>>>>>>> dev_borrow
         <Button label="Yes" icon="pi pi-check" @click="deleteProduct" />
       </template>
     </Dialog>
@@ -498,6 +723,7 @@
     >
       <div class="flex items-center gap-4">
         <i class="pi pi-exclamation-triangle !text-3xl" />
+<<<<<<< HEAD
         <span v-if="product">
           Are you sure you want to delete the selected products?
         </span>
@@ -515,6 +741,13 @@
           text
           @click="deleteSelectedProducts"
         />
+=======
+        <span v-if="product">Are you sure you want to delete the selected products?</span>
+      </div>
+      <template #footer>
+        <Button label="No" icon="pi pi-times" text @click="deleteProductsDialog = false" />
+        <Button label="Yes" icon="pi pi-check" text @click="deleteSelectedProducts" />
+>>>>>>> dev_borrow
       </template>
     </Dialog>
   </div>

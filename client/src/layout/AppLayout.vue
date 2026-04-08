@@ -11,6 +11,7 @@
   // Define the correct type for the outsideClickListener
   const outsideClickListener = ref<((event: MouseEvent) => void) | null>(null);
 
+<<<<<<< HEAD
   watch(isSidebarActive, newVal => {
     if (newVal) {
       bindOutsideClickListener();
@@ -54,9 +55,54 @@
   function isOutsideClicked(event: MouseEvent) {
     const sidebarEl = document.querySelector('.layout-sidebar');
     const topbarEl = document.querySelector('.layout-menu-button');
+=======
+watch(isSidebarActive, (newVal) => {
+  if (newVal) {
+    bindOutsideClickListener();
+  } else {
+    unbindOutsideClickListener();
+  }
+});
 
-    if (!sidebarEl || !topbarEl) return true;
+const containerClass = computed(() => {
+  return {
+    'layout-overlay': layoutConfig.menuMode === 'overlay',
+    'layout-static': layoutConfig.menuMode === 'static',
+    'layout-static-inactive':
+      layoutState.staticMenuDesktopInactive && layoutConfig.menuMode === 'static',
+    'layout-overlay-active': layoutState.overlayMenuActive,
+    'layout-mobile-active': layoutState.staticMenuMobileActive,
+  };
+});
 
+function bindOutsideClickListener() {
+  if (!outsideClickListener.value) {
+    outsideClickListener.value = (event: MouseEvent) => {
+      if (isOutsideClicked(event)) {
+        layoutState.overlayMenuActive = false;
+        layoutState.staticMenuMobileActive = false;
+        layoutState.menuHoverActive = false;
+      }
+    };
+    document.addEventListener('click', outsideClickListener.value);
+  }
+}
+
+function unbindOutsideClickListener() {
+  if (outsideClickListener.value) {
+    document.removeEventListener('click', outsideClickListener.value);
+    outsideClickListener.value = null;
+  }
+}
+
+function isOutsideClicked(event: MouseEvent) {
+  const sidebarEl = document.querySelector('.layout-sidebar');
+  const topbarEl = document.querySelector('.layout-menu-button');
+>>>>>>> dev_borrow
+
+  if (!sidebarEl || !topbarEl) return true;
+
+<<<<<<< HEAD
     return !(
       sidebarEl.isSameNode(event.target as Node) ||
       sidebarEl.contains(event.target as Node) ||
@@ -64,6 +110,15 @@
       topbarEl.contains(event.target as Node)
     );
   }
+=======
+  return !(
+    sidebarEl.isSameNode(event.target as Node) ||
+    sidebarEl.contains(event.target as Node) ||
+    topbarEl.isSameNode(event.target as Node) ||
+    topbarEl.contains(event.target as Node)
+  );
+}
+>>>>>>> dev_borrow
 </script>
 
 <template>

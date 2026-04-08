@@ -70,12 +70,16 @@ export const NodeService = {
         data: 'Events Folder',
         icon: 'pi pi-fw pi-calendar',
         children: [
+<<<<<<< HEAD
           {
             key: '1-0',
             label: 'Meeting',
             icon: 'pi pi-fw pi-calendar-plus',
             data: 'Meeting',
           },
+=======
+          { key: '1-0', label: 'Meeting', icon: 'pi pi-fw pi-calendar-plus', data: 'Meeting' },
+>>>>>>> dev_borrow
           {
             key: '1-1',
             label: 'Product Launch',
@@ -108,12 +112,16 @@ export const NodeService = {
                 icon: 'pi pi-fw pi-video',
                 data: 'Scarface Movie',
               },
+<<<<<<< HEAD
               {
                 key: '2-0-1',
                 label: 'Serpico',
                 icon: 'pi pi-fw pi-video',
                 data: 'Serpico Movie',
               },
+=======
+              { key: '2-0-1', label: 'Serpico', icon: 'pi pi-fw pi-video', data: 'Serpico Movie' },
+>>>>>>> dev_borrow
             ],
           },
           {

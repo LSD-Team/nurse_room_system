@@ -5,12 +5,16 @@
         <a
           class="flex flex-wrap items-center justify-center md:justify-start md:mb-0 mb-4 cursor-pointer"
         >
+<<<<<<< HEAD
           <svg
             viewBox="0 0 54 40"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
             class="h-14 mr-2"
           >
+=======
+          <svg viewBox="0 0 54 40" fill="none" xmlns="http://www.w3.org/2000/svg" class="h-14 mr-2">
+>>>>>>> dev_borrow
             <path
               fill-rule="evenodd"
               clip-rule="evenodd"
@@ -38,9 +42,13 @@
               />
             </g>
           </svg>
+<<<<<<< HEAD
           <h4 class="font-medium text-3xl text-surface-900 dark:text-surface-0">
             SAKAI
           </h4>
+=======
+          <h4 class="font-medium text-3xl text-surface-900 dark:text-surface-0">SAKAI</h4>
+>>>>>>> dev_borrow
         </a>
       </div>
 
@@ -54,6 +62,7 @@
             </h4>
             <a
               class="leading-normal text-xl block cursor-pointer mb-2 text-surface-700 dark:text-surface-100"
+<<<<<<< HEAD
             >
               About Us
             </a>
@@ -77,6 +86,26 @@
             >
               Media Kit
             </a>
+=======
+              >About Us</a
+            >
+            <a
+              class="leading-normal text-xl block cursor-pointer mb-2 text-surface-700 dark:text-surface-100"
+              >News</a
+            >
+            <a
+              class="leading-normal text-xl block cursor-pointer mb-2 text-surface-700 dark:text-surface-100"
+              >Investor Relations</a
+            >
+            <a
+              class="leading-normal text-xl block cursor-pointer mb-2 text-surface-700 dark:text-surface-100"
+              >Careers</a
+            >
+            <a
+              class="leading-normal text-xl block cursor-pointer text-surface-700 dark:text-surface-100"
+              >Media Kit</a
+            >
+>>>>>>> dev_borrow
           </div>
 
           <div class="col-span-12 md:col-span-3">
@@ -87,6 +116,7 @@
             </h4>
             <a
               class="leading-normal text-xl block cursor-pointer mb-2 text-surface-700 dark:text-surface-100"
+<<<<<<< HEAD
             >
               Get Started
             </a>
@@ -100,6 +130,18 @@
             >
               Case Studies
             </a>
+=======
+              >Get Started</a
+            >
+            <a
+              class="leading-normal text-xl block cursor-pointer mb-2 text-surface-700 dark:text-surface-100"
+              >Learn</a
+            >
+            <a
+              class="leading-normal text-xl block cursor-pointer text-surface-700 dark:text-surface-100"
+              >Case Studies</a
+            >
+>>>>>>> dev_borrow
           </div>
 
           <div class="col-span-12 md:col-span-3">
@@ -110,6 +152,7 @@
             </h4>
             <a
               class="leading-normal text-xl block cursor-pointer mb-2 text-surface-700 dark:text-surface-100"
+<<<<<<< HEAD
             >
               Discord
             </a>
@@ -129,6 +172,22 @@
             >
               Blog
             </a>
+=======
+              >Discord</a
+            >
+            <a
+              class="leading-normal text-xl block cursor-pointer mb-2 text-surface-700 dark:text-surface-100"
+              >Events<img src="/demo/images/landing/new-badge.svg" class="ml-2"
+            /></a>
+            <a
+              class="leading-normal text-xl block cursor-pointer mb-2 text-surface-700 dark:text-surface-100"
+              >FAQ</a
+            >
+            <a
+              class="leading-normal text-xl block cursor-pointer text-surface-700 dark:text-surface-100"
+              >Blog</a
+            >
+>>>>>>> dev_borrow
           </div>
 
           <div class="col-span-12 md:col-span-3">
@@ -139,6 +198,7 @@
             </h4>
             <a
               class="leading-normal text-xl block cursor-pointer mb-2 text-surface-700 dark:text-surface-100"
+<<<<<<< HEAD
             >
               Brand Policy
             </a>
@@ -152,6 +212,18 @@
             >
               Terms of Service
             </a>
+=======
+              >Brand Policy</a
+            >
+            <a
+              class="leading-normal text-xl block cursor-pointer mb-2 text-surface-700 dark:text-surface-100"
+              >Privacy Policy</a
+            >
+            <a
+              class="leading-normal text-xl block cursor-pointer text-surface-700 dark:text-surface-100"
+              >Terms of Service</a
+            >
+>>>>>>> dev_borrow
           </div>
         </div>
       </div>

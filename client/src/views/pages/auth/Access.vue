@@ -30,6 +30,7 @@
             >
               <i class="text-orange-500 pi pi-fw pi-lock !text-2xl"></i>
             </div>
+<<<<<<< HEAD
             <h1
               class="text-surface-900 dark:text-surface-0 font-bold text-4xl lg:text-5xl mb-2"
             >
@@ -38,6 +39,14 @@
             <span class="text-muted-color mb-8">
               You do not have the necessary permisions. Please contact admins.
             </span>
+=======
+            <h1 class="text-surface-900 dark:text-surface-0 font-bold text-4xl lg:text-5xl mb-2">
+              Access Denied
+            </h1>
+            <span class="text-muted-color mb-8"
+              >You do not have the necessary permisions. Please contact admins.</span
+            >
+>>>>>>> dev_borrow
             <img
               src="/demo/images/access/asset-access.svg"
               alt="Access denied"
@@ -45,12 +54,16 @@
               width="80%"
             />
             <div class="col-span-12 mt-8 text-center">
+<<<<<<< HEAD
               <Button
                 as="router-link"
                 label="Go to Dashboard"
                 to="/"
                 severity="warn"
               />
+=======
+              <Button as="router-link" label="Go to Dashboard" to="/" severity="warn" />
+>>>>>>> dev_borrow
             </div>
           </div>
         </div>

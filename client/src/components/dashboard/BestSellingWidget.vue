@@ -5,10 +5,17 @@
   // Define the type for menu ref using the Vue component's type
   const menu = ref<InstanceType<typeof Menu> | null>(null);
 
+<<<<<<< HEAD
   const items = ref([
     { label: 'Add New', icon: 'pi pi-fw pi-plus' },
     { label: 'Remove', icon: 'pi pi-fw pi-trash' },
   ]);
+=======
+const items = ref([
+  { label: 'Add New', icon: 'pi pi-fw pi-plus' },
+  { label: 'Remove', icon: 'pi pi-fw pi-trash' },
+]);
+>>>>>>> dev_borrow
 </script>
 
 <template>
@@ -25,6 +32,7 @@
       </div>
     </div>
     <ul class="list-none p-0 m-0">
+<<<<<<< HEAD
       <li
         class="flex flex-col md:flex-row md:items-center md:justify-between mb-6"
       >
@@ -34,6 +42,13 @@
           >
             Space T-Shirt
           </span>
+=======
+      <li class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+        <div>
+          <span class="text-surface-900 dark:text-surface-0 font-medium mr-2 mb-1 md:mb-0"
+            >Space T-Shirt</span
+          >
+>>>>>>> dev_borrow
           <div class="mt-1 text-muted-color">Clothing</div>
         </div>
         <div class="mt-2 md:mt-0 flex items-center">
@@ -46,6 +61,7 @@
           <span class="text-orange-500 ml-4 font-medium">%50</span>
         </div>
       </li>
+<<<<<<< HEAD
       <li
         class="flex flex-col md:flex-row md:items-center md:justify-between mb-6"
       >
@@ -55,6 +71,13 @@
           >
             Portal Sticker
           </span>
+=======
+      <li class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+        <div>
+          <span class="text-surface-900 dark:text-surface-0 font-medium mr-2 mb-1 md:mb-0"
+            >Portal Sticker</span
+          >
+>>>>>>> dev_borrow
           <div class="mt-1 text-muted-color">Accessories</div>
         </div>
         <div class="mt-2 md:mt-0 ml-0 md:ml-20 flex items-center">
@@ -67,6 +90,7 @@
           <span class="text-cyan-500 ml-4 font-medium">%16</span>
         </div>
       </li>
+<<<<<<< HEAD
       <li
         class="flex flex-col md:flex-row md:items-center md:justify-between mb-6"
       >
@@ -76,6 +100,13 @@
           >
             Supernova Sticker
           </span>
+=======
+      <li class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+        <div>
+          <span class="text-surface-900 dark:text-surface-0 font-medium mr-2 mb-1 md:mb-0"
+            >Supernova Sticker</span
+          >
+>>>>>>> dev_borrow
           <div class="mt-1 text-muted-color">Accessories</div>
         </div>
         <div class="mt-2 md:mt-0 ml-0 md:ml-20 flex items-center">
@@ -88,6 +119,7 @@
           <span class="text-pink-500 ml-4 font-medium">%67</span>
         </div>
       </li>
+<<<<<<< HEAD
       <li
         class="flex flex-col md:flex-row md:items-center md:justify-between mb-6"
       >
@@ -97,6 +129,13 @@
           >
             Wonders Notebook
           </span>
+=======
+      <li class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+        <div>
+          <span class="text-surface-900 dark:text-surface-0 font-medium mr-2 mb-1 md:mb-0"
+            >Wonders Notebook</span
+          >
+>>>>>>> dev_borrow
           <div class="mt-1 text-muted-color">Office</div>
         </div>
         <div class="mt-2 md:mt-0 ml-0 md:ml-20 flex items-center">
@@ -109,6 +148,7 @@
           <span class="text-primary ml-4 font-medium">%35</span>
         </div>
       </li>
+<<<<<<< HEAD
       <li
         class="flex flex-col md:flex-row md:items-center md:justify-between mb-6"
       >
@@ -118,6 +158,13 @@
           >
             Mat Black Case
           </span>
+=======
+      <li class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+        <div>
+          <span class="text-surface-900 dark:text-surface-0 font-medium mr-2 mb-1 md:mb-0"
+            >Mat Black Case</span
+          >
+>>>>>>> dev_borrow
           <div class="mt-1 text-muted-color">Accessories</div>
         </div>
         <div class="mt-2 md:mt-0 ml-0 md:ml-20 flex items-center">
@@ -130,6 +177,7 @@
           <span class="text-purple-500 ml-4 font-medium">%75</span>
         </div>
       </li>
+<<<<<<< HEAD
       <li
         class="flex flex-col md:flex-row md:items-center md:justify-between mb-6"
       >
@@ -139,6 +187,13 @@
           >
             Robots T-Shirt
           </span>
+=======
+      <li class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+        <div>
+          <span class="text-surface-900 dark:text-surface-0 font-medium mr-2 mb-1 md:mb-0"
+            >Robots T-Shirt</span
+          >
+>>>>>>> dev_borrow
           <div class="mt-1 text-muted-color">Clothing</div>
         </div>
         <div class="mt-2 md:mt-0 ml-0 md:ml-20 flex items-center">

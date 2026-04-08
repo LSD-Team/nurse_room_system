@@ -1468,6 +1468,7 @@ IF EXISTS (SELECT * FROM sys.all_objects WHERE object_id = OBJECT_ID(N'[dbo].[sp
 GO
 
 CREATE PROCEDURE [dbo].[sp_BR_03_Submit]
+-- ALTER PROCEDURE sp_BR_03_Submit
     @BorrowId NVARCHAR(20),
     @SubmitBy NVARCHAR(100)
 AS
@@ -1478,7 +1479,7 @@ BEGIN
 
     IF @BorrowId IS NULL OR ISNUMERIC(@BorrowId) = 0
     BEGIN
-        SELECT 'Error' AS Status, 'กรุณาระบุ @BorrowId' AS Message;
+        SELECT 'Error' AS Status, N'กรุณาระบุ @BorrowId' AS Message;
         RETURN;
     END;
 
@@ -1492,15 +1493,15 @@ BEGIN
     IF @Status IS NULL
     BEGIN
         SELECT 'Error' AS Status,
-               'ไม่พบ borrow_id = ' + @BorrowId AS Message;
+               N'ไม่พบ borrow_id = ' + @BorrowId AS Message;
         RETURN;
     END;
 
     IF @Status <> 'DRAFT'
     BEGIN
         SELECT 'Error' AS Status,
-               'ส่งอนุมัติได้เฉพาะสถานะ DRAFT (ปัจจุบัน: '
-               + @Status + ')' AS Message;
+               N'ส่งอนุมัติได้เฉพาะสถานะ DRAFT (ปัจจุบัน: '
+               + @Status + N')' AS Message;
         RETURN;
     END;
 
@@ -1508,17 +1509,40 @@ BEGIN
         SELECT 1 FROM borrow_lines WHERE borrow_id = @BorrowIdInt
     )
     BEGIN
-        SELECT 'Error' AS Status, 'ไม่มีรายการสินค้าใน Borrow นี้' AS Message;
+        SELECT 'Error' AS Status, N'ไม่มีรายการสินค้าใน Borrow นี้' AS Message;
         RETURN;
     END;
 
     BEGIN TRY
         BEGIN TRANSACTION;
 
+        -- ===== Step 1: Log existing actioned approvals before DELETE (resubmit scenario) =====
+        INSERT INTO borrow_approval_logs
+            (borrow_id, approval_level, approval_role, action, actioned_by, actioned_at, remark)
+        SELECT borrow_id, approval_level, approval_role,
+               CASE status
+                   WHEN 'APPROVED' THEN 'APPROVE'
+                   WHEN 'REJECTED' THEN 'REJECT'
+                   WHEN 'REWORKED' THEN 'REWORK'
+                   ELSE status
+               END,
+               actioned_by, actioned_at, remark
+        FROM borrow_approvals
+        WHERE borrow_id = @BorrowIdInt
+          AND actioned_by IS NOT NULL;
+
+        -- ===== Step 2: Log SUBMIT action =====
+        INSERT INTO borrow_approval_logs
+            (borrow_id, approval_level, approval_role, action, actioned_by, actioned_at, remark)
+        VALUES
+            (@BorrowIdInt, 0, 'SUBMITTER', 'SUBMIT', @SubmitBy, GETDATE(), NULL);
+
+        -- ===== Step 3: Update status =====
         UPDATE borrow_headers
         SET status = 'PENDING_APPROVAL'
         WHERE borrow_id = @BorrowIdInt;
 
+        -- ===== Step 4: Reset approvals =====
         DELETE FROM borrow_approvals WHERE borrow_id = @BorrowIdInt;
 
         INSERT INTO borrow_approvals (
@@ -1532,8 +1556,8 @@ BEGIN
         COMMIT TRANSACTION;
 
         SELECT 'Success' AS Status,
-               'ส่งอนุมัติ Borrow ' + @BorrowNo
-               + ' เรียบร้อย (PENDING_APPROVAL)' AS Message;
+               N'ส่งอนุมัติ Borrow ' + @BorrowNo
+               + N' เรียบร้อย (PENDING_APPROVAL)' AS Message;
 
         -- Email → GROUP_LEAD
         SELECT
@@ -1541,11 +1565,11 @@ BEGIN
             ar.approver_id  AS employee_id,
             ve.eng_name,
             ve.email,
-            '[รออนุมัติ] Borrow เลขที่ ' + @BorrowNo AS subject,
-            'มี Borrow เลขที่ '  + @BorrowNo
-            + ' รอการอนุมัติจากท่าน'
+            N'[รออนุมัติ] Borrow เลขที่ ' + @BorrowNo AS subject,
+            N'มี Borrow เลขที่ '  + @BorrowNo
+            + N' รอการอนุมัติจากท่าน'
             + CHAR(13) + CHAR(10)
-            + 'ส่งโดย: ' + @SubmitBy                AS body
+            + N'ส่งโดย: ' + @SubmitBy                AS body
         FROM approval_roles ar
         JOIN view_email     ve ON ar.approver_id = ve.employee_id
         WHERE ar.role_code  = 'GROUP_LEAD'
@@ -1567,6 +1591,8 @@ IF EXISTS (SELECT * FROM sys.all_objects WHERE object_id = OBJECT_ID(N'[dbo].[sp
 GO
 
 CREATE PROCEDURE [dbo].[sp_BR_04_Approve]
+-- (ใช้ Code จากที่ออกแบบล่าสุด เปลี่ยนชื่อเท่านั้น)
+-- ALTER   PROCEDURE sp_BR_04_Approve
     @BorrowId   NVARCHAR(20),
     @Action     NVARCHAR(10),    -- APPROVE / REJECT / REWORK
     @ActionedBy NVARCHAR(100),
@@ -1576,302 +1602,302 @@ BEGIN
     SET NOCOUNT ON;
 
     ------------------------------------------------------------
-    -- Normalize
-    ------------------------------------------------------------
-    SET @BorrowId   = NULLIF(LTRIM(RTRIM(@BorrowId)),   '');
-    SET @Action     = UPPER(NULLIF(LTRIM(RTRIM(@Action)), ''));
-    SET @ActionedBy = NULLIF(LTRIM(RTRIM(@ActionedBy)), '');
-    SET @Remark     = NULLIF(LTRIM(RTRIM(@Remark)),     '');
+-- Normalize
+------------------------------------------------------------
+SET @BorrowId   = NULLIF(LTRIM(RTRIM(@BorrowId)),   '');
+SET @Action     = UPPER(NULLIF(LTRIM(RTRIM(@Action)), ''));
+SET @ActionedBy = NULLIF(LTRIM(RTRIM(@ActionedBy)), '');
+SET @Remark     = NULLIF(LTRIM(RTRIM(@Remark)),     '');
+
+------------------------------------------------------------
+-- 1) ตรวจ parameter
+------------------------------------------------------------
+IF @BorrowId IS NULL OR ISNUMERIC(@BorrowId) = 0
+BEGIN
+    SELECT 'Error' AS Status, 'กรุณาระบุ @BorrowId' AS Message;
+    RETURN;
+END;
+
+IF @ActionedBy IS NULL
+BEGIN
+    SELECT 'Error' AS Status, 'กรุณาระบุ @ActionedBy' AS Message;
+    RETURN;
+END;
+
+IF @Action NOT IN ('APPROVE', 'REJECT', 'REWORK')
+BEGIN
+    SELECT 'Error' AS Status,
+           'Action ที่รองรับ: APPROVE, REJECT, REWORK' AS Message;
+    RETURN;
+END;
+
+-- REWORK และ REJECT ต้องระบุ Remark
+IF @Action IN ('REJECT', 'REWORK') AND @Remark IS NULL
+BEGIN
+    SELECT 'Error' AS Status,
+           'กรุณาระบุ @Remark สำหรับ ' + @Action AS Message;
+    RETURN;
+END;
+
+DECLARE @BorrowIdInt INT = CAST(@BorrowId AS INT);
+
+------------------------------------------------------------
+-- 2) ดึงข้อมูล Borrow
+------------------------------------------------------------
+DECLARE
+    @CurrentStatus VARCHAR(30),
+    @BorrowNo      VARCHAR(20),
+    @CreatedBy     NVARCHAR(100),
+    @SupplierId    INT;
+
+SELECT
+    @CurrentStatus = status,
+    @BorrowNo      = borrow_no,
+    @CreatedBy     = created_by,
+    @SupplierId    = supplier_id
+FROM borrow_headers
+WHERE borrow_id = @BorrowIdInt;
+
+IF @CurrentStatus IS NULL
+BEGIN
+    SELECT 'Error' AS Status,
+           'ไม่พบ borrow_id = ' + @BorrowId AS Message;
+    RETURN;
+END;
+
+IF @CurrentStatus NOT IN ('PENDING_APPROVAL', 'APPROVED_L1', 'APPROVED_L2')
+BEGIN
+    SELECT 'Error' AS Status,
+           'ไม่สามารถดำเนินการได้: Borrow อยู่ในสถานะ '
+           + @CurrentStatus AS Message;
+    RETURN;
+END;
+
+------------------------------------------------------------
+-- 3) ตรวจสิทธิ์จาก approval_roles
+------------------------------------------------------------
+DECLARE @Role NVARCHAR(50);
+
+SELECT @Role = role_code
+FROM approval_roles
+WHERE approver_id = @ActionedBy
+  AND is_active   = 1;
+
+IF @Role IS NULL
+BEGIN
+    SELECT 'Error' AS Status,
+           'รหัสพนักงาน ' + @ActionedBy
+           + ' ไม่มีสิทธิ์อนุมัติ' AS Message;
+    RETURN;
+END;
+
+------------------------------------------------------------
+-- 4) ตรวจลำดับการอนุมัติ
+------------------------------------------------------------
+DECLARE @ExpectedRole NVARCHAR(50) = CASE @CurrentStatus
+    WHEN 'PENDING_APPROVAL' THEN 'GROUP_LEAD'
+    WHEN 'APPROVED_L1'      THEN 'MANAGER'
+    WHEN 'APPROVED_L2'      THEN 'DEPARTMENT'
+END;
+
+IF @Role <> @ExpectedRole
+BEGIN
+    SELECT 'Error' AS Status,
+           'รหัสพนักงาน ' + @ActionedBy
+           + ' เป็น ' + @Role
+           + ' แต่ลำดับนี้ต้องให้ ' + @ExpectedRole
+           + ' ดำเนินการก่อน' AS Message;
+    RETURN;
+END;
+
+IF NOT EXISTS (
+    SELECT 1 FROM borrow_approvals
+    WHERE borrow_id     = @BorrowIdInt
+      AND approval_role = @Role
+      AND status        = 'PENDING'
+)
+BEGIN
+    SELECT 'Error' AS Status,
+           'approval ระดับ ' + @Role
+           + ' ของ Borrow นี้ไม่ได้อยู่ในสถานะ PENDING' AS Message;
+    RETURN;
+END;
+
+------------------------------------------------------------
+-- 5) กำหนด Next Status
+------------------------------------------------------------
+DECLARE @NextStatus VARCHAR(30) = CASE
+    WHEN @Action = 'REJECT'       THEN 'CANCELLED'
+    WHEN @Action = 'REWORK'       THEN 'DRAFT'
+    WHEN @Role   = 'GROUP_LEAD'   THEN 'APPROVED_L1'
+    WHEN @Role   = 'MANAGER'      THEN 'APPROVED_L2'
+    WHEN @Role   = 'DEPARTMENT'   THEN 'APPROVED'
+END;
+
+BEGIN TRY
+    BEGIN TRANSACTION;
 
     ------------------------------------------------------------
-    -- 1) ตรวจ parameter
+    -- 6) Update approval row ปัจจุบัน
     ------------------------------------------------------------
-    IF @BorrowId IS NULL OR ISNUMERIC(@BorrowId) = 0
-    BEGIN
-        SELECT 'Error' AS Status, 'กรุณาระบุ @BorrowId' AS Message;
-        RETURN;
-    END;
-
-    IF @ActionedBy IS NULL
-    BEGIN
-        SELECT 'Error' AS Status, 'กรุณาระบุ @ActionedBy' AS Message;
-        RETURN;
-    END;
-
-    IF @Action NOT IN ('APPROVE', 'REJECT', 'REWORK')
-    BEGIN
-        SELECT 'Error' AS Status,
-               'Action ที่รองรับ: APPROVE, REJECT, REWORK' AS Message;
-        RETURN;
-    END;
-
-    -- REWORK และ REJECT ต้องระบุ Remark
-    IF @Action IN ('REJECT', 'REWORK') AND @Remark IS NULL
-    BEGIN
-        SELECT 'Error' AS Status,
-               'กรุณาระบุ @Remark สำหรับ ' + @Action AS Message;
-        RETURN;
-    END;
-
-    DECLARE @BorrowIdInt INT = CAST(@BorrowId AS INT);
+    UPDATE borrow_approvals
+    SET
+        status      = @Action,
+        actioned_by = @ActionedBy,
+        actioned_at = GETDATE(),
+        remark      = @Remark
+    WHERE borrow_id     = @BorrowIdInt
+      AND approval_role = @Role;
 
     ------------------------------------------------------------
-    -- 2) ดึงข้อมูล Borrow
+    -- 7) Update Borrow status
     ------------------------------------------------------------
-    DECLARE
-        @CurrentStatus VARCHAR(30),
-        @BorrowNo      VARCHAR(20),
-        @CreatedBy     NVARCHAR(100),
-        @SupplierId    INT;
-
-    SELECT
-        @CurrentStatus = status,
-        @BorrowNo      = borrow_no,
-        @CreatedBy     = created_by,
-        @SupplierId    = supplier_id
-    FROM borrow_headers
+    UPDATE borrow_headers
+    SET status = @NextStatus
     WHERE borrow_id = @BorrowIdInt;
 
-    IF @CurrentStatus IS NULL
+    ------------------------------------------------------------
+    -- 8) REJECT → ยกเลิก approval ที่เหลือทั้งหมด
+    ------------------------------------------------------------
+    IF @Action = 'REJECT'
     BEGIN
-        SELECT 'Error' AS Status,
-               'ไม่พบ borrow_id = ' + @BorrowId AS Message;
-        RETURN;
+        UPDATE borrow_approvals
+        SET status = 'CANCELLED'
+        WHERE borrow_id = @BorrowIdInt
+          AND status    = 'PENDING';
     END;
 
-    IF @CurrentStatus NOT IN ('PENDING_APPROVAL', 'APPROVED_L1', 'APPROVED_L2')
+    ------------------------------------------------------------
+    -- 9) REWORK → Reset approval ทุกระดับกลับเป็น PENDING
+    --            เพื่อให้ส่งอนุมัติใหม่ตั้งแต่ต้น
+    ------------------------------------------------------------
+    IF @Action = 'REWORK'
     BEGIN
-        SELECT 'Error' AS Status,
-               'ไม่สามารถดำเนินการได้: Borrow อยู่ในสถานะ '
-               + @CurrentStatus AS Message;
-        RETURN;
-    END;
-
-    ------------------------------------------------------------
-    -- 3) ตรวจสิทธิ์จาก approval_roles
-    ------------------------------------------------------------
-    DECLARE @Role NVARCHAR(50);
-
-    SELECT @Role = role_code
-    FROM approval_roles
-    WHERE approver_id = @ActionedBy
-      AND is_active   = 1;
-
-    IF @Role IS NULL
-    BEGIN
-        SELECT 'Error' AS Status,
-               'รหัสพนักงาน ' + @ActionedBy
-               + ' ไม่มีสิทธิ์อนุมัติ' AS Message;
-        RETURN;
-    END;
-
-    ------------------------------------------------------------
-    -- 4) ตรวจลำดับการอนุมัติ
-    ------------------------------------------------------------
-    DECLARE @ExpectedRole NVARCHAR(50) = CASE @CurrentStatus
-        WHEN 'PENDING_APPROVAL' THEN 'GROUP_LEAD'
-        WHEN 'APPROVED_L1'      THEN 'MANAGER'
-        WHEN 'APPROVED_L2'      THEN 'DEPARTMENT'
-    END;
-
-    IF @Role <> @ExpectedRole
-    BEGIN
-        SELECT 'Error' AS Status,
-               'รหัสพนักงาน ' + @ActionedBy
-               + ' เป็น ' + @Role
-               + ' แต่ลำดับนี้ต้องให้ ' + @ExpectedRole
-               + ' ดำเนินการก่อน' AS Message;
-        RETURN;
-    END;
-
-    IF NOT EXISTS (
-        SELECT 1 FROM borrow_approvals
-        WHERE borrow_id     = @BorrowIdInt
-          AND approval_role = @Role
-          AND status        = 'PENDING'
-    )
-    BEGIN
-        SELECT 'Error' AS Status,
-               'approval ระดับ ' + @Role
-               + ' ของ Borrow นี้ไม่ได้อยู่ในสถานะ PENDING' AS Message;
-        RETURN;
-    END;
-
-    ------------------------------------------------------------
-    -- 5) กำหนด Next Status
-    ------------------------------------------------------------
-    DECLARE @NextStatus VARCHAR(30) = CASE
-        WHEN @Action = 'REJECT'       THEN 'CANCELLED'
-        WHEN @Action = 'REWORK'       THEN 'DRAFT'
-        WHEN @Role   = 'GROUP_LEAD'   THEN 'APPROVED_L1'
-        WHEN @Role   = 'MANAGER'      THEN 'APPROVED_L2'
-        WHEN @Role   = 'DEPARTMENT'   THEN 'APPROVED'
-    END;
-
-    BEGIN TRY
-        BEGIN TRANSACTION;
-
-        ------------------------------------------------------------
-        -- 6) Update approval row ปัจจุบัน
-        ------------------------------------------------------------
         UPDATE borrow_approvals
         SET
-            status      = @Action,
-            actioned_by = @ActionedBy,
-            actioned_at = GETDATE(),
-            remark      = @Remark
-        WHERE borrow_id     = @BorrowIdInt
-          AND approval_role = @Role;
-
-        ------------------------------------------------------------
-        -- 7) Update Borrow status
-        ------------------------------------------------------------
-        UPDATE borrow_headers
-        SET status = @NextStatus
+            status      = 'PENDING',
+            actioned_by = NULL,
+            actioned_at = NULL,
+            remark      = NULL
         WHERE borrow_id = @BorrowIdInt;
+    END;
 
-        ------------------------------------------------------------
-        -- 8) REJECT → ยกเลิก approval ที่เหลือทั้งหมด
-        ------------------------------------------------------------
-        IF @Action = 'REJECT'
-        BEGIN
-            UPDATE borrow_approvals
-            SET status = 'CANCELLED'
-            WHERE borrow_id = @BorrowIdInt
-              AND status    = 'PENDING';
+    COMMIT TRANSACTION;
+
+    SELECT 'Success' AS Status,
+           CASE @Action
+               WHEN 'APPROVE' THEN 'อนุมัติ ' + @BorrowNo
+                                   + ' โดย ' + @ActionedBy
+                                   + ' (' + @Role + ')'
+                                   + ' → ' + @NextStatus
+               WHEN 'REJECT'  THEN 'ยกเลิก ' + @BorrowNo
+                                   + ' โดย ' + @ActionedBy
+                                   + ' (' + @Role + ')'
+                                   + ' → CANCELLED'
+               WHEN 'REWORK'  THEN 'ส่งกลับแก้ไข ' + @BorrowNo
+                                   + ' โดย ' + @ActionedBy
+                                   + ' (' + @Role + ')'
+                                   + ' → DRAFT (Reset ทุกระดับ)'
+           END AS Message;
+
+    ------------------------------------------------------------
+    -- 10) Return Email สำหรับ Application ส่งแจ้งเตือน
+    ------------------------------------------------------------
+    IF @Action = 'REJECT'
+    BEGIN
+        -- แจ้ง HR ว่าถูกยกเลิกถาวร
+        SELECT
+            'HR'             AS notify_role,
+            @CreatedBy       AS employee_id,
+            ve.eng_name,
+            ve.email,
+            '[ยกเลิก] Borrow ' + @BorrowNo
+            + ' ถูกปฏิเสธโดย ' + @Role
+                             AS subject,
+            'Borrow เลขที่ ' + @BorrowNo
+            + ' ถูกปฏิเสธโดย ' + @ActionedBy
+            + ' (' + @Role + ')'
+            + CHAR(13) + CHAR(10)
+            + 'เหตุผล: '    + @Remark
+            + CHAR(13) + CHAR(10)
+            + 'สถานะ: CANCELLED (ไม่สามารถดำเนินการต่อได้)'
+                             AS body
+        FROM view_email ve
+        WHERE ve.employee_id = @CreatedBy;
+    END
+    ELSE IF @Action = 'REWORK'
+    BEGIN
+        -- แจ้ง HR ให้กลับไปแก้ไข
+        SELECT
+            'HR'             AS notify_role,
+            @CreatedBy       AS employee_id,
+            ve.eng_name,
+            ve.email,
+            '[แก้ไข] Borrow ' + @BorrowNo
+            + ' ส่งกลับให้แก้ไข'
+                             AS subject,
+            'Borrow เลขที่ ' + @BorrowNo
+            + ' ถูกส่งกลับให้แก้ไขโดย ' + @ActionedBy
+            + ' (' + @Role + ')'
+            + CHAR(13) + CHAR(10)
+            + 'เหตุผล: '    + @Remark
+            + CHAR(13) + CHAR(10)
+            + 'กรุณาแก้ไขและส่งอนุมัติใหม่อีกครั้ง'
+                             AS body
+        FROM view_email ve
+        WHERE ve.employee_id = @CreatedBy;
+    END
+    ELSE IF @Action = 'APPROVE' AND @NextStatus = 'APPROVED'
+    BEGIN
+        -- แจ้ง HR ว่าอนุมัติครบแล้ว รอรับยา
+        SELECT
+            'HR'             AS notify_role,
+            @CreatedBy       AS employee_id,
+            ve.eng_name,
+            ve.email,
+            '[อนุมัติแล้ว] Borrow ' + @BorrowNo
+            + ' พร้อมรับยา'  AS subject,
+            'Borrow เลขที่ ' + @BorrowNo
+            + ' ได้รับการอนุมัติครบทุกระดับแล้ว'
+            + CHAR(13) + CHAR(10)
+            + 'กรุณาดำเนินการรับยาจาก Supplier'
+                             AS body
+        FROM view_email ve
+        WHERE ve.employee_id = @CreatedBy;
+    END
+    ELSE IF @Action = 'APPROVE'
+    BEGIN
+        -- แจ้งผู้อนุมัติระดับถัดไป
+        DECLARE @NextRole NVARCHAR(50) = CASE @Role
+            WHEN 'GROUP_LEAD' THEN 'MANAGER'
+            WHEN 'MANAGER'    THEN 'DEPARTMENT'
         END;
 
-        ------------------------------------------------------------
-        -- 9) REWORK → Reset approval ทุกระดับกลับเป็น PENDING
-        --            เพื่อให้ส่งอนุมัติใหม่ตั้งแต่ต้น
-        ------------------------------------------------------------
-        IF @Action = 'REWORK'
-        BEGIN
-            UPDATE borrow_approvals
-            SET
-                status      = 'PENDING',
-                actioned_by = NULL,
-                actioned_at = NULL,
-                remark      = NULL
-            WHERE borrow_id = @BorrowIdInt;
-        END;
-
-        COMMIT TRANSACTION;
-
-        SELECT 'Success' AS Status,
-               CASE @Action
-                   WHEN 'APPROVE' THEN 'อนุมัติ ' + @BorrowNo
-                                       + ' โดย ' + @ActionedBy
-                                       + ' (' + @Role + ')'
-                                       + ' → ' + @NextStatus
-                   WHEN 'REJECT'  THEN 'ยกเลิก ' + @BorrowNo
-                                       + ' โดย ' + @ActionedBy
-                                       + ' (' + @Role + ')'
-                                       + ' → CANCELLED'
-                   WHEN 'REWORK'  THEN 'ส่งกลับแก้ไข ' + @BorrowNo
-                                       + ' โดย ' + @ActionedBy
-                                       + ' (' + @Role + ')'
-                                       + ' → DRAFT (Reset ทุกระดับ)'
-               END AS Message;
-
-        ------------------------------------------------------------
-        -- 10) Return Email สำหรับ Application ส่งแจ้งเตือน
-        ------------------------------------------------------------
-        IF @Action = 'REJECT'
-        BEGIN
-            -- แจ้ง HR ว่าถูกยกเลิกถาวร
-            SELECT
-                'HR'             AS notify_role,
-                @CreatedBy       AS employee_id,
-                ve.eng_name,
-                ve.email,
-                '[ยกเลิก] Borrow ' + @BorrowNo
-                + ' ถูกปฏิเสธโดย ' + @Role
+        SELECT
+            ar.role_code         AS notify_role,
+            ar.approver_id       AS employee_id,
+            ve.eng_name,
+            ve.email,
+            '[รออนุมัติ] Borrow ' + @BorrowNo
                                  AS subject,
-                'Borrow เลขที่ ' + @BorrowNo
-                + ' ถูกปฏิเสธโดย ' + @ActionedBy
-                + ' (' + @Role + ')'
-                + CHAR(13) + CHAR(10)
-                + 'เหตุผล: '    + @Remark
-                + CHAR(13) + CHAR(10)
-                + 'สถานะ: CANCELLED (ไม่สามารถดำเนินการต่อได้)'
+            'มี Borrow เลขที่ '  + @BorrowNo
+            + ' รอการอนุมัติจากท่าน'
+            + CHAR(13) + CHAR(10)
+            + 'ผ่านการอนุมัติจาก ' + @Role
+            + ' โดย ' + @ActionedBy + ' แล้ว'
+            + CHAR(13) + CHAR(10)
+            + 'กรุณาเข้าสู่ระบบเพื่อตรวจสอบและอนุมัติ'
                                  AS body
-            FROM view_email ve
-            WHERE ve.employee_id = @CreatedBy;
-        END
-        ELSE IF @Action = 'REWORK'
-        BEGIN
-            -- แจ้ง HR ให้กลับไปแก้ไข
-            SELECT
-                'HR'             AS notify_role,
-                @CreatedBy       AS employee_id,
-                ve.eng_name,
-                ve.email,
-                '[แก้ไข] Borrow ' + @BorrowNo
-                + ' ส่งกลับให้แก้ไข'
-                                 AS subject,
-                'Borrow เลขที่ ' + @BorrowNo
-                + ' ถูกส่งกลับให้แก้ไขโดย ' + @ActionedBy
-                + ' (' + @Role + ')'
-                + CHAR(13) + CHAR(10)
-                + 'เหตุผล: '    + @Remark
-                + CHAR(13) + CHAR(10)
-                + 'กรุณาแก้ไขและส่งอนุมัติใหม่อีกครั้ง'
-                                 AS body
-            FROM view_email ve
-            WHERE ve.employee_id = @CreatedBy;
-        END
-        ELSE IF @Action = 'APPROVE' AND @NextStatus = 'APPROVED'
-        BEGIN
-            -- แจ้ง HR ว่าอนุมัติครบแล้ว รอรับยา
-            SELECT
-                'HR'             AS notify_role,
-                @CreatedBy       AS employee_id,
-                ve.eng_name,
-                ve.email,
-                '[อนุมัติแล้ว] Borrow ' + @BorrowNo
-                + ' พร้อมรับยา'  AS subject,
-                'Borrow เลขที่ ' + @BorrowNo
-                + ' ได้รับการอนุมัติครบทุกระดับแล้ว'
-                + CHAR(13) + CHAR(10)
-                + 'กรุณาดำเนินการรับยาจาก Supplier'
-                                 AS body
-            FROM view_email ve
-            WHERE ve.employee_id = @CreatedBy;
-        END
-        ELSE IF @Action = 'APPROVE'
-        BEGIN
-            -- แจ้งผู้อนุมัติระดับถัดไป
-            DECLARE @NextRole NVARCHAR(50) = CASE @Role
-                WHEN 'GROUP_LEAD' THEN 'MANAGER'
-                WHEN 'MANAGER'    THEN 'DEPARTMENT'
-            END;
-
-            SELECT
-                ar.role_code         AS notify_role,
-                ar.approver_id       AS employee_id,
-                ve.eng_name,
-                ve.email,
-                '[รออนุมัติ] Borrow ' + @BorrowNo
-                                     AS subject,
-                'มี Borrow เลขที่ '  + @BorrowNo
-                + ' รอการอนุมัติจากท่าน'
-                + CHAR(13) + CHAR(10)
-                + 'ผ่านการอนุมัติจาก ' + @Role
-                + ' โดย ' + @ActionedBy + ' แล้ว'
-                + CHAR(13) + CHAR(10)
-                + 'กรุณาเข้าสู่ระบบเพื่อตรวจสอบและอนุมัติ'
-                                     AS body
-            FROM approval_roles ar
-            JOIN view_email     ve ON ar.approver_id = ve.employee_id
-            WHERE ar.role_code  = @NextRole
-              AND ar.is_active  = 1;
-        END;
-    END TRY
-    BEGIN CATCH
-        IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
-        SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message;
-    END CATCH;
+        FROM approval_roles ar
+        JOIN view_email     ve ON ar.approver_id = ve.employee_id
+        WHERE ar.role_code  = @NextRole
+          AND ar.is_active  = 1;
+    END;
+END TRY
+BEGIN CATCH
+    IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+    SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message;
+END CATCH;
 END;
 GO
 

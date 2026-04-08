@@ -18,7 +18,7 @@ export class EmployeesService {
   }
 
   async findAll() {
-    const query: string = `SELECT * FROM view_employee;`;
+    const query: string = `SELECT * FROM view_employee_all;`;
     const employees: IViewEmployee[] = await this.databaseService.query<
       IViewEmployee[]
     >(this.DATABASE_NAME, query);

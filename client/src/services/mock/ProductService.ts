@@ -76,9 +76,13 @@ export const ProductService = {
     return Promise.resolve(this.getProductsData());
   },
 
+<<<<<<< HEAD
   getProductsWithOrdersSmall(): Promise<
     (Product & { orders: ProductOrder[] })[]
   > {
+=======
+  getProductsWithOrdersSmall(): Promise<(Product & { orders: ProductOrder[] })[]> {
+>>>>>>> dev_borrow
     const orders: ProductOrder[] = [
       {
         id: '1000',
@@ -96,10 +100,17 @@ export const ProductService = {
     return Promise.resolve(
       this.getProductsData()
         .slice(0, 5)
+<<<<<<< HEAD
         .map(product => ({
           ...product,
           orders: orders.filter(order => order.productCode === product.code),
         }))
+=======
+        .map((product) => ({
+          ...product,
+          orders: orders.filter((order) => order.productCode === product.code),
+        })),
+>>>>>>> dev_borrow
     );
   },
 };

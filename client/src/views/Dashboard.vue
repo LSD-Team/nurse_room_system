@@ -5,6 +5,7 @@
   import RevenueStreamWidget from '@/components/dashboard/RevenueStreamWidget.vue';
   import StatsWidget from '@/components/dashboard/StatsWidget.vue';
 
+<<<<<<< HEAD
   import { useMainStore } from '@/stores/main.store';
   import { onMounted } from 'vue';
   const mainStore = useMainStore();
@@ -12,6 +13,15 @@
   onMounted(async () => {
     await mainStore.getEmployees();
   });
+=======
+import { useMainStore } from '@/stores/main.store';
+import { onMounted } from 'vue';
+const mainStore = useMainStore();
+
+onMounted(async () => {
+  await mainStore.getEmployees();
+});
+>>>>>>> dev_borrow
 </script>
 
 <template>
@@ -19,7 +29,10 @@
     <StatsWidget />
 
     <div class="col-span-12 xl:col-span-6">
+<<<<<<< HEAD
       <pre>{{ mainStore._employees }}</pre>
+=======
+>>>>>>> dev_borrow
       <RecentSalesWidget />
       <BestSellingWidget />
     </div>
