@@ -9,17 +9,10 @@
   const treeTableValue = ref<any[]>([]);
   const selectedTreeTableValue = ref<TreeTableSelectionKeys>({});
 
-<<<<<<< HEAD
   onMounted(() => {
     treeValue.value = NodeService.getTreeNodesData();
     treeTableValue.value = NodeService.getTreeTableNodesData();
   });
-=======
-onMounted(() => {
-  treeValue.value = NodeService.getTreeNodesData();
-  treeTableValue.value = NodeService.getTreeTableNodesData();
-});
->>>>>>> dev_borrow
 </script>
 
 <template>

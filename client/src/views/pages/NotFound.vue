@@ -27,17 +27,12 @@
             class="logo-image"
           />
           <!-- horizontal line tailwindcss -->
-<<<<<<< HEAD
           <div
             class="border-t border-surface-300 dark:border-surface-500 w-full my-8"
           ></div>
           <h1
             class="text-surface-900 dark:text-surface-0 font-bold text-3xl lg:text-3xl mb-2"
           >
-=======
-          <div class="border-t border-surface-300 dark:border-surface-500 w-full my-8"></div>
-          <h1 class="text-surface-900 dark:text-surface-0 font-bold text-3xl lg:text-3xl mb-2">
->>>>>>> dev_borrow
             404 : Not Found
           </h1>
           <div class="text-surface-600 dark:text-surface-200 mb-8">
@@ -51,17 +46,9 @@
 </template>
 
 <style lang="scss" scoped>
-<<<<<<< HEAD
   .logo-image {
     width: 35vw;
     height: auto;
     margin-bottom: 1rem;
   }
-=======
-.logo-image {
-  width: 35vw;
-  height: auto;
-  margin-bottom: 1rem;
-}
->>>>>>> dev_borrow
 </style>

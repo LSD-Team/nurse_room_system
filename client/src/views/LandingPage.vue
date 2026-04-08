@@ -63,17 +63,11 @@
       >
         <div class="flex items-center gap-2 text-2xl font-bold">
           <span class="text-3xl">🏥</span>
-<<<<<<< HEAD
           <span
             class="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent"
           >
             Nurse Room
           </span>
-=======
-          <span class="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent"
-            >Nurse Room</span
-          >
->>>>>>> dev_borrow
         </div>
         <Button
           label="เข้าสู่ระบบ"
@@ -92,13 +86,9 @@
         >
           Nurse Room Management System
         </h1>
-<<<<<<< HEAD
         <p
           class="text-xl text-slate-300 mb-8 max-w-2xl mx-auto leading-relaxed"
         >
-=======
-        <p class="text-xl text-slate-300 mb-8 max-w-2xl mx-auto leading-relaxed">
->>>>>>> dev_borrow
           ระบบจัดการห้องพยาบาลแบบครบถ้วน ช่วยให้การบริหารและจัดการห้องพยาบาล
           และพยาบาลทำงานได้อย่างมีประสิทธิภาพสูงสุด
         </p>
@@ -233,12 +223,8 @@
       >
         <h2 class="text-3xl font-bold mb-4">พร้อมที่จะเริ่มต้นหรือยัง?</h2>
         <p class="text-lg mb-8 opacity-90">
-<<<<<<< HEAD
           เข้าใช้งานระบบ Nurse Room Management
           ทันทีและเพิ่มประสิทธิภาพการทำงานของคุณ
-=======
-          เข้าใช้งานระบบ Nurse Room Management ทันทีและเพิ่มประสิทธิภาพการทำงานของคุณ
->>>>>>> dev_borrow
         </p>
         <Button
           label="เข้าใช้งานตอนนี้"
@@ -288,21 +274,15 @@
 </template>
 
 <style scoped>
-<<<<<<< HEAD
   @keyframes pulse {
     0%,
     100% {
       opacity: 1;
     }
+
     50% {
       opacity: 0.8;
     }
-=======
-@keyframes pulse {
-  0%,
-  100% {
-    opacity: 1;
->>>>>>> dev_borrow
   }
 
   .animate-pulse {

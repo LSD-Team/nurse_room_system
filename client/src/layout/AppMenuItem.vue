@@ -7,7 +7,6 @@
 
   const { layoutState, setActiveMenuItem, onMenuToggle } = useLayout();
 
-<<<<<<< HEAD
   const props = defineProps({
     item: {
       type: Object,
@@ -26,26 +25,6 @@
       default: '',
     },
   });
-=======
-const props = defineProps({
-  item: {
-    type: Object,
-    default: () => ({}),
-  },
-  index: {
-    type: Number,
-    default: 0,
-  },
-  root: {
-    type: Boolean,
-    default: true,
-  },
-  parentItemKey: {
-    type: String,
-    default: '',
-  },
-});
->>>>>>> dev_borrow
 
   const isActiveMenu = ref(false);
   const itemKey = ref<string>('');
@@ -53,21 +32,13 @@ const props = defineProps({
   // Create a computed property that always returns a string for use in the template
   const itemKeyString = computed(() => itemKey.value);
 
-<<<<<<< HEAD
   onBeforeMount(() => {
     itemKey.value = props.parentItemKey
       ? props.parentItemKey + '-' + props.index
       : String(props.index);
-=======
-onBeforeMount(() => {
-  itemKey.value = props.parentItemKey
-    ? props.parentItemKey + '-' + props.index
-    : String(props.index);
->>>>>>> dev_borrow
 
-  const activeItem = layoutState.activeMenuItem;
+    const activeItem = layoutState.activeMenuItem;
 
-<<<<<<< HEAD
     isActiveMenu.value =
       activeItem === itemKey.value ||
       (activeItem ? activeItem.startsWith(itemKey.value + '-') : false);
@@ -117,54 +88,6 @@ onBeforeMount(() => {
   <li
     :class="{ 'layout-root-menuitem': root, 'active-menuitem': isActiveMenu }"
   >
-=======
-  isActiveMenu.value =
-    activeItem === itemKey.value ||
-    (activeItem ? activeItem.startsWith(itemKey.value + '-') : false);
-});
-
-watch(
-  () => layoutState.activeMenuItem,
-  (newVal) => {
-    isActiveMenu.value =
-      newVal === itemKey.value || (newVal && newVal.startsWith(itemKey.value + '-'));
-  },
-);
-
-function itemClick(event, item) {
-  if (item.disabled) {
-    event.preventDefault();
-    return;
-  }
-
-  if (
-    (item.to || item.url) &&
-    (layoutState.staticMenuMobileActive || layoutState.overlayMenuActive)
-  ) {
-    onMenuToggle();
-  }
-
-  if (item.command) {
-    item.command({ originalEvent: event, item: item });
-  }
-
-  const foundItemKey = item.items
-    ? isActiveMenu.value
-      ? props.parentItemKey
-      : itemKey.value
-    : itemKey.value;
-
-  setActiveMenuItem(foundItemKey);
-}
-
-function checkActiveRoute(item) {
-  return route.path === item.to;
-}
-</script>
-
-<template>
-  <li :class="{ 'layout-root-menuitem': root, 'active-menuitem': isActiveMenu }">
->>>>>>> dev_borrow
     <!-- <div v-if="root && item.visible !== false" class="layout-menuitem-root-text">Nurse Room System</div> -->
     <a
       v-if="(!item.to || item.items) && item.visible !== false"
@@ -176,14 +99,10 @@ function checkActiveRoute(item) {
     >
       <i :class="[item.icon, item.color]" class="layout-menuitem-icon"></i>
       <span class="layout-menuitem-text">{{ item.label }}</span>
-<<<<<<< HEAD
       <i
         class="pi pi-fw pi-angle-down layout-submenu-toggler"
         v-if="item.items"
       ></i>
-=======
-      <i class="pi pi-fw pi-angle-down layout-submenu-toggler" v-if="item.items"></i>
->>>>>>> dev_borrow
     </a>
     <router-link
       v-if="item.to && !item.items && item.visible !== false"
@@ -194,7 +113,6 @@ function checkActiveRoute(item) {
     >
       <i :class="[item.icon, item.color]" class="layout-menuitem-icon"></i>
       <span class="layout-menuitem-text">{{ item.label }}</span>
-<<<<<<< HEAD
       <i
         class="pi pi-fw pi-angle-down layout-submenu-toggler"
         v-if="item.items"
@@ -204,11 +122,6 @@ function checkActiveRoute(item) {
       v-if="item.items && item.visible !== false"
       name="layout-submenu"
     >
-=======
-      <i class="pi pi-fw pi-angle-down layout-submenu-toggler" v-if="item.items"></i>
-    </router-link>
-    <Transition v-if="item.items && item.visible !== false" name="layout-submenu">
->>>>>>> dev_borrow
       <ul
         v-show="root ? true : isActiveMenu"
         class="layout-submenu"
@@ -228,31 +141,18 @@ function checkActiveRoute(item) {
 </template>
 
 <style lang="scss" scoped>
-<<<<<<< HEAD
   .layout-submenu {
     list-style: none;
     margin: 0;
     padding: 0;
   }
+
   .layout-submenu > li {
     margin-top: 20px;
     margin-bottom: 20px;
   }
+
   li:not(.layout-root-menuitem) > .layout-menuitem-root-text {
     padding-left: 1.5rem;
   }
-=======
-.layout-submenu {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-.layout-submenu > li {
-  margin-top: 20px;
-  margin-bottom: 20px;
-}
-li:not(.layout-root-menuitem) > .layout-menuitem-root-text {
-  padding-left: 1.5rem;
-}
->>>>>>> dev_borrow
 </style>

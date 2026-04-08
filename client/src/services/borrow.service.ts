@@ -23,12 +23,20 @@ export class BorrowService {
   }
 
   // โ”€โ”€โ”€ เธฃเธฒเธเธฒเธขเธฒเธ•เธฒเธก supplier โ”€โ”€โ”€
-  static async getSupplierPrices(supplierId: number): Promise<ISupplierItemPrice[]> {
-    return Api.get<ISupplierItemPrice[]>(`/borrow/supplier-prices/${supplierId}`);
+  static async getSupplierPrices(
+    supplierId: number
+  ): Promise<ISupplierItemPrice[]> {
+    return Api.get<ISupplierItemPrice[]>(
+      `/borrow/supplier-prices/${supplierId}`
+    );
   }
 
   // โ”€โ”€โ”€ เธชเธฃเนเธฒเธเนเธเธขเธทเธก โ”€โ”€โ”€
-  static async createBorrow(data: { JsonLines: string; SupplierId: string; Note?: string }) {
+  static async createBorrow(data: {
+    JsonLines: string;
+    SupplierId: string;
+    Note?: string;
+  }) {
     return Api.post('/borrow', data);
   }
 
@@ -38,7 +46,7 @@ export class BorrowService {
     data: {
       JsonLines?: string;
       Note?: string;
-    },
+    }
   ) {
     return Api.put(`/borrow/${borrowId}`, data);
   }
@@ -54,7 +62,7 @@ export class BorrowService {
     data: {
       Action: 'APPROVE' | 'REJECT' | 'REWORK';
       Remark?: string;
-    },
+    }
   ) {
     return Api.post(`/borrow/${borrowId}/approve`, data);
   }

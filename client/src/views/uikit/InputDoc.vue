@@ -3,7 +3,6 @@
   import { NodeService } from '@/services/mock/NodeService';
   import { onMounted, ref } from 'vue';
 
-<<<<<<< HEAD
   // Define interfaces
   interface TreeNode {
     key: string;
@@ -55,59 +54,6 @@
     { name: 'Spain', code: 'ES' },
     { name: 'United States', code: 'US' },
   ]);
-=======
-// Define interfaces
-interface TreeNode {
-  key: string;
-  label: string;
-  data?: string;
-  icon?: string;
-  children?: TreeNode[];
-  leaf?: boolean;
-  selectable?: boolean;
-}
-
-const floatValue = ref<string | null>(null);
-const autoValue = ref<Array<{ name: string; code: string }>>([]);
-const selectedAutoValue = ref<{ name: string; code: string } | null>(null);
-const autoFilteredValue = ref<Array<{ name: string; code: string }>>([]);
-const calendarValue = ref<Date | null>(null);
-const inputNumberValue = ref<number | null>(null);
-const sliderValue = ref<number>(50);
-const ratingValue = ref<number>(0);
-const colorValue = ref<string>('#1976D2');
-const radioValue = ref<string | null>(null);
-const checkboxValue = ref<Array<string>>([]);
-const switchValue = ref<boolean>(false);
-const listboxValues = ref<Array<{ name: string; code: string }>>([
-  { name: 'New York', code: 'NY' },
-  { name: 'Rome', code: 'RM' },
-  { name: 'London', code: 'LDN' },
-  { name: 'Istanbul', code: 'IST' },
-  { name: 'Paris', code: 'PRS' },
-]);
-const listboxValue = ref(null);
-const dropdownValues = ref([
-  { name: 'New York', code: 'NY' },
-  { name: 'Rome', code: 'RM' },
-  { name: 'London', code: 'LDN' },
-  { name: 'Istanbul', code: 'IST' },
-  { name: 'Paris', code: 'PRS' },
-]);
-const dropdownValue = ref(null);
-const multiselectValues = ref([
-  { name: 'Australia', code: 'AU' },
-  { name: 'Brazil', code: 'BR' },
-  { name: 'China', code: 'CN' },
-  { name: 'Egypt', code: 'EG' },
-  { name: 'France', code: 'FR' },
-  { name: 'Germany', code: 'DE' },
-  { name: 'India', code: 'IN' },
-  { name: 'Japan', code: 'JP' },
-  { name: 'Spain', code: 'ES' },
-  { name: 'United States', code: 'US' },
-]);
->>>>>>> dev_borrow
 
   const multiselectValue = ref(null);
   const toggleValue = ref(false);
@@ -122,7 +68,6 @@ const multiselectValues = ref([
   const treeSelectNodes = ref<TreeNode[]>([]);
   const selectedNode = ref(null);
 
-<<<<<<< HEAD
   onMounted(() => {
     autoValue.value = CountryService.getData();
     treeSelectNodes.value = NodeService.getTreeNodesData();
@@ -141,24 +86,6 @@ const multiselectValues = ref([
       }
     }, 250);
   }
-=======
-onMounted(() => {
-  autoValue.value = CountryService.getData();
-  treeSelectNodes.value = NodeService.getTreeNodesData();
-});
-
-function searchCountry(event) {
-  setTimeout(() => {
-    if (!event.query.trim().length) {
-      autoFilteredValue.value = [...autoValue.value];
-    } else {
-      autoFilteredValue.value = autoValue.value.filter((country) => {
-        return country.name.toLowerCase().startsWith(event.query.toLowerCase());
-      });
-    }
-  }, 250);
-}
->>>>>>> dev_borrow
 </script>
 
 <template>
@@ -189,16 +116,12 @@ function searchCountry(event) {
         </FloatLabel>
 
         <div class="font-semibold text-xl">Textarea</div>
-<<<<<<< HEAD
         <Textarea
           placeholder="Your Message"
           :autoResize="true"
           rows="3"
           cols="30"
         />
-=======
-        <Textarea placeholder="Your Message" :autoResize="true" rows="3" cols="30" />
->>>>>>> dev_borrow
 
         <div class="font-semibold text-xl">AutoComplete</div>
         <AutoComplete
@@ -213,7 +136,6 @@ function searchCountry(event) {
         />
 
         <div class="font-semibold text-xl">DatePicker</div>
-<<<<<<< HEAD
         <DatePicker
           :showIcon="true"
           :showButtonBar="true"
@@ -226,12 +148,6 @@ function searchCountry(event) {
           showButtons
           mode="decimal"
         ></InputNumber>
-=======
-        <DatePicker :showIcon="true" :showButtonBar="true" v-model="calendarValue"></DatePicker>
-
-        <div class="font-semibold text-xl">InputNumber</div>
-        <InputNumber v-model="inputNumberValue" showButtons mode="decimal"></InputNumber>
->>>>>>> dev_borrow
       </div>
 
       <div class="card flex flex-col gap-4">
@@ -251,7 +167,6 @@ function searchCountry(event) {
         </div>
 
         <div class="font-semibold text-xl">Knob</div>
-<<<<<<< HEAD
         <Knob
           v-model="knobValue"
           :step="10"
@@ -259,9 +174,6 @@ function searchCountry(event) {
           :max="50"
           valueTemplate="{value}%"
         />
-=======
-        <Knob v-model="knobValue" :step="10" :min="-50" :max="50" valueTemplate="{value}%" />
->>>>>>> dev_borrow
       </div>
     </div>
     <div class="md:w-1/2">
@@ -269,7 +181,6 @@ function searchCountry(event) {
         <div class="font-semibold text-xl">RadioButton</div>
         <div class="flex flex-col md:flex-row gap-4">
           <div class="flex items-center">
-<<<<<<< HEAD
             <RadioButton
               id="option1"
               name="option"
@@ -294,17 +205,6 @@ function searchCountry(event) {
               value="New York"
               v-model="radioValue"
             />
-=======
-            <RadioButton id="option1" name="option" value="Chicago" v-model="radioValue" />
-            <label for="option1" class="leading-none ml-2">Chicago</label>
-          </div>
-          <div class="flex items-center">
-            <RadioButton id="option2" name="option" value="Los Angeles" v-model="radioValue" />
-            <label for="option2" class="leading-none ml-2">Los Angeles</label>
-          </div>
-          <div class="flex items-center">
-            <RadioButton id="option3" name="option" value="New York" v-model="radioValue" />
->>>>>>> dev_borrow
             <label for="option3" class="leading-none ml-2">New York</label>
           </div>
         </div>
@@ -312,7 +212,6 @@ function searchCountry(event) {
         <div class="font-semibold text-xl">Checkbox</div>
         <div class="flex flex-col md:flex-row gap-4">
           <div class="flex items-center">
-<<<<<<< HEAD
             <Checkbox
               id="checkOption1"
               name="option"
@@ -337,17 +236,6 @@ function searchCountry(event) {
               value="New York"
               v-model="checkboxValue"
             />
-=======
-            <Checkbox id="checkOption1" name="option" value="Chicago" v-model="checkboxValue" />
-            <label for="checkOption1" class="ml-2">Chicago</label>
-          </div>
-          <div class="flex items-center">
-            <Checkbox id="checkOption2" name="option" value="Los Angeles" v-model="checkboxValue" />
-            <label for="checkOption2" class="ml-2">Los Angeles</label>
-          </div>
-          <div class="flex items-center">
-            <Checkbox id="checkOption3" name="option" value="New York" v-model="checkboxValue" />
->>>>>>> dev_borrow
             <label for="checkOption3" class="ml-2">New York</label>
           </div>
         </div>

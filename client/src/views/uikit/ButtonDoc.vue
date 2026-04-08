@@ -2,7 +2,6 @@
   import { ref } from 'vue';
   import type { MenuItem } from 'primevue/menuitem';
 
-<<<<<<< HEAD
   const items = ref<MenuItem[]>([
     {
       label: 'Update',
@@ -20,39 +19,13 @@
       icon: 'pi pi-home',
     },
   ]);
-=======
-const items = ref([
-  {
-    label: 'Update',
-    icon: 'pi pi-refresh',
-  },
-  {
-    label: 'Delete',
-    icon: 'pi pi-times',
-  },
-  {
-    separator: true,
-  },
-  {
-    label: 'Home',
-    icon: 'pi pi-home',
-  },
-]);
->>>>>>> dev_borrow
 
   const loading = ref([false, false, false]);
 
-<<<<<<< HEAD
   function load(index: number) {
     loading.value[index] = true;
     setTimeout(() => (loading.value[index] = false), 1000);
   }
-=======
-function load(index: number) {
-  loading.value[index] = true;
-  setTimeout(() => (loading.value[index] = false), 1000);
-}
->>>>>>> dev_borrow
 </script>
 
 <template>
@@ -119,7 +92,6 @@ function load(index: number) {
         <div class="font-semibold text-xl">SplitButton</div>
         <div class="flex flex-wrap gap-2">
           <SplitButton label="Save" :model="items"></SplitButton>
-<<<<<<< HEAD
           <SplitButton
             label="Save"
             :model="items"
@@ -155,30 +127,17 @@ function load(index: number) {
             :model="items"
             severity="contrast"
           ></SplitButton>
-=======
-          <SplitButton label="Save" :model="items" severity="secondary"></SplitButton>
-          <SplitButton label="Save" :model="items" severity="success"></SplitButton>
-          <SplitButton label="Save" :model="items" severity="info"></SplitButton>
-          <SplitButton label="Save" :model="items" severity="warn"></SplitButton>
-          <SplitButton label="Save" :model="items" severity="help"></SplitButton>
-          <SplitButton label="Save" :model="items" severity="danger"></SplitButton>
-          <SplitButton label="Save" :model="items" severity="contrast"></SplitButton>
->>>>>>> dev_borrow
         </div>
       </div>
       <div class="card flex flex-col gap-4">
         <div class="font-semibold text-xl">Templating</div>
         <div class="flex flex-wrap gap-2">
           <Button type="button">
-<<<<<<< HEAD
             <img
               alt="logo"
               src="/demo/images/logo-white.svg"
               style="width: 1.5rem"
             />
-=======
-            <img alt="logo" src="/demo/images/logo-white.svg" style="width: 1.5rem" />
->>>>>>> dev_borrow
           </Button>
           <Button type="button" outlined severity="success">
             <img alt="logo" src="/demo/images/logo.svg" style="width: 1.5rem" />
@@ -192,7 +151,6 @@ function load(index: number) {
         <div class="font-semibold text-xl">Icons</div>
         <div class="flex flex-wrap gap-2">
           <Button icon="pi pi-star-fill" class="mr-2 mb-2"></Button>
-<<<<<<< HEAD
           <Button
             label="Bookmark"
             icon="pi pi-bookmark"
@@ -204,10 +162,6 @@ function load(index: number) {
             iconPos="right"
             class="mr-2 mb-2"
           ></Button>
-=======
-          <Button label="Bookmark" icon="pi pi-bookmark" class="mr-2 mb-2"></Button>
-          <Button label="Bookmark" icon="pi pi-bookmark" iconPos="right" class="mr-2 mb-2"></Button>
->>>>>>> dev_borrow
         </div>
       </div>
       <div class="card flex flex-col gap-4">
@@ -252,7 +206,6 @@ function load(index: number) {
         <div class="font-semibold text-xl">Rounded Text</div>
         <div class="flex flex-wrap gap-2">
           <Button icon="pi pi-check" text raised rounded />
-<<<<<<< HEAD
           <Button
             icon="pi pi-bookmark"
             severity="secondary"
@@ -260,9 +213,6 @@ function load(index: number) {
             raised
             rounded
           />
-=======
-          <Button icon="pi pi-bookmark" severity="secondary" text raised rounded />
->>>>>>> dev_borrow
           <Button icon="pi pi-search" severity="success" text raised rounded />
           <Button icon="pi pi-user" severity="info" text raised rounded />
           <Button icon="pi pi-bell" severity="warn" text raised rounded />

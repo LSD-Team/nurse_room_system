@@ -5,7 +5,6 @@
   const toast = useToast();
   const fileupload = ref();
 
-<<<<<<< HEAD
   function upload() {
     fileupload.value.upload();
   }
@@ -18,15 +17,6 @@
       life: 3000,
     });
   }
-=======
-function upload() {
-  fileupload.value.upload();
-}
-
-function onUpload() {
-  toast.add({ severity: 'info', summary: 'Success', detail: 'File Uploaded', life: 3000 });
-}
->>>>>>> dev_borrow
 </script>
 
 <template>

@@ -70,23 +70,15 @@ export function useLayout() {
     }
 
     if (window.innerWidth > 991) {
-<<<<<<< HEAD
       layoutState.staticMenuDesktopInactive =
         !layoutState.staticMenuDesktopInactive;
-=======
-      layoutState.staticMenuDesktopInactive = !layoutState.staticMenuDesktopInactive;
->>>>>>> dev_borrow
     } else {
       layoutState.staticMenuMobileActive = !layoutState.staticMenuMobileActive;
     }
   };
 
   const isSidebarActive = computed(
-<<<<<<< HEAD
     () => layoutState.overlayMenuActive || layoutState.staticMenuMobileActive
-=======
-    () => layoutState.overlayMenuActive || layoutState.staticMenuMobileActive,
->>>>>>> dev_borrow
   );
 
   const isDarkTheme = computed(() => layoutConfig.darkTheme);

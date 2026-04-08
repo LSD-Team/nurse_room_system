@@ -2,7 +2,6 @@
   import { ProductService } from '@/services/mock/ProductService';
   import { onMounted, ref } from 'vue';
 
-<<<<<<< HEAD
   interface Product {
     id: string;
     code: string;
@@ -15,20 +14,6 @@
     inventoryStatus: string;
     rating: number;
   }
-=======
-interface Product {
-  id: string;
-  code: string;
-  name: string;
-  description: string;
-  image: string;
-  price: number;
-  category: string;
-  quantity: number;
-  inventoryStatus: string;
-  rating: number;
-}
->>>>>>> dev_borrow
 
   const products = ref<Product[]>([]);
   const picklistProducts = ref<Product[][]>([[], []]);
@@ -36,7 +21,6 @@ interface Product {
   const options = ref(['list', 'grid']);
   const layout = ref('list');
 
-<<<<<<< HEAD
   onMounted(() => {
     ProductService.getProductsSmall().then(data => {
       products.value = data.slice(0, 6);
@@ -59,28 +43,6 @@ interface Product {
         return undefined;
     }
   }
-=======
-onMounted(() => {
-  ProductService.getProductsSmall().then((data) => {
-    products.value = data.slice(0, 6);
-    picklistProducts.value = [data, []];
-    orderlistProducts.value = data;
-  });
-});
-
-function getSeverity(product: Product): 'success' | 'warning' | 'danger' | undefined {
-  switch (product.inventoryStatus) {
-    case 'INSTOCK':
-      return 'success';
-    case 'LOWSTOCK':
-      return 'warning';
-    case 'OUTOFSTOCK':
-      return 'danger';
-    default:
-      return undefined;
-  }
-}
->>>>>>> dev_borrow
 </script>
 
 <template>
@@ -90,7 +52,6 @@ function getSeverity(product: Product): 'success' | 'warning' | 'danger' | undef
       <DataView :value="products" :layout="layout">
         <template #header>
           <div class="flex justify-end">
-<<<<<<< HEAD
             <SelectButton
               v-model="layout"
               :options="options"
@@ -100,11 +61,6 @@ function getSeverity(product: Product): 'success' | 'warning' | 'danger' | undef
                 <i
                   :class="[option === 'list' ? 'pi pi-bars' : 'pi pi-table']"
                 />
-=======
-            <SelectButton v-model="layout" :options="options" :allowEmpty="false">
-              <template #option="{ option }">
-                <i :class="[option === 'list' ? 'pi pi-bars' : 'pi pi-table']" />
->>>>>>> dev_borrow
               </template>
             </SelectButton>
           </div>
@@ -130,7 +86,6 @@ function getSeverity(product: Product): 'success' | 'warning' | 'danger' | undef
                     style="left: 4px; top: 4px"
                   ></Tag>
                 </div>
-<<<<<<< HEAD
                 <div
                   class="flex flex-col md:flex-row justify-between md:items-center flex-1 gap-6"
                 >
@@ -146,15 +101,6 @@ function getSeverity(product: Product): 'success' | 'warning' | 'danger' | undef
                       <div class="text-lg font-medium mt-2">
                         {{ item.name }}
                       </div>
-=======
-                <div class="flex flex-col md:flex-row justify-between md:items-center flex-1 gap-6">
-                  <div class="flex flex-row md:flex-col justify-between items-start gap-2">
-                    <div>
-                      <span class="font-medium text-surface-500 dark:text-surface-400 text-sm">{{
-                        item.category
-                      }}</span>
-                      <div class="text-lg font-medium mt-2">{{ item.name }}</div>
->>>>>>> dev_borrow
                     </div>
                     <div class="bg-surface-100 p-1" style="border-radius: 30px">
                       <div
@@ -166,13 +112,9 @@ function getSeverity(product: Product): 'success' | 'warning' | 'danger' | undef
                             0px 1px 2px 0px rgba(0, 0, 0, 0.06);
                         "
                       >
-<<<<<<< HEAD
                         <span class="text-surface-900 font-medium text-sm">
                           {{ item.rating }}
                         </span>
-=======
-                        <span class="text-surface-900 font-medium text-sm">{{ item.rating }}</span>
->>>>>>> dev_borrow
                         <i class="pi pi-star-fill text-yellow-500"></i>
                       </div>
                     </div>
@@ -224,7 +166,6 @@ function getSeverity(product: Product): 'success' | 'warning' | 'danger' | undef
                 <div class="pt-6">
                   <div class="flex flex-row justify-between items-start gap-2">
                     <div>
-<<<<<<< HEAD
                       <span
                         class="font-medium text-surface-500 dark:text-surface-400 text-sm"
                       >
@@ -233,12 +174,6 @@ function getSeverity(product: Product): 'success' | 'warning' | 'danger' | undef
                       <div class="text-lg font-medium mt-1">
                         {{ item.name }}
                       </div>
-=======
-                      <span class="font-medium text-surface-500 dark:text-surface-400 text-sm">{{
-                        item.category
-                      }}</span>
-                      <div class="text-lg font-medium mt-1">{{ item.name }}</div>
->>>>>>> dev_borrow
                     </div>
                     <div class="bg-surface-100 p-1" style="border-radius: 30px">
                       <div
@@ -250,25 +185,17 @@ function getSeverity(product: Product): 'success' | 'warning' | 'danger' | undef
                             0px 1px 2px 0px rgba(0, 0, 0, 0.06);
                         "
                       >
-<<<<<<< HEAD
                         <span class="text-surface-900 font-medium text-sm">
                           {{ item.rating }}
                         </span>
-=======
-                        <span class="text-surface-900 font-medium text-sm">{{ item.rating }}</span>
->>>>>>> dev_borrow
                         <i class="pi pi-star-fill text-yellow-500"></i>
                       </div>
                     </div>
                   </div>
                   <div class="flex flex-col gap-6 mt-6">
-<<<<<<< HEAD
                     <span class="text-2xl font-semibold">
                       ${{ item.price }}
                     </span>
-=======
-                    <span class="text-2xl font-semibold">${{ item.price }}</span>
->>>>>>> dev_borrow
                     <div class="flex gap-2">
                       <Button
                         icon="pi pi-shopping-cart"

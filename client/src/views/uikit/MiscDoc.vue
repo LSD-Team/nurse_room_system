@@ -4,7 +4,6 @@
   const value = ref(0);
   let interval: ReturnType<typeof setInterval> | null = null;
 
-<<<<<<< HEAD
   function startProgress() {
     interval = setInterval(() => {
       let newValue = value.value + Math.floor(Math.random() * 10) + 1;
@@ -29,32 +28,6 @@
   onBeforeUnmount(() => {
     endProgress();
   });
-=======
-function startProgress() {
-  interval = setInterval(() => {
-    let newValue = value.value + Math.floor(Math.random() * 10) + 1;
-    if (newValue >= 100) {
-      newValue = 100;
-    }
-    value.value = newValue;
-  }, 2000);
-}
-
-function endProgress() {
-  if (interval !== null) {
-    clearInterval(interval);
-    interval = null;
-  }
-}
-
-onMounted(() => {
-  startProgress();
-});
-
-onBeforeUnmount(() => {
-  endProgress();
-});
->>>>>>> dev_borrow
 </script>
 
 <template>
@@ -178,7 +151,6 @@ onBeforeUnmount(() => {
         <div class="font-semibold text-xl mb-4">ScrollTop</div>
         <ScrollPanel :style="{ width: '250px', height: '200px' }">
           <p>
-<<<<<<< HEAD
             Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
             eiusmod tempor incididunt ut labore et dolore magna aliqua. Vitae et
             leo duis ut diam. Ultricies mi quis hendrerit dolor magna eget est
@@ -201,23 +173,6 @@ onBeforeUnmount(() => {
             :threshold="100"
             icon="pi pi-arrow-up"
           ></ScrollTop>
-=======
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor
-            incididunt ut labore et dolore magna aliqua. Vitae et leo duis ut diam. Ultricies mi
-            quis hendrerit dolor magna eget est lorem. Amet consectetur adipiscing elit ut. Nam
-            libero justo laoreet sit amet. Pharetra massa massa ultricies mi quis hendrerit dolor
-            magna. Est ultricies integer quis auctor elit sed vulputate. Consequat ac felis donec
-            et. Tellus orci ac auctor augue mauris. Semper feugiat nibh sed pulvinar proin gravida
-            hendrerit lectus a. Tincidunt arcu non sodales neque sodales. Metus aliquam eleifend mi
-            in nulla posuere sollicitudin aliquam ultrices. Sodales ut etiam sit amet nisl purus.
-            Cursus sit amet dictum sit amet. Tristique senectus et netus et malesuada fames ac
-            turpis egestas. Et tortor consequat id porta nibh venenatis cras sed. Diam maecenas
-            ultricies mi eget mauris. Eget egestas purus viverra accumsan in nisl nisi. Suscipit
-            adipiscing bibendum est ultricies integer. Mattis aliquam faucibus purus in massa tempor
-            nec.
-          </p>
-          <ScrollTop target="parent" :threshold="100" icon="pi pi-arrow-up"></ScrollTop>
->>>>>>> dev_borrow
         </ScrollPanel>
       </div>
     </div>
@@ -247,15 +202,11 @@ onBeforeUnmount(() => {
           <Tag icon="pi pi-user" value="Primary"></Tag>
           <Tag icon="pi pi-check" severity="success" value="Success"></Tag>
           <Tag icon="pi pi-info-circle" severity="info" value="Info"></Tag>
-<<<<<<< HEAD
           <Tag
             con="pi pi-exclamation-triangle"
             severity="warn"
             value="Warn"
           ></Tag>
-=======
-          <Tag con="pi pi-exclamation-triangle" severity="warn" value="Warn"></Tag>
->>>>>>> dev_borrow
           <Tag icon="pi pi-times" severity="danger" value="Danger"></Tag>
         </div>
       </div>
@@ -275,16 +226,12 @@ onBeforeUnmount(() => {
           <Chip label="Apple" icon="pi pi-apple" class="mr-2 mb-2"></Chip>
           <Chip label="Facebook" icon="pi pi-facebook" class="mr-2 mb-2"></Chip>
           <Chip label="Google" icon="pi pi-google" class="mr-2 mb-2"></Chip>
-<<<<<<< HEAD
           <Chip
             label="Microsoft"
             icon="pi pi-microsoft"
             :removable="true"
             class="mb-2"
           ></Chip>
-=======
-          <Chip label="Microsoft" icon="pi pi-microsoft" :removable="true" class="mb-2"></Chip>
->>>>>>> dev_borrow
         </div>
 
         <div class="font-semibold my-4">Image</div>

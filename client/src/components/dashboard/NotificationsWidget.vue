@@ -4,17 +4,10 @@
 
   const menu = ref<InstanceType<typeof Menu> | null>(null);
 
-<<<<<<< HEAD
   const items = ref([
     { label: 'Add New', icon: 'pi pi-fw pi-plus' },
     { label: 'Remove', icon: 'pi pi-fw pi-trash' },
   ]);
-=======
-const items = ref([
-  { label: 'Add New', icon: 'pi pi-fw pi-plus' },
-  { label: 'Remove', icon: 'pi pi-fw pi-trash' },
-]);
->>>>>>> dev_borrow
 </script>
 
 <template>
@@ -39,21 +32,12 @@ const items = ref([
         >
           <i class="pi pi-dollar !text-xl text-blue-500"></i>
         </div>
-<<<<<<< HEAD
         <span class="text-surface-900 dark:text-surface-0 leading-normal">
           Richard Jones
           <span class="text-surface-700 dark:text-surface-100">
             has purchased a blue t-shirt for
             <span class="text-primary font-bold">$79.00</span>
           </span>
-=======
-        <span class="text-surface-900 dark:text-surface-0 leading-normal"
-          >Richard Jones
-          <span class="text-surface-700 dark:text-surface-100"
-            >has purchased a blue t-shirt for
-            <span class="text-primary font-bold">$79.00</span></span
-          >
->>>>>>> dev_borrow
         </span>
       </li>
       <li class="flex items-center py-2">
@@ -62,18 +46,11 @@ const items = ref([
         >
           <i class="pi pi-download !text-xl text-orange-500"></i>
         </div>
-<<<<<<< HEAD
         <span class="text-surface-700 dark:text-surface-100 leading-normal">
           Your request for withdrawal of
           <span class="text-primary font-bold">$2500.00</span>
           has been initiated.
         </span>
-=======
-        <span class="text-surface-700 dark:text-surface-100 leading-normal"
-          >Your request for withdrawal of <span class="text-primary font-bold">$2500.00</span> has
-          been initiated.</span
-        >
->>>>>>> dev_borrow
       </li>
     </ul>
 
@@ -85,21 +62,12 @@ const items = ref([
         >
           <i class="pi pi-dollar !text-xl text-blue-500"></i>
         </div>
-<<<<<<< HEAD
         <span class="text-surface-900 dark:text-surface-0 leading-normal">
           Keyser Wick
           <span class="text-surface-700 dark:text-surface-100">
             has purchased a black jacket for
             <span class="text-primary font-bold">$59.00</span>
           </span>
-=======
-        <span class="text-surface-900 dark:text-surface-0 leading-normal"
-          >Keyser Wick
-          <span class="text-surface-700 dark:text-surface-100"
-            >has purchased a black jacket for
-            <span class="text-primary font-bold">$59.00</span></span
-          >
->>>>>>> dev_borrow
         </span>
       </li>
       <li class="flex items-center py-2 border-b border-surface">
@@ -108,19 +76,11 @@ const items = ref([
         >
           <i class="pi pi-question !text-xl text-pink-500"></i>
         </div>
-<<<<<<< HEAD
         <span class="text-surface-900 dark:text-surface-0 leading-normal">
           Jane Davis
           <span class="text-surface-700 dark:text-surface-100">
             has posted a new questions about your product.
           </span>
-=======
-        <span class="text-surface-900 dark:text-surface-0 leading-normal"
-          >Jane Davis
-          <span class="text-surface-700 dark:text-surface-100"
-            >has posted a new questions about your product.</span
-          >
->>>>>>> dev_borrow
         </span>
       </li>
     </ul>
@@ -132,17 +92,11 @@ const items = ref([
         >
           <i class="pi pi-arrow-up !text-xl text-green-500"></i>
         </div>
-<<<<<<< HEAD
         <span class="text-surface-900 dark:text-surface-0 leading-normal">
           Your revenue has increased by
           <span class="text-primary font-bold">%25</span>
           .
         </span>
-=======
-        <span class="text-surface-900 dark:text-surface-0 leading-normal"
-          >Your revenue has increased by <span class="text-primary font-bold">%25</span>.</span
-        >
->>>>>>> dev_borrow
       </li>
       <li class="flex items-center py-2 border-b border-surface">
         <div
@@ -150,17 +104,10 @@ const items = ref([
         >
           <i class="pi pi-heart !text-xl text-purple-500"></i>
         </div>
-<<<<<<< HEAD
         <span class="text-surface-900 dark:text-surface-0 leading-normal">
           <span class="text-primary font-bold">12</span>
           users have added your products to their wishlist.
         </span>
-=======
-        <span class="text-surface-900 dark:text-surface-0 leading-normal"
-          ><span class="text-primary font-bold">12</span> users have added your products to their
-          wishlist.</span
-        >
->>>>>>> dev_borrow
       </li>
     </ul>
   </div>

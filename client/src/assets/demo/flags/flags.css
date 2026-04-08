@@ -7,12 +7,8 @@ img.flag {
   width: 30px;
 }
 .flag {
-<<<<<<< HEAD
   background: url(https://primefaces.org/cdn/primevue/images/flag/flags_responsive.png)
     no-repeat;
-=======
-  background: url(https://primefaces.org/cdn/primevue/images/flag/flags_responsive.png) no-repeat;
->>>>>>> dev_borrow
   background-size: 100%;
   vertical-align: middle;
 }

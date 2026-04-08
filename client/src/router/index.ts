@@ -104,15 +104,11 @@ const routes: RouteRecordRaw[] = [
         name: 'medicineItems',
         component: () => import('@/views/pages/Empty.vue'),
       },
-<<<<<<< HEAD
       {
         path: 'units',
         name: 'units',
         component: () => import('@/views/pages/Empty.vue'),
       },
-=======
-      { path: 'units', name: 'units', component: () => import('@/views/pages/Empty.vue') },
->>>>>>> dev_borrow
       {
         path: 'medicine-prices',
         name: 'medicinePrices',
@@ -131,11 +127,7 @@ const routes: RouteRecordRaw[] = [
       {
         path: 'borrow-medicines',
         name: 'borrowMedicines',
-<<<<<<< HEAD
-        component: () => import('@/views/pages/Empty.vue'),
-=======
         component: () => import('@/views/pages/BorrowMedicines.vue'),
->>>>>>> dev_borrow
       },
       {
         path: 'stock-status',
@@ -154,15 +146,11 @@ const routes: RouteRecordRaw[] = [
       },
 
       // ===== ข้อมูลหลัก (Master Data) =====
-<<<<<<< HEAD
       {
         path: 'suppliers',
         name: 'suppliers',
         component: () => import('@/views/pages/Empty.vue'),
       },
-=======
-      { path: 'suppliers', name: 'suppliers', component: () => import('@/views/pages/Empty.vue') },
->>>>>>> dev_borrow
       {
         path: 'treatment-types',
         name: 'treatmentTypes',
@@ -321,11 +309,7 @@ const routes: RouteRecordRaw[] = [
       {
         path: 'approve-purchase',
         name: 'approvePurchase',
-<<<<<<< HEAD
-        component: () => import('@/views/pages/Empty.vue'),
-=======
         component: () => import('@/views/pages/ApprovePurchase.vue'),
->>>>>>> dev_borrow
       },
     ],
   },

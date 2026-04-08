@@ -1,19 +1,11 @@
 <script lang="ts" setup>
   import { ref } from 'vue';
 
-<<<<<<< HEAD
   const dropdownItems = ref<Array<{ name: string; code: string }>>([
     { name: 'Option 1', code: 'Option 1' },
     { name: 'Option 2', code: 'Option 2' },
     { name: 'Option 3', code: 'Option 3' },
   ]);
-=======
-const dropdownItems = ref<Array<{ name: string; code: string }>>([
-  { name: 'Option 1', code: 'Option 1' },
-  { name: 'Option 2', code: 'Option 2' },
-  { name: 'Option 3', code: 'Option 3' },
-]);
->>>>>>> dev_borrow
 
   const dropdownItem = ref<{ name: string; code: string } | null>(null);
 </script>
@@ -56,35 +48,23 @@ const dropdownItems = ref<Array<{ name: string; code: string }>>([
         <div class="card flex flex-col gap-4">
           <div class="font-semibold text-xl">Horizontal</div>
           <div class="grid grid-cols-12 gap-2">
-<<<<<<< HEAD
             <label
               for="name3"
               class="flex items-center col-span-12 mb-2 md:col-span-2 md:mb-0"
             >
               Name
             </label>
-=======
-            <label for="name3" class="flex items-center col-span-12 mb-2 md:col-span-2 md:mb-0"
-              >Name</label
-            >
->>>>>>> dev_borrow
             <div class="col-span-12 md:col-span-10">
               <InputText id="name3" type="text" />
             </div>
           </div>
           <div class="grid grid-cols-12 gap-2">
-<<<<<<< HEAD
             <label
               for="email3"
               class="flex items-center col-span-12 mb-2 md:col-span-2 md:mb-0"
             >
               Email
             </label>
-=======
-            <label for="email3" class="flex items-center col-span-12 mb-2 md:col-span-2 md:mb-0"
-              >Email</label
-            >
->>>>>>> dev_borrow
             <div class="col-span-12 md:col-span-10">
               <InputText id="email3" type="text" />
             </div>
