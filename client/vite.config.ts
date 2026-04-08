@@ -10,6 +10,7 @@ export default defineConfig({
   optimizeDeps: {
     noDiscovery: true,
   },
+  base: '/nurse-room-system/', // Set your desired public
   plugins: [
     vue({}) as any,
     vueDevTools(),
@@ -32,5 +33,8 @@ export default defineConfig({
         includePaths: [path.resolve(__dirname, 'src/assets')],
       },
     },
+  },
+  build: {
+    chunkSizeWarningLimit: 1000, // Set your desired limit in kilobytes
   },
 });

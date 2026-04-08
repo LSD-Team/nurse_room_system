@@ -14,7 +14,6 @@
   import Swal from 'sweetalert2';
 
   const borrowHeaders = ref<IBorrowHeader[]>([]);
-  const borrowLines = ref<IBorrowLine[]>([]);
   const suppliers = ref<ISupplier[]>([]);
   const supplierPrices = ref<ISupplierItemPrice[]>([]);
   const loading = ref(false);
@@ -312,17 +311,6 @@
         '\u0E2A\u0E48\u0E07\u0E01\u0E25\u0E31\u0E1A\u0E41\u0E01\u0E49\u0E44\u0E02',
     };
     return map[action] || action;
-  }
-
-  function roleLabel(role: string): string {
-    const map: Record<string, string> = {
-      GROUP_LEAD:
-        '\u0E2B\u0E31\u0E27\u0E2B\u0E19\u0E49\u0E32\u0E01\u0E25\u0E38\u0E48\u0E21',
-      MANAGER: '\u0E1C\u0E39\u0E49\u0E08\u0E31\u0E14\u0E01\u0E32\u0E23',
-      DEPARTMENT:
-        '\u0E2B\u0E31\u0E27\u0E2B\u0E19\u0E49\u0E32\u0E41\u0E1C\u0E19\u0E01',
-    };
-    return map[role] || role;
   }
 
   async function viewDetail(row: IBorrowHeader) {

@@ -190,6 +190,7 @@
         }
       }
     }
+    return total;
   }
 
   function clearFilter() {
