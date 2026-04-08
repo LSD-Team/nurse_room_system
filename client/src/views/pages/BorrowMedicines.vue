@@ -653,9 +653,7 @@
         </div>
 
         <div class="flex flex-col gap-2">
-          <label class="font-semibold">
-            {{ '&#xe2b;&#xe21;&#xe32;&#xe22;&#xe40;&#xe2b;&#xe15;&#xe38;' }}
-          </label>
+          <label class="font-semibold">หมายเหตุ (optional)</label>
           <Textarea v-model="formNote" rows="2" />
         </div>
 
