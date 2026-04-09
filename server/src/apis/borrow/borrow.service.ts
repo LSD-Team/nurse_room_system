@@ -22,7 +22,8 @@ export class BorrowService {
         borrow_id, borrow_no, borrow_date, borrow_status,
         supplier_id, supplier_code, supplier_name,
         approval_level, approval_role, approval_status,
-        actioned_by, actioned_at, remark
+        actioned_by, actioned_by_eng_name, actioned_at,
+        created_by_eng_name, remark
       FROM view_borrowed_items_header
       ORDER BY borrow_id DESC
     `;

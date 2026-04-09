@@ -142,6 +142,12 @@
       ).length
   );
 
+  const countApproved = computed(
+    () =>
+      numberedHeaders.value.filter(item => item.borrow_status === 'APPROVED')
+        .length
+  );
+
   function statusSeverity(status: string): string {
     const map: Record<string, string> = {
       DRAFT: 'secondary',
@@ -549,13 +555,22 @@
               </template>
             </Button>
             <Button
-              label="APPROVED"
               :variant="
                 selectedStatusFilter === 'APPROVED' ? 'contained' : 'outlined'
               "
               @click="selectedStatusFilter = 'APPROVED'"
               class="text-sm"
-            />
+            >
+              <template #default>
+                <span>APPROVED</span>
+                <Badge
+                  v-if="countApproved > 0"
+                  :value="countApproved"
+                  severity="success"
+                  class="ml-2"
+                />
+              </template>
+            </Button>
             <Button
               label="RECEIVED"
               :variant="
@@ -666,9 +681,9 @@
           {{ data.approval_status || '-' }}
         </template>
       </Column>
-      <Column field="created_by" :header="'ผู้สร้าง'" style="min-width: 130px">
+      <Column field="created_by_eng_name" :header="'ผู้สร้าง'" style="min-width: 130px">
         <template #body="{ data }">
-          {{ data.created_by || '-' }}
+          {{ data.created_by_eng_name || '-' }}
         </template>
       </Column>
       <Column
@@ -927,7 +942,7 @@
 
     <Dialog
       v-model:visible="showDetailDialog"
-      :header="'รายละเอียดการยืม'"
+      :header="'รายละเอียดการยืมยา'"
       modal
       :style="{ width: '850px' }"
       :closable="true"
