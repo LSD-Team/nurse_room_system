@@ -1,4 +1,5 @@
 import { Api } from '@/services/api.service';
+import type { IStockMovement } from '@/interfaces/stock.interfaces';
 
 export interface IStockOnHand {
   item_id: number;
@@ -13,5 +14,9 @@ export interface IStockOnHand {
 export class StockService {
   static async getStockStatus(): Promise<IStockOnHand[]> {
     return Api.get<IStockOnHand[]>('/stock/stock-status');
+  }
+
+  static async getMovementRecords(): Promise<IStockMovement[]> {
+    return Api.get<IStockMovement[]>('/stock/movements');
   }
 }

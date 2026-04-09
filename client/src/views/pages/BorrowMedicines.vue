@@ -705,7 +705,7 @@
                 @click="cancelBorrow(data)"
               />
             </template>
-            <template v-if="data.borrow_status === 'APPROVED'">
+            <template v-else-if="data.borrow_status === 'APPROVED'">
               <Button
                 :label="'รับยาเข้าคลัง'"
                 icon="pi pi-download"
@@ -715,15 +715,11 @@
                 @click="receiveBorrow(data)"
               />
             </template>
-            <template v-if="data.borrow_status === 'PENDING_APPROVAL'">
-              <Button
-                :label="'ยกเลิก'"
-                icon="pi pi-times"
-                severity="danger"
-                size="small"
-                text
-                @click="cancelBorrow(data)"
-              />
+            <template v-else-if="data.borrow_status === 'PENDING_APPROVAL'">
+              <Badge value="รอการอนุมัติ" severity="warn" />
+            </template>
+            <template v-else-if="['RECEIVED', 'SETTLED', 'CANCELLED'].includes(data.borrow_status)">
+              <Badge value="สำเร็จ" severity="success" />
             </template>
           </div>
         </template>

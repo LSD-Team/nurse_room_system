@@ -137,7 +137,7 @@ const routes: RouteRecordRaw[] = [
       {
         path: 'movement-records',
         name: 'movementRecords',
-        component: () => import('@/views/pages/Empty.vue'),
+        component: () => import('@/views/pages/MovementRecords.vue'),
       },
       {
         path: 'stock-adjustment',

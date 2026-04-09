@@ -13,4 +13,11 @@ export class StockController {
   async getStockStatus() {
     return this.stockService.getStockStatus();
   }
+
+  @Get('movements')
+  @ApiOperation({ summary: 'Get all stock movement records' })
+  @ApiResponse({ status: 200, description: 'Returns all stock movements with employee names' })
+  async getMovementRecords() {
+    return this.stockService.getMovementRecords();
+  }
 }

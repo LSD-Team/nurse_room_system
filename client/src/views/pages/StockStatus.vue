@@ -88,7 +88,7 @@
       :loading="loading"
       dataKey="item_id"
       paginator
-      :rows="20"
+      :rows="100"
       :rowsPerPageOptions="[10, 20, 50, 100]"
       stateStorage="local"
       stateKey="dt-stock-status"
