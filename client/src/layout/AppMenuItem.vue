@@ -129,8 +129,9 @@
       >
         <app-menu-item
           v-for="(child, i) in item.items"
-          :key="i"
+          :key="`${itemKeyString}-${i}-${child.label}`"
           :item="child"
+          :index="i"
           :parentItemKey="itemKeyString"
           :root="false"
         ></app-menu-item>

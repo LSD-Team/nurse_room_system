@@ -12,6 +12,8 @@ export interface IBorrowHeader {
   approval_status: string | null;
   actioned_by: string | null;
   actioned_at: string | null;
+  created_by: string | null;
+  created_at: string | null;
   remark: string | null;
 }
 

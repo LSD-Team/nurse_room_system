@@ -10,7 +10,7 @@
   const mainStore = useMainStore();
 
   onMounted(async () => {
-    await mainStore.getEmployees();
+    // Employees loading removed for performance
   });
 </script>
 
@@ -19,7 +19,6 @@
     <StatsWidget />
 
     <div class="col-span-12 xl:col-span-6">
-      <pre>{{ mainStore._employees }}</pre>
       <RecentSalesWidget />
       <BestSellingWidget />
     </div>

@@ -33,58 +33,15 @@
         },
         // ...removed 'การรักษาพยาบาล' and its submenus...
         {
-          label: 'ข้อมูลพยาบาลและคลังยา',
+          label: 'คลังยา และ ข้อมูลพยาบาล',
           icon: 'pi pi-fw pi-box',
           color: 'text-emerald-400',
           items: [
-            {
-              label: 'ข้อมูลพยาบาล',
-              icon: 'pi pi-fw pi-id-card',
-              color: 'text-emerald-300',
-              items: [
-                {
-                  label: 'รายชื่อพยาบาล',
-                  icon: 'pi pi-fw pi-user-edit',
-                  color: 'text-emerald-300',
-                  to: '/nurses-list',
-                },
-                {
-                  label: 'ทีมพยาบาล',
-                  icon: 'pi pi-fw pi-users',
-                  color: 'text-emerald-300',
-                  to: '/nurse-teams',
-                },
-                {
-                  label: 'สัญญาจ้างงานพยาบาล',
-                  icon: 'pi pi-fw pi-file',
-                  color: 'text-emerald-300',
-                  to: '/nurse-contracts',
-                },
-              ],
-            },
             {
               label: 'จัดซื้อ & ยืม ยา/เวชภัณฑ์',
               icon: 'pi pi-fw pi-shopping-cart',
               color: 'text-cyan-300',
               items: [
-                {
-                  label: 'รายการยา/เวชภัณฑ์',
-                  icon: 'pi pi-fw pi-list',
-                  color: 'text-teal-300',
-                  to: '/medicine-items',
-                },
-                {
-                  label: 'หน่วยนับ',
-                  icon: 'pi pi-fw pi-sort-numeric-up',
-                  color: 'text-teal-300',
-                  to: '/units',
-                },
-                {
-                  label: 'ราคายา/เวชภัณฑ์',
-                  icon: 'pi pi-fw pi-dollar',
-                  color: 'text-teal-300',
-                  to: '/medicine-prices',
-                },
                 {
                   label: 'สั่งซื้อ',
                   icon: 'pi pi-fw pi-shopping-cart',
@@ -102,6 +59,24 @@
                   icon: 'pi pi-fw pi-share-alt',
                   color: 'text-cyan-300',
                   to: '/borrow-medicines',
+                },
+                {
+                  label: 'รายการยา/เวชภัณฑ์',
+                  icon: 'pi pi-fw pi-list',
+                  color: 'text-teal-300',
+                  to: '/medicine-items',
+                },
+                {
+                  label: 'หน่วยนับ',
+                  icon: 'pi pi-fw pi-sort-numeric-up',
+                  color: 'text-teal-300',
+                  to: '/units',
+                },
+                {
+                  label: 'ราคายา/เวชภัณฑ์',
+                  icon: 'pi pi-fw pi-dollar',
+                  color: 'text-teal-300',
+                  to: '/medicine-prices',
                 },
               ],
             },
@@ -127,6 +102,31 @@
                   icon: 'pi pi-fw pi-pencil',
                   color: 'text-sky-300',
                   to: '/stock-adjustment',
+                },
+              ],
+            },
+            {
+              label: 'ข้อมูลพยาบาล',
+              icon: 'pi pi-fw pi-id-card',
+              color: 'text-emerald-300',
+              items: [
+                {
+                  label: 'รายชื่อพยาบาล',
+                  icon: 'pi pi-fw pi-user-edit',
+                  color: 'text-emerald-300',
+                  to: '/nurses-list',
+                },
+                {
+                  label: 'ทีมพยาบาล',
+                  icon: 'pi pi-fw pi-users',
+                  color: 'text-emerald-300',
+                  to: '/nurse-teams',
+                },
+                {
+                  label: 'สัญญาจ้างงานพยาบาล',
+                  icon: 'pi pi-fw pi-file',
+                  color: 'text-emerald-300',
+                  to: '/nurse-contracts',
                 },
               ],
             },

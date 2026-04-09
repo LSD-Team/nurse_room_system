@@ -31,7 +31,7 @@
     { id: '3346', label: '3346 - DEPARTMENT' },
     {
       id: '',
-      label: '8300 (\u0E1C\u0E39\u0E49\u0E43\u0E0A\u0E49\u0E07\u0E32\u0E19)',
+      label: '8300 (ผู้ใช้งาน)',
     },
   ];
   const simulatedUserId = ref('');
@@ -62,9 +62,7 @@
   });
 
   function typeLabel(type: string): string {
-    return type === 'PO'
-      ? '\u0E2A\u0E31\u0E48\u0E07\u0E0B\u0E37\u0E49\u0E2D'
-      : '\u0E22\u0E37\u0E21';
+    return type === 'PO' ? 'ใบสั่งซื้อ' : 'ยืม';
   }
 
   function typeSeverity(type: string): string {
@@ -73,12 +71,9 @@
 
   function statusLabel(status: string): string {
     const map: Record<string, string> = {
-      PENDING_APPROVAL:
-        '\u0E23\u0E2D\u0E2D\u0E19\u0E38\u0E21\u0E31\u0E15\u0E34',
-      APPROVED_L1:
-        '\u0E2D\u0E19\u0E38\u0E21\u0E31\u0E15\u0E34\u0E23\u0E30\u0E14\u0E31\u0E1A 1',
-      APPROVED_L2:
-        '\u0E2D\u0E19\u0E38\u0E21\u0E31\u0E15\u0E34\u0E23\u0E30\u0E14\u0E31\u0E1A 2',
+      PENDING_APPROVAL: 'PENDING APPROVAL',
+      APPROVED_L1: 'APPROVED LEVEL 1',
+      APPROVED_L2: 'APPROVED L2',
     };
     return map[status] || status;
   }
@@ -94,24 +89,20 @@
 
   function roleLabel(role: string): string {
     const map: Record<string, string> = {
-      GROUP_LEAD:
-        '\u0E2B\u0E31\u0E27\u0E2B\u0E19\u0E49\u0E32\u0E01\u0E25\u0E38\u0E48\u0E21',
-      MANAGER: '\u0E1C\u0E39\u0E49\u0E08\u0E31\u0E14\u0E01\u0E32\u0E23',
-      DEPARTMENT:
-        '\u0E2B\u0E31\u0E27\u0E2B\u0E19\u0E49\u0E32\u0E41\u0E1C\u0E19\u0E01',
+      GROUP_LEAD: 'GROUP LEADER',
+      MANAGER: 'MANAGER',
+      DEPARTMENT: 'DEPARTMENT',
     };
     return map[role] || role;
   }
 
   function approvalStatusLabel(status: string): string {
     const map: Record<string, string> = {
-      PENDING:
-        '\u0E23\u0E2D\u0E14\u0E33\u0E40\u0E19\u0E34\u0E19\u0E01\u0E32\u0E23',
-      APPROVE: '\u0E2D\u0E19\u0E38\u0E21\u0E31\u0E15\u0E34',
-      REJECT: '\u0E1B\u0E0F\u0E34\u0E40\u0E2A\u0E18',
-      REWORK:
-        '\u0E2A\u0E48\u0E07\u0E01\u0E25\u0E31\u0E1A\u0E41\u0E01\u0E49\u0E44\u0E02',
-      CANCELLED: '\u0E22\u0E01\u0E40\u0E25\u0E34\u0E01',
+      PENDING: 'PENDING',
+      APPROVE: 'APPROVE',
+      REJECT: 'REJECT',
+      REWORK: 'REWORK',
+      CANCELLED: 'CANCELLED',
     };
     return map[status] || status;
   }
@@ -149,11 +140,10 @@
 
   function logActionLabel(action: string): string {
     const map: Record<string, string> = {
-      SUBMIT: '\u0E2A\u0E48\u0E07\u0E2D\u0E19\u0E38\u0E21\u0E31\u0E15\u0E34',
-      APPROVE: '\u0E2D\u0E19\u0E38\u0E21\u0E31\u0E15\u0E34',
-      REJECT: '\u0E1B\u0E0F\u0E34\u0E40\u0E2A\u0E18',
-      REWORK:
-        '\u0E2A\u0E48\u0E07\u0E01\u0E25\u0E31\u0E1A\u0E41\u0E01\u0E49\u0E44\u0E02',
+      SUBMIT: 'SUBMIT',
+      APPROVE: 'APPROVE',
+      REJECT: 'REJECT',
+      REWORK: 'REWORK',
     };
     return map[action] || action;
   }
@@ -172,7 +162,8 @@
 
   async function loadHistoryApprovals() {
     try {
-      historyItems.value = await ApprovalService.getApprovalHistory();
+      const allHistory = await ApprovalService.getApprovalHistory();
+      historyItems.value = allHistory.filter(item => item.status !== 'DRAFT');
     } catch {
       // handled by axios interceptor
     }
@@ -218,10 +209,9 @@
     action: 'APPROVE' | 'REJECT' | 'REWORK'
   ) {
     const actionLabel: Record<string, string> = {
-      APPROVE: '\u0E2D\u0E19\u0E38\u0E21\u0E31\u0E15\u0E34',
-      REJECT: '\u0E1B\u0E0F\u0E34\u0E40\u0E2A\u0E18',
-      REWORK:
-        '\u0E2A\u0E48\u0E07\u0E01\u0E25\u0E31\u0E1A\u0E41\u0E01\u0E49\u0E44\u0E02',
+      APPROVE: 'อนุมัติ',
+      REJECT: 'ปฏิเสธ',
+      REWORK: 'แก้ไข',
     };
 
     // Close dialog first so Swal is not blocked by modal overlay
@@ -234,15 +224,16 @@
       const { value, isConfirmed } = await Swal.fire({
         title: actionLabel[action] + ' ' + item.doc_no,
         input: 'textarea',
-        inputLabel:
-          '\u0E2B\u0E21\u0E32\u0E22\u0E40\u0E2B\u0E15\u0E38 (\u0E1A\u0E31\u0E07\u0E04\u0E31\u0E1A)',
-        inputValidator: v =>
-          !v
-            ? '\u0E01\u0E23\u0E38\u0E13\u0E32\u0E01\u0E23\u0E2D\u0E01\u0E2B\u0E21\u0E32\u0E22\u0E40\u0E2B\u0E15\u0E38'
-            : null,
+        inputLabel: 'หมายเหตุ (บังคับใส่)',
+        inputValidator: v => {
+          if (!v || v.trim() === '') {
+            return 'กรุณากรอกเหตุผล';
+          }
+          return null;
+        },
         showCancelButton: true,
         confirmButtonText: actionLabel[action],
-        cancelButtonText: '\u0E22\u0E01\u0E40\u0E25\u0E34\u0E01',
+        cancelButtonText: 'ยกเลิก',
       });
       if (!isConfirmed) {
         showDetailDialog.value = true;
@@ -251,13 +242,12 @@
       remark = value;
     } else {
       const result = await Swal.fire({
-        title:
-          '\u0E22\u0E37\u0E19\u0E22\u0E31\u0E19' + actionLabel[action] + '?',
+        title: 'คุณต้องการ' + actionLabel[action] + '?',
         text: item.doc_no,
         icon: 'question',
         showCancelButton: true,
         confirmButtonText: actionLabel[action],
-        cancelButtonText: '\u0E22\u0E01\u0E40\u0E25\u0E34\u0E01',
+        cancelButtonText: 'ยกเลิก',
       });
       if (!result.isConfirmed) {
         showDetailDialog.value = true;
@@ -281,12 +271,7 @@
         });
       }
       selectedItem.value = null;
-      await Swal.fire(
-        '\u0E2A\u0E33\u0E40\u0E23\u0E47\u0E08',
-        actionLabel[action] +
-          '\u0E40\u0E23\u0E35\u0E22\u0E1A\u0E23\u0E49\u0E2D\u0E22',
-        'success'
-      );
+      await Swal.fire('สำเร็จ', actionLabel[action] + 'เรียบร้อย', 'success');
       await loadPendingApprovals();
     } catch {
       // handled by axios interceptor
@@ -301,15 +286,10 @@
 <template>
   <div class="card">
     <div class="flex justify-between items-center mb-4">
-      <div class="font-semibold text-xl">
-        &#x0E2D;&#x0E19;&#x0E38;&#x0E21;&#x0E31;&#x0E15;&#x0E34;&#x0E01;&#x0E32;&#x0E23;&#x0E2A;&#x0E31;&#x0E48;&#x0E07;&#x0E0B;&#x0E37;&#x0E49;&#x0E2D;
-        / &#x0E22;&#x0E37;&#x0E21;
-      </div>
+      <div class="font-semibold text-xl">อนุมัติการสั่งซื้อ / ยืม</div>
       <!-- Simulate user buttons (DEV) -->
       <div class="flex items-center gap-2">
-        <span class="text-sm text-surface-500">
-          &#x0E08;&#x0E33;&#x0E25;&#x0E2D;&#x0E07;&#x0E2A;&#x0E34;&#x0E17;&#x0E18;&#x0E34;&#x0E4C;:
-        </span>
+        <span class="text-sm text-surface-500">จำลองสิทธิ์:</span>
         <SelectButton
           v-model="simulatedUserId"
           :options="simulateUsers"
@@ -319,10 +299,7 @@
           size="small"
         />
         <Tag
-          :value="
-            '\u0E01\u0E33\u0E25\u0E31\u0E07\u0E43\u0E0A\u0E49: ' +
-            (currentUserId || realUserId)
-          "
+          :value="'กำลังใช้งาน: ' + (currentUserId || realUserId)"
           severity="info"
         />
       </div>
@@ -352,7 +329,7 @@
         <div class="flex justify-between items-center gap-2">
           <div class="flex gap-2">
             <Button
-              :label="'Wait Approve'"
+              :label="'Pending Approve'"
               :outlined="viewMode !== 'pending'"
               severity="info"
               size="small"
@@ -387,7 +364,7 @@
               <InputIcon class="pi pi-search" />
               <InputText
                 v-model="filters['global'].value"
-                :placeholder="'\u0E04\u0E49\u0E19\u0E2B\u0E32...'"
+                :placeholder="'ค้นหา...'"
               />
             </IconField>
           </div>
@@ -395,15 +372,10 @@
       </template>
 
       <template #empty>
-        <div class="text-center py-6 text-surface-500">
-          &#x0E44;&#x0E21;&#x0E48;&#x0E21;&#x0E35;&#x0E23;&#x0E32;&#x0E22;&#x0E01;&#x0E32;&#x0E23;&#x0E23;&#x0E2D;&#x0E2D;&#x0E19;&#x0E38;&#x0E21;&#x0E31;&#x0E15;&#x0E34;
-        </div>
+        <div class="text-center py-6 text-surface-500">ไม่มีข้อมูล</div>
       </template>
 
-      <Column
-        :header="'\u0E1B\u0E23\u0E30\u0E40\u0E20\u0E17'"
-        style="min-width: 100px"
-      >
+      <Column :header="'ประเภท'" style="min-width: 100px">
         <template #body="{ data }">
           <Tag
             :value="typeLabel(data.type)"
@@ -414,26 +386,19 @@
 
       <Column
         field="doc_no"
-        :header="'\u0E40\u0E25\u0E02\u0E17\u0E35\u0E48\u0E40\u0E2D\u0E01\u0E2A\u0E32\u0E23'"
+        :header="'เลขที่เอกสาร'"
         style="min-width: 160px"
       />
 
-      <Column
-        field="doc_date"
-        :header="'\u0E27\u0E31\u0E19\u0E17\u0E35\u0E48'"
-        style="min-width: 120px"
-      />
+      <Column field="doc_date" :header="'วันที่'" style="min-width: 120px" />
 
       <Column
         field="supplier_name"
-        :header="'\u0E1C\u0E39\u0E49\u0E08\u0E31\u0E14\u0E08\u0E33\u0E2B\u0E19\u0E48\u0E32\u0E22'"
+        :header="'ผู้จำหน่าย'"
         style="min-width: 160px"
       />
 
-      <Column
-        :header="'\u0E2A\u0E16\u0E32\u0E19\u0E30'"
-        style="min-width: 140px"
-      >
+      <Column :header="'สถานะ'" style="min-width: 140px">
         <template #body="{ data }">
           <Tag
             :value="statusLabel(data.status)"
@@ -444,14 +409,11 @@
 
       <Column
         field="created_by_name"
-        :header="'\u0E1C\u0E39\u0E49\u0E2A\u0E23\u0E49\u0E32\u0E07'"
+        :header="'ผู้สร้าง'"
         style="min-width: 140px"
       />
 
-      <Column
-        :header="'\u0E23\u0E2D\u0E2D\u0E19\u0E38\u0E21\u0E31\u0E15\u0E34\u0E42\u0E14\u0E22'"
-        style="min-width: 240px"
-      >
+      <Column :header="'รออนุมัติโดย'" style="min-width: 240px">
         <template #body="{ data }">
           <div class="flex items-center gap-2">
             <Tag :value="data.current_approval_role" severity="secondary" />
@@ -469,7 +431,7 @@
       </Column>
 
       <Column
-        :header="'\u0E08\u0E31\u0E14\u0E01\u0E32\u0E23'"
+        :header="'จัดการ'"
         style="min-width: 120px"
         frozen
         alignFrozen="right"
@@ -477,7 +439,7 @@
         <template #body="{ data }">
           <Button
             icon="pi pi-eye"
-            :label="'\u0E14\u0E39\u0E23\u0E32\u0E22\u0E25\u0E30\u0E40\u0E2D\u0E35\u0E22\u0E14'"
+            :label="'ดูรายละเอียด'"
             severity="info"
             size="small"
             text
@@ -504,33 +466,25 @@
       <!-- Info Section -->
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
         <div>
-          <div class="text-surface-500 text-sm">
-            &#x0E1B;&#x0E23;&#x0E30;&#x0E40;&#x0E20;&#x0E17;
-          </div>
+          <div class="text-surface-500 text-sm">ประเภท</div>
           <Tag
             :value="typeLabel(selectedItem.type)"
             :severity="typeSeverity(selectedItem.type)"
           />
         </div>
         <div>
-          <div class="text-surface-500 text-sm">
-            &#x0E2A;&#x0E16;&#x0E32;&#x0E19;&#x0E30;
-          </div>
+          <div class="text-surface-500 text-sm">สถานะ</div>
           <Tag
             :value="statusLabel(selectedItem.status)"
             :severity="statusSeverity(selectedItem.status)"
           />
         </div>
         <div>
-          <div class="text-surface-500 text-sm">
-            &#x0E1C;&#x0E39;&#x0E49;&#x0E08;&#x0E31;&#x0E14;&#x0E08;&#x0E33;&#x0E2B;&#x0E19;&#x0E48;&#x0E32;&#x0E22;
-          </div>
+          <div class="text-surface-500 text-sm">ผู้จำหน่าย</div>
           <div>{{ selectedItem.supplier_name }}</div>
         </div>
         <div>
-          <div class="text-surface-500 text-sm">
-            &#x0E1C;&#x0E39;&#x0E49;&#x0E2A;&#x0E23;&#x0E49;&#x0E32;&#x0E07;
-          </div>
+          <div class="text-surface-500 text-sm">ผู้สร้าง</div>
           <div>
             {{ selectedItem.created_by_name || selectedItem.created_by }}
           </div>
@@ -538,21 +492,17 @@
       </div>
 
       <div v-if="selectedItem.note" class="mb-4">
-        <div class="text-surface-500 text-sm">
-          &#x0E2B;&#x0E21;&#x0E32;&#x0E22;&#x0E40;&#x0E2B;&#x0E15;&#x0E38;
-        </div>
+        <div class="text-surface-500 text-sm">หมายเหตุ</div>
         <div>{{ selectedItem.note }}</div>
       </div>
 
       <!-- PO Lines -->
       <div v-if="selectedItem.type === 'PO' && poLines.length > 0" class="mb-4">
-        <div class="font-semibold mb-2">
-          &#x0E23;&#x0E32;&#x0E22;&#x0E01;&#x0E32;&#x0E23;&#x0E2A;&#x0E34;&#x0E19;&#x0E04;&#x0E49;&#x0E32;
-        </div>
+        <div class="font-semibold mb-2">รายการสั่งซื้อ</div>
         <DataTable :value="poLines" size="small" stripedRows>
           <Column
             field="item_name_th"
-            :header="'\u0E0A\u0E37\u0E48\u0E2D\u0E23\u0E32\u0E22\u0E01\u0E32\u0E23'"
+            :header="'ชื่อรายการ'"
             style="min-width: 200px"
           >
             <template #body="{ data }">
@@ -563,13 +513,10 @@
           </Column>
           <Column
             field="qty_order"
-            :header="'\u0E08\u0E33\u0E19\u0E27\u0E19\u0E2A\u0E31\u0E48\u0E07'"
+            :header="'จำนวนสั่งซื้อ'"
             style="min-width: 80px"
           />
-          <Column
-            :header="'\u0E23\u0E32\u0E04\u0E32/\u0E2B\u0E19\u0E48\u0E27\u0E22'"
-            style="min-width: 100px"
-          >
+          <Column :header="'ราคา/หน่วย'" style="min-width: 100px">
             <template #body="{ data }">
               &#x0E3F;{{
                 Number(data.unit_price).toLocaleString('en-US', {
@@ -600,13 +547,11 @@
         v-if="selectedItem.type === 'BORROW' && borrowLines.length > 0"
         class="mb-4"
       >
-        <div class="font-semibold mb-2">
-          &#x0E23;&#x0E32;&#x0E22;&#x0E01;&#x0E32;&#x0E23;&#x0E22;&#x0E37;&#x0E21;
-        </div>
+        <div class="font-semibold mb-2">รายการยืม</div>
         <DataTable :value="borrowLines" size="small" stripedRows>
           <Column
             field="item_name_th"
-            :header="'\u0E0A\u0E37\u0E48\u0E2D\u0E23\u0E32\u0E22\u0E01\u0E32\u0E23'"
+            :header="'ชื่อรายการ'"
             style="min-width: 200px"
           >
             <template #body="{ data }">
@@ -617,13 +562,10 @@
           </Column>
           <Column
             field="qty_borrow"
-            :header="'\u0E08\u0E33\u0E19\u0E27\u0E19\u0E22\u0E37\u0E21'"
+            :header="'จำนวนยืม'"
             style="min-width: 80px"
           />
-          <Column
-            :header="'\u0E23\u0E32\u0E04\u0E32/\u0E2B\u0E19\u0E48\u0E27\u0E22'"
-            style="min-width: 100px"
-          >
+          <Column :header="'ราคา/หน่วย'" style="min-width: 100px">
             <template #body="{ data }">
               &#x0E3F;{{
                 Number(data.unit_price).toLocaleString('en-US', {
@@ -632,7 +574,7 @@
               }}
             </template>
           </Column>
-          <Column :header="'\u0E23\u0E27\u0E21'" style="min-width: 100px">
+          <Column :header="'ราคารวม'" style="min-width: 100px">
             <template #body="{ data }">
               &#x0E3F;{{
                 Number(data.total_price).toLocaleString('en-US', {
@@ -643,7 +585,7 @@
           </Column>
           <Column
             field="purchase_unit_name_th"
-            :header="'\u0E2B\u0E19\u0E48\u0E27\u0E22'"
+            :header="'หน่วยซื้อ'"
             style="min-width: 80px"
           />
         </DataTable>
@@ -651,27 +593,19 @@
 
       <!-- Approval History -->
       <div class="mb-4">
-        <div class="font-semibold mb-2">
-          &#x0E1B;&#x0E23;&#x0E30;&#x0E27;&#x0E31;&#x0E15;&#x0E34;&#x0E01;&#x0E32;&#x0E23;&#x0E2D;&#x0E19;&#x0E38;&#x0E21;&#x0E31;&#x0E15;&#x0E34;
-        </div>
+        <div class="font-semibold mb-2">ประวัติการอนุมัติ</div>
         <DataTable :value="approvalHistory" size="small" stripedRows>
           <Column
-            :header="'\u0E25\u0E33\u0E14\u0E31\u0E1A'"
+            :header="'ลำดับ'"
             field="approval_level"
             style="min-width: 60px"
           />
-          <Column
-            :header="'\u0E15\u0E33\u0E41\u0E2B\u0E19\u0E48\u0E07'"
-            style="min-width: 120px"
-          >
+          <Column :header="'ตำแหน่งอนุมัติ'" style="min-width: 120px">
             <template #body="{ data }">
               {{ roleLabel(data.approval_role) }}
             </template>
           </Column>
-          <Column
-            :header="'\u0E2A\u0E16\u0E32\u0E19\u0E30'"
-            style="min-width: 120px"
-          >
+          <Column :header="'สถานะ'" style="min-width: 120px">
             <template #body="{ data }">
               <Tag
                 :value="approvalStatusLabel(data.status)"
@@ -679,17 +613,14 @@
               />
             </template>
           </Column>
-          <Column
-            :header="'\u0E1C\u0E39\u0E49\u0E14\u0E33\u0E40\u0E19\u0E34\u0E19\u0E01\u0E32\u0E23'"
-            style="min-width: 140px"
-          >
+          <Column :header="'ผู้ดำเนินการ'" style="min-width: 140px">
             <template #body="{ data }">
               {{ data.actioned_by_name || data.actioned_by || '-' }}
             </template>
           </Column>
           <Column
             field="actioned_at"
-            :header="'\u0E27\u0E31\u0E19\u0E17\u0E35\u0E48'"
+            :header="'วันที่ดำเนินการ'"
             style="min-width: 150px"
           >
             <template #body="{ data }">
@@ -700,11 +631,7 @@
               }}
             </template>
           </Column>
-          <Column
-            field="remark"
-            :header="'\u0E2B\u0E21\u0E32\u0E22\u0E40\u0E2B\u0E15\u0E38'"
-            style="min-width: 200px"
-          >
+          <Column field="remark" :header="'หมายเหตุ'" style="min-width: 200px">
             <template #body="{ data }">
               {{ data.remark || '-' }}
             </template>
@@ -718,20 +645,20 @@
         class="flex gap-2 justify-end pt-2 border-t mb-4"
       >
         <Button
-          :label="'\u0E2D\u0E19\u0E38\u0E21\u0E31\u0E15\u0E34'"
+          :label="'อนุมัติ'"
           icon="pi pi-check"
           severity="success"
           @click="handleApprove(selectedItem!, 'APPROVE')"
         />
         <Button
-          :label="'\u0E1B\u0E0F\u0E34\u0E40\u0E2A\u0E18'"
+          :label="'ปฏิเสธ'"
           icon="pi pi-times"
           severity="danger"
           @click="handleApprove(selectedItem!, 'REJECT')"
         />
         <Button
           v-if="selectedItem.type === 'BORROW'"
-          :label="'\u0E2A\u0E48\u0E07\u0E01\u0E25\u0E31\u0E1A\u0E41\u0E01\u0E49\u0E44\u0E02'"
+          :label="'ส่งกลับแก้ไข'"
           icon="pi pi-replay"
           severity="warn"
           @click="handleApprove(selectedItem!, 'REWORK')"
@@ -743,10 +670,7 @@
         v-if="selectedItem.type === 'BORROW' && approvalLogs.length > 0"
         class="mb-4"
       >
-        <div class="font-semibold mb-2">
-          Timeline
-          &#x0E01;&#x0E32;&#x0E23;&#x0E2D;&#x0E19;&#x0E38;&#x0E21;&#x0E31;&#x0E15;&#x0E34;
-        </div>
+        <div class="font-semibold mb-2">Timeline การอนุมัติ</div>
         <Timeline :value="approvalLogs" align="left" class="pl-2">
           <template #marker="{ item }">
             <span

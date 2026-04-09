@@ -3,6 +3,7 @@
   import { FilterMatchMode } from '@primevue/core/api';
   import { BorrowService } from '@/services/borrow.service';
   import { ApprovalService } from '@/services/approval.service';
+  import { StockService, type IStockOnHand } from '@/services/stock.service';
   import type {
     IBorrowHeader,
     IBorrowLine,
@@ -16,6 +17,7 @@
   const borrowHeaders = ref<IBorrowHeader[]>([]);
   const suppliers = ref<ISupplier[]>([]);
   const supplierPrices = ref<ISupplierItemPrice[]>([]);
+  const stockOnHands = ref<IStockOnHand[]>([]);
   const loading = ref(false);
   const errorMsg = ref('');
 
@@ -46,18 +48,40 @@
 
   onMounted(async () => {
     await loadBorrowHeaders();
+    await loadStockOnHands();
   });
 
-  async function loadBorrowHeaders() {
+  function getErrorMessage(err: unknown): string {
+    if (err instanceof Error) {
+      return err.message;
+    }
+    if (typeof err === 'object' && err !== null && 'response' in err) {
+      const apiError = err as { response?: { data?: { message?: string } } };
+      return apiError.response?.data?.message || String(err);
+    }
+    return String(err);
+  }
+
+  async function loadBorrowHeaders(): Promise<void> {
     loading.value = true;
     errorMsg.value = '';
     try {
       borrowHeaders.value = await BorrowService.getBorrowHeaders();
-    } catch (err: any) {
-      errorMsg.value =
-        err?.response?.data?.message || err?.message || String(err);
+    } catch (err: unknown) {
+      errorMsg.value = getErrorMessage(err);
     } finally {
       loading.value = false;
+    }
+  }
+
+  async function loadStockOnHands(): Promise<void> {
+    try {
+      const data = await StockService.getStockStatus();
+      stockOnHands.value = data;
+      console.log('Stock on hands loaded:', stockOnHands.value.length, 'items');
+    } catch (err: unknown) {
+      const error = err instanceof Error ? err.message : String(err);
+      console.error('Error loading stock on hands:', error);
     }
   }
 
@@ -97,6 +121,26 @@
       supplierPrices.value.find(p => p.item_id === selectedItemId.value) || null
     );
   });
+
+  const selectedItemOnHand = computed(() => {
+    if (!selectedItemId.value) return null;
+    return (
+      stockOnHands.value.find(s => s.item_id === selectedItemId.value) || null
+    );
+  });
+
+  const countDraft = computed(
+    () =>
+      numberedHeaders.value.filter(item => item.borrow_status === 'DRAFT')
+        .length
+  );
+
+  const countPendingApproval = computed(
+    () =>
+      numberedHeaders.value.filter(
+        item => item.borrow_status === 'PENDING_APPROVAL'
+      ).length
+  );
 
   function statusSeverity(status: string): string {
     const map: Record<string, string> = {
@@ -143,7 +187,7 @@
     });
   }
 
-  async function openCreateDialog() {
+  async function openCreateDialog(): Promise<void> {
     isEditing.value = false;
     editingBorrowId.value = null;
     selectedSupplierId.value = null;
@@ -195,7 +239,7 @@
     showFormDialog.value = true;
   }
 
-  async function onSupplierChange() {
+  async function onSupplierChange(): Promise<void> {
     if (!selectedSupplierId.value) {
       supplierPrices.value = [];
       return;
@@ -204,14 +248,13 @@
       supplierPrices.value = await BorrowService.getSupplierPrices(
         selectedSupplierId.value
       );
-    } catch (err: any) {
-      errorMsg.value =
-        err?.response?.data?.message || err?.message || String(err);
+    } catch (err: unknown) {
+      errorMsg.value = getErrorMessage(err);
     }
   }
 
-  function addLine() {
-    if (!selectedItemId.value || selectedQty.value <= 0) return;
+  function addLine(): void {
+    if (!selectedItemId.value) return;
     const price = supplierPrices.value.find(
       p => p.item_id === selectedItemId.value
     );
@@ -219,20 +262,28 @@
 
     formLines.value.push({
       item_id: price.item_id,
-      qty: selectedQty.value,
+      qty: 1,
       item_code: price.item_code,
       item_name_th: price.item_name_th,
       item_name_en: price.item_name_en,
       unit_name_th: price.unit_name_th,
       unit_price: price.unit_price,
-      total_price: selectedQty.value * price.unit_price,
+      total_price: 1 * price.unit_price,
     });
 
     selectedItemId.value = null;
     selectedQty.value = 1;
   }
 
-  function removeLine(index: number) {
+  function updateLineQuantity(index: number, newQty: number): void {
+    if (newQty <= 0) return;
+    const line = formLines.value[index];
+    if (!line) return;
+    line.qty = newQty;
+    line.total_price = newQty * line.unit_price;
+  }
+
+  function removeLine(index: number): void {
     formLines.value.splice(index, 1);
   }
 
@@ -364,24 +415,18 @@
 
   async function receiveBorrow(row: IBorrowHeader) {
     const result = await Swal.fire({
-      title:
-        '\u0E22\u0E37\u0E19\u0E22\u0E31\u0E19\u0E23\u0E31\u0E1A\u0E22\u0E37\u0E21\u0E40\u0E02\u0E49\u0E32\u0E2A\u0E15\u0E47\u0E2D\u0E01?',
-      text: '\u0E43\u0E1A\u0E22\u0E37\u0E21 ' + row.borrow_no,
+      title: 'ยืนยันการรับยาเข้าคลัง?',
+      text: 'เลขที่ใบยืม ' + row.borrow_no,
       icon: 'question',
       showCancelButton: true,
-      confirmButtonText:
-        '\u0E23\u0E31\u0E1A\u0E40\u0E02\u0E49\u0E32\u0E2A\u0E15\u0E47\u0E2D\u0E01',
-      cancelButtonText: '\u0E22\u0E01\u0E40\u0E25\u0E34\u0E01',
+      confirmButtonText: 'รับยาเข้าคลัง',
+      cancelButtonText: 'ยกเลิก',
     });
     if (!result.isConfirmed) return;
 
     try {
       await BorrowService.receiveBorrow(row.borrow_id);
-      await Swal.fire(
-        '\u0E2A\u0E33\u0E40\u0E23\u0E47\u0E08',
-        '\u0E23\u0E31\u0E1A\u0E22\u0E37\u0E21\u0E40\u0E02\u0E49\u0E32\u0E2A\u0E15\u0E47\u0E2D\u0E01\u0E40\u0E23\u0E35\u0E22\u0E1A\u0E23\u0E49\u0E2D\u0E22',
-        'success'
-      );
+      await Swal.fire('สำเร็จ', 'รับยาเข้าคลังสำเร็จ', 'success');
       await loadBorrowHeaders();
     } catch (err: any) {
       // Error handled by axios interceptor
@@ -390,18 +435,13 @@
 
   async function cancelBorrow(row: IBorrowHeader) {
     const { value, isConfirmed } = await Swal.fire({
-      title:
-        '\u0E22\u0E01\u0E40\u0E25\u0E34\u0E01\u0E43\u0E1A\u0E22\u0E37\u0E21 ' +
-        row.borrow_no +
-        '?',
+      title: 'ยกเลิกใบยืม ' + row.borrow_no + '?',
       input: 'textarea',
-      inputLabel:
-        '\u0E40\u0E2B\u0E15\u0E38\u0E1C\u0E25 (\u0E16\u0E49\u0E32\u0E21\u0E35)',
+      inputLabel: 'เหตุผล (ถ้ามี)',
       showCancelButton: true,
-      confirmButtonText:
-        '\u0E22\u0E01\u0E40\u0E25\u0E34\u0E01\u0E43\u0E1A\u0E22\u0E37\u0E21',
+      confirmButtonText: 'ยกเลิกใบยืม',
       confirmButtonColor: '#dc3545',
-      cancelButtonText: '\u0E1B\u0E34\u0E14',
+      cancelButtonText: 'ยกเลิก',
     });
     if (!isConfirmed) return;
 
@@ -410,8 +450,8 @@
         Reason: value || undefined,
       });
       await Swal.fire(
-        '\u0E2A\u0E33\u0E40\u0E23\u0E47\u0E08',
-        '\u0E22\u0E01\u0E40\u0E25\u0E34\u0E01\u0E43\u0E1A\u0E22\u0E37\u0E21\u0E40\u0E23\u0E35\u0E22\u0E1A\u0E23\u0E49\u0E2D\u0E22',
+        'สำเร็จ',
+        'ยกเลิกใบยืม ' + row.borrow_no + ' สำเร็จ',
         'success'
       );
       await loadBorrowHeaders();
@@ -426,18 +466,14 @@
     <div class="flex items-center justify-between mb-4">
       <div>
         <h2 class="text-2xl font-bold text-surface-900 dark:text-surface-0">
-          {{
-            '&#xe22;&#xe37;&#xe21;&#xe22;&#xe32;/&#xe40;&#xe27;&#xe0a;&#xe20;&#xe31;&#xe13;&#xe11;&#xe4c;'
-          }}
+          {{ 'ยืมยา/เวชภัณฑ์' }}
         </h2>
         <p class="text-surface-500 mt-1">
-          {{
-            '&#xe23;&#xe32;&#xe22;&#xe01;&#xe32;&#xe23;&#xe43;&#xe1a;&#xe22;&#xe37;&#xe21;&#xe22;&#xe32;/&#xe40;&#xe27;&#xe0a;&#xe20;&#xe31;&#xe13;&#xe11;&#xe4c;&#xe17;&#xe31;&#xe49;&#xe07;&#xe2b;&#xe21;&#xe14;'
-          }}
+          {{ 'รายละเอียดการยืมยา/เวชภัณฑ์' }}
         </p>
       </div>
       <Button
-        :label="'\u0E2A\u0E23\u0E49\u0E32\u0E07\u0E43\u0E1A\u0E22\u0E37\u0E21'"
+        :label="'สร้างใบยืม'"
         icon="pi pi-plus"
         @click="openCreateDialog"
       />
@@ -445,9 +481,7 @@
 
     <Message v-if="errorMsg" severity="error" class="mb-4">
       <span class="font-semibold">
-        {{
-          '&#xe40;&#xe01;&#xe34;&#xe14;&#xe02;&#xe49;&#xe2d;&#xe1c;&#xe34;&#xe14;&#xe1e;&#xe25;&#xe32;&#xe14;: '
-        }}
+        {{ 'ข้อผิดพลาด: ' }}
       </span>
       {{ errorMsg }}
     </Message>
@@ -471,32 +505,97 @@
     >
       <template #header>
         <div class="flex justify-between items-center gap-2">
-          <SelectButton
-            v-model="selectedStatusFilter"
-            :options="statusFilterOptions"
-            optionLabel="label"
-            optionValue="value"
-            class="flex-wrap"
-          />
+          <div class="flex gap-2 flex-wrap">
+            <Button
+              :label="'All'"
+              :variant="selectedStatusFilter === '' ? 'contained' : 'outlined'"
+              @click="selectedStatusFilter = ''"
+              class="text-sm"
+            />
+            <Button
+              :variant="
+                selectedStatusFilter === 'DRAFT' ? 'contained' : 'outlined'
+              "
+              @click="selectedStatusFilter = 'DRAFT'"
+              class="text-sm"
+            >
+              <template #default>
+                <span>DRAFT</span>
+                <Badge
+                  v-if="countDraft > 0"
+                  :value="countDraft"
+                  severity="warning"
+                  class="ml-2"
+                />
+              </template>
+            </Button>
+            <Button
+              :variant="
+                selectedStatusFilter === 'PENDING_APPROVAL'
+                  ? 'contained'
+                  : 'outlined'
+              "
+              @click="selectedStatusFilter = 'PENDING_APPROVAL'"
+              class="text-sm"
+            >
+              <template #default>
+                <span>PENDING_APPROVAL</span>
+                <Badge
+                  v-if="countPendingApproval > 0"
+                  :value="countPendingApproval"
+                  severity="warning"
+                  class="ml-2"
+                />
+              </template>
+            </Button>
+            <Button
+              label="APPROVED"
+              :variant="
+                selectedStatusFilter === 'APPROVED' ? 'contained' : 'outlined'
+              "
+              @click="selectedStatusFilter = 'APPROVED'"
+              class="text-sm"
+            />
+            <Button
+              label="RECEIVED"
+              :variant="
+                selectedStatusFilter === 'RECEIVED' ? 'contained' : 'outlined'
+              "
+              @click="selectedStatusFilter = 'RECEIVED'"
+              class="text-sm"
+            />
+            <Button
+              label="SETTLED"
+              :variant="
+                selectedStatusFilter === 'SETTLED' ? 'contained' : 'outlined'
+              "
+              @click="selectedStatusFilter = 'SETTLED'"
+              class="text-sm"
+            />
+            <Button
+              label="CANCELLED"
+              :variant="
+                selectedStatusFilter === 'CANCELLED' ? 'contained' : 'outlined'
+              "
+              @click="selectedStatusFilter = 'CANCELLED'"
+              class="text-sm"
+            />
+          </div>
           <IconField>
             <InputIcon class="pi pi-search" />
             <InputText
               v-model="filters['global'].value"
-              :placeholder="'\u0E04\u0E49\u0E19\u0E2B\u0E32...'"
+              :placeholder="'ค้นหา...'"
             />
           </IconField>
         </div>
       </template>
 
       <template #empty>
-        {{
-          '&#xe44;&#xe21;&#xe48;&#xe1e;&#xe1a;&#xe02;&#xe49;&#xe2d;&#xe21;&#xe39;&#xe25;'
-        }}
+        {{ 'ไม่พบข้อมูล' }}
       </template>
       <template #loading>
-        {{
-          '&#xe01;&#xe33;&#xe25;&#xe31;&#xe07;&#xe42;&#xe2b;&#xe25;&#xe14;&#xe02;&#xe49;&#xe2d;&#xe21;&#xe39;&#xe25;...'
-        }}
+        {{ 'กำลังโหลดข้อมูล...' }}
       </template>
 
       <Column
@@ -508,7 +607,7 @@
       />
       <Column
         field="borrow_no"
-        :header="'\u0E40\u0E25\u0E02\u0E17\u0E35\u0E48\u0E43\u0E1A\u0E22\u0E37\u0E21'"
+        :header="'เลขที่ใบยืม'"
         sortable
         style="min-width: 150px"
         frozen
@@ -524,7 +623,7 @@
       </Column>
       <Column
         field="borrow_date"
-        :header="'\u0E27\u0E31\u0E19\u0E17\u0E35\u0E48'"
+        :header="'วันที่ยืม'"
         sortable
         style="min-width: 120px"
       >
@@ -538,7 +637,7 @@
       />
       <Column
         field="borrow_status"
-        :header="'\u0E2A\u0E16\u0E32\u0E19\u0E30'"
+        :header="'สถานะใบยืม'"
         sortable
         style="min-width: 140px"
       >
@@ -551,7 +650,7 @@
       </Column>
       <Column
         field="approval_role"
-        :header="'\u0E23\u0E30\u0E14\u0E31\u0E1A\u0E2D\u0E19\u0E38\u0E21\u0E31\u0E15\u0E34'"
+        :header="'บทบาทผู้อนุมัติ'"
         style="min-width: 130px"
       >
         <template #body="{ data }">
@@ -560,15 +659,20 @@
       </Column>
       <Column
         field="approval_status"
-        :header="'\u0E2A\u0E16\u0E32\u0E19\u0E30\u0E2D\u0E19\u0E38\u0E21\u0E31\u0E15\u0E34'"
+        :header="'สถานะการอนุมัติ'"
         style="min-width: 130px"
       >
         <template #body="{ data }">
           {{ data.approval_status || '-' }}
         </template>
       </Column>
+      <Column field="created_by" :header="'ผู้สร้าง'" style="min-width: 130px">
+        <template #body="{ data }">
+          {{ data.created_by || '-' }}
+        </template>
+      </Column>
       <Column
-        :header="'\u0E08\u0E31\u0E14\u0E01\u0E32\u0E23'"
+        :header="'จัดการ'"
         style="min-width: 200px"
         frozen
         alignFrozen="right"
@@ -577,7 +681,7 @@
           <div class="flex gap-1 flex-wrap">
             <template v-if="data.borrow_status === 'DRAFT'">
               <Button
-                :label="'\u0E41\u0E01\u0E49\u0E44\u0E02'"
+                :label="'แก้ไข'"
                 icon="pi pi-pencil"
                 severity="info"
                 size="small"
@@ -585,7 +689,7 @@
                 @click="openEditDialog(data)"
               />
               <Button
-                :label="'\u0E2A\u0E48\u0E07\u0E2D\u0E19\u0E38\u0E21\u0E31\u0E15\u0E34'"
+                :label="'ส่งอนุมัติ'"
                 icon="pi pi-send"
                 severity="success"
                 size="small"
@@ -593,7 +697,7 @@
                 @click="submitBorrow(data)"
               />
               <Button
-                :label="'\u0E22\u0E01\u0E40\u0E25\u0E34\u0E01'"
+                :label="'ยกเลิก'"
                 icon="pi pi-times"
                 severity="danger"
                 size="small"
@@ -603,7 +707,7 @@
             </template>
             <template v-if="data.borrow_status === 'APPROVED'">
               <Button
-                :label="'\u0E23\u0E31\u0E1A\u0E40\u0E02\u0E49\u0E32\u0E2A\u0E15\u0E47\u0E2D\u0E01'"
+                :label="'รับยาเข้าคลัง'"
                 icon="pi pi-download"
                 severity="success"
                 size="small"
@@ -613,7 +717,7 @@
             </template>
             <template v-if="data.borrow_status === 'PENDING_APPROVAL'">
               <Button
-                :label="'\u0E22\u0E01\u0E40\u0E25\u0E34\u0E01'"
+                :label="'ยกเลิก'"
                 icon="pi pi-times"
                 severity="danger"
                 size="small"
@@ -628,13 +732,9 @@
 
     <Dialog
       v-model:visible="showFormDialog"
-      :header="
-        isEditing
-          ? '\u0E41\u0E01\u0E49\u0E44\u0E02\u0E43\u0E1A\u0E22\u0E37\u0E21'
-          : '\u0E2A\u0E23\u0E49\u0E32\u0E07\u0E43\u0E1A\u0E22\u0E37\u0E21\u0E43\u0E2B\u0E21\u0E48'
-      "
+      :header="isEditing ? 'แก้ไข' : 'สร้างรายการยืมยา'"
       modal
-      :style="{ width: '800px' }"
+      :style="{ width: '1000px' }"
       :closable="true"
     >
       <div class="flex flex-col gap-4">
@@ -645,7 +745,7 @@
             :options="suppliers"
             optionLabel="supplier_name"
             optionValue="supplier_id"
-            :placeholder="'\u0E40\u0E25\u0E37\u0E2D\u0E01 Supplier'"
+            :placeholder="'เลือก Supplier'"
             :disabled="isEditing"
             filter
             @change="onSupplierChange"
@@ -669,19 +769,31 @@
               :options="availableItems"
               optionLabel="item_name_th"
               optionValue="item_id"
-              :placeholder="'\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E23\u0E32\u0E22\u0E01\u0E32\u0E23\u0E22\u0E32'"
+              :placeholder="'เลือกรายการยา'"
               filter
               :filterFields="['item_name_th', 'item_name_en']"
               class="flex-1"
             >
               <template #value="{ placeholder }">
-                <span v-if="selectedItemInfo">
-                  {{ selectedItemInfo.item_name_th }} ({{
-                    selectedItemInfo.item_name_en
-                  }}) - ฿{{ formatNumber(selectedItemInfo.unit_price) }}/{{
-                    selectedItemInfo.unit_name_th
-                  }}
-                </span>
+                <div v-if="selectedItemInfo" class="flex flex-col gap-1">
+                  <span class="text-sm">
+                    {{ selectedItemInfo.item_name_th }} ({{
+                      selectedItemInfo.item_name_en
+                    }}) - ฿{{ formatNumber(selectedItemInfo.unit_price) }}/{{
+                      selectedItemInfo.unit_name_th
+                    }}
+                  </span>
+                  <span
+                    v-if="selectedItemOnHand"
+                    class="text-xs text-blue-600 font-semibold"
+                  >
+                    Onhand: {{ formatNumber(selectedItemOnHand.qty_base) }}
+                    {{ selectedItemInfo.unit_name_th }}
+                  </span>
+                  <span v-else class="text-xs text-red-500 font-semibold">
+                    Onhand: {{ 'ไม่มีข้อมูล' }}
+                  </span>
+                </div>
                 <span v-else class="text-surface-400">{{ placeholder }}</span>
               </template>
               <template #option="{ option }">
@@ -692,20 +804,11 @@
                 </span>
               </template>
             </Select>
-            <div class="flex flex-col gap-1">
-              <label class="text-sm font-semibold">{{ 'จำนวน' }}</label>
-              <InputNumber
-                v-model="selectedQty"
-                :min="1"
-                showButtons
-                style="width: 140px"
-              />
-            </div>
             <Button
               icon="pi pi-plus"
               severity="success"
               @click="addLine"
-              :disabled="!selectedItemId || selectedQty <= 0"
+              :disabled="!selectedItemId"
               class="mt-5"
             />
           </div>
@@ -719,7 +822,7 @@
         >
           <Column
             field="item_name_th"
-            :header="'\u0E0A\u0E37\u0E48\u0E2D\u0E22\u0E32'"
+            :header="'ชื่อยา'"
             style="min-width: 250px"
           >
             <template #body="{ data }">
@@ -731,18 +834,45 @@
           </Column>
           <Column
             field="qty"
-            :header="'\u0E08\u0E33\u0E19\u0E27\u0E19'"
-            style="min-width: 80px"
+            :header="'จำนวนยืม'"
+            style="min-width: 60px"
             bodyClass="text-right"
-          />
+          >
+            <template #body="{ data, index }">
+              <InputNumber
+                :model-value="data.qty"
+                :min="1"
+                @update:model-value="updateLineQuantity(index, $event)"
+                showButtons
+                size="small"
+                class="w-full"
+              />
+            </template>
+          </Column>
           <Column
             field="unit_name_th"
-            :header="'\u0E2B\u0E19\u0E48\u0E27\u0E22'"
+            :header="'หน่วย'"
             style="min-width: 100px"
           />
           <Column
+            :header="'คงเหลือ'"
+            style="min-width: 100px"
+            bodyClass="text-right font-semibold text-blue-600"
+          >
+            <template #body="{ data }">
+              {{
+                stockOnHands.find(s => s.item_id === data.item_id)?.qty_base
+                  ? formatNumber(
+                      stockOnHands.find(s => s.item_id === data.item_id)
+                        ?.qty_base
+                    )
+                  : '-'
+              }}
+            </template>
+          </Column>
+          <Column
             field="unit_price"
-            :header="'\u0E23\u0E32\u0E04\u0E32/\u0E2B\u0E19\u0E48\u0E27\u0E22'"
+            :header="'ราคา/หน่วย'"
             style="min-width: 110px"
             bodyClass="text-right"
           >
@@ -752,7 +882,7 @@
           </Column>
           <Column
             field="total_price"
-            :header="'\u0E23\u0E27\u0E21'"
+            :header="'รวม'"
             style="min-width: 110px"
             bodyClass="text-right"
           >
@@ -785,18 +915,14 @@
 
       <template #footer>
         <Button
-          :label="'\u0E22\u0E01\u0E40\u0E25\u0E34\u0E01'"
+          :label="'ยกเลิก'"
           icon="pi pi-times"
           severity="secondary"
           text
           @click="showFormDialog = false"
         />
         <Button
-          :label="
-            isEditing
-              ? '\u0E1A\u0E31\u0E19\u0E17\u0E36\u0E01'
-              : '\u0E2A\u0E23\u0E49\u0E32\u0E07\u0E43\u0E1A\u0E22\u0E37\u0E21'
-          "
+          :label="isEditing ? 'บันทึก' : 'สร้างใหม่'"
           icon="pi pi-check"
           @click="saveBorrow"
         />
@@ -805,7 +931,7 @@
 
     <Dialog
       v-model:visible="showDetailDialog"
-      :header="'\u0E23\u0E32\u0E22\u0E25\u0E30\u0E40\u0E2D\u0E35\u0E22\u0E14\u0E43\u0E1A\u0E22\u0E37\u0E21'"
+      :header="'รายละเอียดการยืม'"
       modal
       :style="{ width: '850px' }"
       :closable="true"
@@ -814,15 +940,13 @@
         <div class="grid grid-cols-2 gap-4">
           <div>
             <span class="font-semibold text-surface-500">
-              {{
-                '&#xe40;&#xe25;&#xe02;&#xe17;&#xe35;&#xe48;&#xe43;&#xe1a;&#xe22;&#xe37;&#xe21;:'
-              }}
+              {{ 'เลขที่เอกสาร:' }}
             </span>
             <span class="ml-2">{{ detailBorrow.borrow_no }}</span>
           </div>
           <div>
             <span class="font-semibold text-surface-500">
-              {{ '&#xe27;&#xe31;&#xe19;&#xe17;&#xe35;&#xe48;:' }}
+              {{ 'วันที่ยืม:' }}
             </span>
             <span class="ml-2">{{ formatDate(detailBorrow.borrow_date) }}</span>
           </div>
@@ -832,7 +956,7 @@
           </div>
           <div>
             <span class="font-semibold text-surface-500">
-              {{ '&#xe2a;&#xe16;&#xe32;&#xe19;&#xe30;:' }}
+              {{ 'สถานะใบยืม:' }}
             </span>
             <Tag
               class="ml-2"
@@ -842,9 +966,7 @@
           </div>
           <div v-if="detailBorrow.approval_role">
             <span class="font-semibold text-surface-500">
-              {{
-                '&#xe23;&#xe30;&#xe14;&#xe31;&#xe1a;&#xe2d;&#xe19;&#xe38;&#xe21;&#xe31;&#xe15;&#xe34;:'
-              }}
+              {{ 'บทบาทผู้อนุมัติ:' }}
             </span>
             <span class="ml-2">
               {{ detailBorrow.approval_role }} (L{{
@@ -854,7 +976,7 @@
           </div>
           <div v-if="detailBorrow.remark">
             <span class="font-semibold text-surface-500">
-              {{ '&#xe2b;&#xe21;&#xe32;&#xe22;&#xe40;&#xe2b;&#xe15;&#xe38;:' }}
+              {{ 'หมายเหตุ:' }}
             </span>
             <span class="ml-2">{{ detailBorrow.remark }}</span>
           </div>
@@ -867,21 +989,19 @@
           class="p-datatable-sm"
         >
           <template #empty>
-            {{
-              '&#xe44;&#xe21;&#xe48;&#xe1e;&#xe1a;&#xe23;&#xe32;&#xe22;&#xe01;&#xe32;&#xe23;'
-            }}
+            {{ 'ไม่พบข้อมูล' }}
           </template>
           <Column header="#" style="min-width: 50px">
             <template #body="{ index }">{{ index + 1 }}</template>
           </Column>
           <Column
             field="item_code"
-            :header="'\u0E23\u0E2B\u0E31\u0E2A'"
+            :header="'รหัสยา'"
             style="min-width: 100px"
           />
           <Column
             field="item_name_th"
-            :header="'\u0E0A\u0E37\u0E48\u0E2D\u0E22\u0E32'"
+            :header="'ชื่อยา'"
             style="min-width: 250px"
           >
             <template #body="{ data }">
@@ -893,18 +1013,18 @@
           </Column>
           <Column
             field="qty_borrow"
-            :header="'\u0E08\u0E33\u0E19\u0E27\u0E19'"
+            :header="'จำนวน'"
             style="min-width: 80px"
             bodyClass="text-right"
           />
           <Column
             field="purchase_unit_name_th"
-            :header="'\u0E2B\u0E19\u0E48\u0E27\u0E22'"
+            :header="'หน่วยซื้อ'"
             style="min-width: 100px"
           />
           <Column
             field="unit_price"
-            :header="'\u0E23\u0E32\u0E04\u0E32/\u0E2B\u0E19\u0E48\u0E27\u0E22'"
+            :header="'ราคา/หน่วย'"
             style="min-width: 110px"
             bodyClass="text-right"
           >
@@ -914,7 +1034,7 @@
           </Column>
           <Column
             field="total_price"
-            :header="'\u0E23\u0E27\u0E21'"
+            :header="'รวม'"
             style="min-width: 110px"
             bodyClass="text-right"
           >
@@ -927,8 +1047,7 @@
         <!-- Approval Timeline -->
         <div v-if="detailLogs.length > 0" class="mt-4">
           <div class="font-semibold text-surface-500 mb-2">
-            Timeline
-            &#x0E01;&#x0E32;&#x0E23;&#x0E2D;&#x0E19;&#x0E38;&#x0E21;&#x0E31;&#x0E15;&#x0E34;
+            Timeline การอนุมัติ
           </div>
           <Timeline :value="detailLogs" align="left" class="pl-2">
             <template #marker="{ item }">
