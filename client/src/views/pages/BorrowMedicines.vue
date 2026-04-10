@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+  // v3: Added printBorrow function and Print button
   import { ref, onMounted, computed } from 'vue';
   import { FilterMatchMode } from '@primevue/core/api';
   import { BorrowService } from '@/services/borrow.service';
@@ -12,6 +13,7 @@
     IBorrowLineForm,
   } from '@/interfaces/borrow.interfaces';
   import type { IBorrowApprovalLog } from '@/interfaces/approval.interfaces';
+  import { formatDate, formatNumber, formatCurrency } from '@/utils/format.utils';
   import Swal from 'sweetalert2';
 
   const borrowHeaders = ref<IBorrowHeader[]>([]);
@@ -148,6 +150,153 @@
         .length
   );
 
+  const uniqueDetailLogs = computed(() => {
+    // Remove duplicate logs by keeping only the last occurrence of each (level, role, action, actor)
+    const seen = new Map<string, IBorrowApprovalLog>();
+    for (const log of detailLogs.value) {
+      const key = `${log.approval_level}|${log.approval_role}|${log.action}|${log.actioned_by}`;
+      seen.set(key, log);
+    }
+    return Array.from(seen.values()).sort(
+      (a, b) =>
+        new Date(a.actioned_at).getTime() - new Date(b.actioned_at).getTime()
+    );
+  });
+
+  function printBorrow(): void {
+    if (!detailBorrow.value || !detailLines.value) return;
+
+    const printWindow = window.open('', '', 'width=900,height=1200');
+    if (!printWindow) return;
+
+    const tableRows = detailLines.value
+      .map(
+        (line, idx) => `
+        <tr>
+          <td style="text-align: center; padding: 8px; border: 1px solid #999;">${idx + 1}</td>
+          <td style="padding: 8px; border: 1px solid #999;">${line.item_code}</td>
+          <td style="padding: 8px; border: 1px solid #999;">
+            <div><strong>${line.item_name_th}</strong></div>
+            <div style="font-size: 12px; color: #666;">${line.item_name_en}</div>
+          </td>
+          <td style="text-align: right; padding: 8px; border: 1px solid #999;">${line.qty_borrow}</td>
+          <td style="text-align: center; padding: 8px; border: 1px solid #999;">${line.purchase_unit_name_th}</td>
+          <td style="text-align: right; padding: 8px; border: 1px solid #999;">฿${formatNumber(line.unit_price)}</td>
+          <td style="text-align: right; padding: 8px; border: 1px solid #999;">฿${formatNumber(line.total_price)}</td>
+        </tr>
+      `
+      )
+      .join('');
+
+    const grandTotal = detailLines.value.reduce((sum, line) => sum + (line.total_price || 0), 0);
+
+    // Get creator name and today's date
+    const creatorName = detailBorrow.value.created_by_eng_name || '-';
+    const today = new Date();
+    const todayDate = today.toLocaleDateString('th-TH', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>ใบสั่งซื้อยา - ${detailBorrow.value.borrow_no}</title>
+        <style>
+          * { margin: 0; padding: 0; }
+          body { font-family: 'Trebuchet MS', Arial, sans-serif; padding: 30px; line-height: 1.4; }
+          .container { max-width: 900px; margin: 0 auto; }
+          .header { text-align: center; margin-bottom: 25px; }
+          .header h1 { font-size: 22px; margin-bottom: 5px; font-weight: bold; }
+          .header p { font-size: 13px; color: #666; }
+          .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; font-size: 13px; }
+          .info-item { }
+          .info-label { font-weight: bold; color: #333; display: inline-block; width: 120px; }
+          .info-value { display: inline; }
+          .section-title { font-weight: bold; font-size: 14px; margin-top: 15px; margin-bottom: 10px; }
+          table { width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 20px; }
+          th { background-color: #e8e8e8; padding: 10px; border: 1px solid #999; text-align: left; font-weight: bold; }
+          td { padding: 8px; border: 1px solid #999; }
+          .total-row { font-weight: bold; background-color: #f5f5f5; }
+          .total-row td { text-align: right; }
+          .signature-section { display: grid; grid-template-columns: 1fr 1fr; gap: 50px; margin-top: 50px; }
+          .signature-box { text-align: center; font-size: 12px; }
+          .signature-line { border-top: 1px solid #000; margin-top: 50px; padding-top: 10px; }
+          @media print {
+            body { padding: 0; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>ใบสั่งซื้อยา</h1>
+            <p>Pharmaceutical Purchase Order</p>
+          </div>
+
+          <div class="info-grid">
+            <div class="info-item">
+              <div><span class="info-label">Document No.:</span><span class="info-value">${detailBorrow.value.borrow_no}</span></div>
+              <div><span class="info-label">Supplier:</span><span class="info-value">${detailBorrow.value.supplier_name}</span></div>
+              <div style="margin-top: 8px;"><span class="info-label">ผู้จำหน่ายยา:</span></div>
+            </div>
+            <div class="info-item">
+              <div><span class="info-label">Date/วันที่:</span><span class="info-value">${formatDate(detailBorrow.value.borrow_date)}</span></div>
+              <div><span class="info-label">Created by:</span><span class="info-value">${detailBorrow.value.created_by_eng_name || '-'}</span></div>
+            </div>
+          </div>
+
+          <div class="section-title">รายละเอียดสินค้า / Item Details:</div>
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 5%">#</th>
+                <th style="width: 8%">Code</th>
+                <th style="width: 35%">Name / ชื่อยา</th>
+                <th style="width: 8%">Qty</th>
+                <th style="width: 10%">Unit</th>
+                <th style="width: 12%">Price/Unit</th>
+                <th style="width: 12%">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${tableRows}
+              <tr class="total-row">
+                <td colspan="6">Grand Total / รวมทั้งสิ้น</td>
+                <td>฿${formatNumber(grandTotal)}</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="signature-section">
+            <div class="signature-box">
+              <div>ผู้สั่งซื้อ / Requestor</div>
+              <div style="font-size: 11px; color: #999;">Staff Signature</div>
+              <div class="signature-line"></div>
+              <div style="font-size: 11px;">${creatorName}</div>
+              <div style="font-size: 11px;">${todayDate}</div>
+            </div>
+            <div class="signature-box">
+              <div>ผู้จำหน่ายยา / Pharmacy</div>
+              <div style="font-size: 11px; color: #999;">Pharmacy Signature</div>
+              <div class="signature-line"></div>
+              <br>
+              <div style="font-size: 11px;">(.......................................................)</div>
+            </div>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    printWindow.document.write(html);
+    printWindow.document.close();
+    printWindow.print();
+  }
+
   function statusSeverity(status: string): string {
     const map: Record<string, string> = {
       DRAFT: 'secondary',
@@ -174,23 +323,6 @@
       CANCELLED: 'CANCELLED',
     };
     return map[status] || status;
-  }
-
-  function formatDate(dateStr: string | null): string {
-    if (!dateStr) return '-';
-    return new Date(dateStr).toLocaleDateString('th-TH', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
-  }
-
-  function formatNumber(num: number | null): string {
-    if (num === null || num === undefined) return '-';
-    return num.toLocaleString('th-TH', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    });
   }
 
   async function openCreateDialog(): Promise<void> {
@@ -379,9 +511,8 @@
       const promises: Promise<any>[] = [
         BorrowService.getBorrowLines(row.borrow_id),
       ];
-      if (row.borrow_status !== 'DRAFT') {
-        promises.push(ApprovalService.getBorrowApprovalLogs(row.borrow_id));
-      }
+      // Always fetch approval logs for timeline visibility (all statuses)
+      promises.push(ApprovalService.getBorrowApprovalLogs(row.borrow_id));
       const results = await Promise.all(promises);
       detailLines.value = results[0];
       if (results[1]) detailLogs.value = results[1];
@@ -942,11 +1073,24 @@
 
     <Dialog
       v-model:visible="showDetailDialog"
-      :header="'รายละเอียดการยืมยา'"
       modal
       :style="{ width: '850px' }"
       :closable="true"
     >
+      <template #header>
+        <div class="flex justify-between items-center w-full">
+          <span>รายละเอียดการยืมยา</span>
+          <Button
+            v-if="['APPROVED', 'RECEIVED', 'SETTLED'].includes(detailBorrow?.borrow_status)"
+            icon="pi pi-print"
+            label="Print"
+            severity="info"
+            size="small"
+            class="mr-8"
+            @click="printBorrow"
+          />
+        </div>
+      </template>
       <div v-if="detailBorrow" class="flex flex-col gap-4">
         <div class="grid grid-cols-2 gap-4">
           <div>
@@ -1056,11 +1200,11 @@
         </DataTable>
 
         <!-- Approval Timeline -->
-        <div v-if="detailLogs.length > 0" class="mt-4">
+        <div v-if="uniqueDetailLogs.length > 0" class="mt-4">
           <div class="font-semibold text-surface-500 mb-2">
             Timeline การอนุมัติ
           </div>
-          <Timeline :value="detailLogs" align="left" class="pl-2">
+          <Timeline :value="uniqueDetailLogs" align="left" class="pl-2">
             <template #marker="{ item }">
               <span
                 class="flex items-center justify-center rounded-full border-2 w-8 h-8"

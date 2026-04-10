@@ -398,14 +398,14 @@
         style="min-width: 160px"
       />
 
-      <Column :header="'สถานะ'" style="min-width: 140px">
+      <!-- <Column :header="'สถานะ'" style="min-width: 140px">
         <template #body="{ data }">
           <Tag
             :value="statusLabel(data.status)"
             :severity="statusSeverity(data.status)"
           />
         </template>
-      </Column>
+      </Column> -->
 
       <Column
         field="created_by_name"

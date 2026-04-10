@@ -93,7 +93,7 @@
       v-if="(!item.to || item.items) && item.visible !== false"
       :href="item.url"
       @click="itemClick($event, item)"
-      :class="item.class"
+      :class="[item.class, 'cursor-pointer']"
       :target="item.target"
       tabindex="0"
     >
@@ -107,7 +107,7 @@
     <router-link
       v-if="item.to && !item.items && item.visible !== false"
       @click="itemClick($event, item)"
-      :class="[item.class, { 'active-route': checkActiveRoute(item) }]"
+      :class="[item.class, { 'active-route': checkActiveRoute(item), 'cursor-pointer': true }]"
       tabindex="0"
       :to="item.to"
     >
