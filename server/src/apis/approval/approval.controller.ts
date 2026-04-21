@@ -62,13 +62,13 @@ export class ApprovalController {
 
   // ─── POST /approval/po/:id/approve ───
   @Post('po/:id/approve')
-  @ApiOperation({ summary: 'Approve/Reject PO (sp_PO_04_ApprovePO)' })
+  @ApiOperation({ summary: 'Approve/Reject/Rework PO (sp_PO_04_ApprovePO)' })
   @ApiParam({ name: 'id', type: String })
   async approvePo(
     @Param('id') id: string,
     @Body()
     body: {
-      Action: 'APPROVE' | 'REJECT';
+      Action: 'APPROVE' | 'REJECT' | 'REWORK';
       Remark?: string;
       SimulateAs?: string;
     },

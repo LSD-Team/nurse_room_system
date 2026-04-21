@@ -179,16 +179,9 @@
 
     try {
       if (item.type === 'PO') {
-        const result = (await ApprovalService.getPoDetail(item.id)) as any;
-        if (Array.isArray(result)) {
-          // sp_PO_02_GetPO returns 3 recordsets
-          poLines.value = result[1] || [];
-          approvalHistory.value = result[2] || [];
-        } else if (result && typeof result === 'object') {
-          poLines.value = result.recordsets?.[1] || result.lines || [];
-          approvalHistory.value =
-            result.recordsets?.[2] || result.approvals || [];
-        }
+        const result = await ApprovalService.getPoDetail(item.id);
+        poLines.value = result.lines || [];
+        approvalHistory.value = result.approvals || [];
       } else {
         const [lines, history, logs] = await Promise.all([
           BorrowService.getBorrowLines(item.id),
@@ -259,7 +252,7 @@
       const simAs = simulatedUserId.value || undefined;
       if (item.type === 'PO') {
         await ApprovalService.approvePo(item.id, {
-          Action: action as 'APPROVE' | 'REJECT',
+          Action: action as 'APPROVE' | 'REJECT' | 'REWORK',
           Remark: remark,
           SimulateAs: simAs,
         });
@@ -657,7 +650,6 @@
           @click="handleApprove(selectedItem!, 'REJECT')"
         />
         <Button
-          v-if="selectedItem.type === 'BORROW'"
           :label="'ส่งกลับแก้ไข'"
           icon="pi pi-replay"
           severity="warn"

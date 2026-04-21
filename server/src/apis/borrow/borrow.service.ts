@@ -27,7 +27,7 @@ export class BorrowService {
       FROM view_borrowed_items_header
       ORDER BY borrow_id DESC
     `;
-    return this.databaseService.query<IBorrowHeader[]>(
+    return this.databaseService.query<IBorrowHeader>(
       this.DATABASE_NAME,
       query,
     );
@@ -48,7 +48,7 @@ export class BorrowService {
       WHERE borrow_id = @param0
       ORDER BY borrow_line_id
     `;
-    return this.databaseService.query<IBorrowLine[]>(
+    return this.databaseService.query<IBorrowLine>(
       this.DATABASE_NAME,
       query,
       [borrowId],
@@ -63,7 +63,7 @@ export class BorrowService {
       WHERE is_active = 1
       ORDER BY supplier_code
     `;
-    return this.databaseService.query<ISupplier[]>(this.DATABASE_NAME, query);
+    return this.databaseService.query<ISupplier>(this.DATABASE_NAME, query);
   }
 
   // โ”€โ”€โ”€ GET: เธฃเธฒเธเธฒเธขเธฒเธ•เธฒเธก supplier (view_supplier_item_prices_current) โ”€โ”€โ”€
@@ -78,7 +78,7 @@ export class BorrowService {
       WHERE supplier_id = @param0
       ORDER BY item_code
     `;
-    return this.databaseService.query<ISupplierItemPrice[]>(
+    return this.databaseService.query<ISupplierItemPrice>(
       this.DATABASE_NAME,
       query,
       [supplierId],

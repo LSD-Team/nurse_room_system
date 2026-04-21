@@ -226,20 +226,29 @@ export class DatabaseService {
   public async query<T>(
     database: string,
     sql: string,
-    values?: (string | number)[],
-  ): Promise<T> {
+    values?: (string | number)[] | { [key: string]: any },
+  ): Promise<T[]> {
     let pool: sql.ConnectionPool;
     try {
       pool = await this.getConnection(database);
       const request = pool.request();
-      values?.forEach((value, index) => {
-        request.input(`param${index}`, value);
-      });
+      
+      // Handle both array and object parameters
+      if (Array.isArray(values)) {
+        values.forEach((value, index) => {
+          request.input(`param${index}`, value);
+        });
+      } else if (values && typeof values === 'object') {
+        Object.keys(values).forEach((key) => {
+          request.input(key, values[key]);
+        });
+      }
+      
       // this.logger.debug(`Query: ${this.replaceParams(sql, values || [])}`);
       const result = await request.query(sql);
       pool.close(); // ปิดการเชื่อมต่อหลังใช้งาน
       // this.closeConnections(); // ปิดการเชื่อมต่อทั้งหมดหลังการ Execute
-      return result.recordset as T;
+      return result.recordset as T[];
     } catch (error: any) {
       this.logger.error(`Query Error for database ${database}:`, error);
 

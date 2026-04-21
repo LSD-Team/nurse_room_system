@@ -7,6 +7,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { ApprovalModule } from '@/src/apis/approval/approval.module';
 import { BorrowModule } from '@/src/apis/borrow/borrow.module';
 import { EmployeesModule } from '@/src/apis/employees/employees.module';
+import { PoModule } from '@/src/apis/po/po.module';
 import { StockModule } from '@/src/apis/stock/stock.module';
 import { AuthModule } from '@/src/auth/auth.module';
 import { DatabaseModule } from '@/src/database/database.module';
@@ -30,6 +31,7 @@ import { AppController } from '@/src/app.controller';
     ApprovalModule,
     BorrowModule,
     EmployeesModule,
+    PoModule,
     StockModule,
   ],
   controllers: [AppController],

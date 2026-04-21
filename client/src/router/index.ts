@@ -117,12 +117,12 @@ const routes: RouteRecordRaw[] = [
       {
         path: 'purchase-orders',
         name: 'purchaseOrders',
-        component: () => import('@/views/pages/Empty.vue'),
+        component: () => import('@/views/pages/PurchaseOrders.vue'),
       },
       {
         path: 'goods-receipt',
         name: 'goodsReceipt',
-        component: () => import('@/views/pages/Empty.vue'),
+        component: () => import('@/views/pages/GoodsReceiptNote.vue'),
       },
       {
         path: 'borrow-medicines',

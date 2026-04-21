@@ -15,7 +15,7 @@ export class ApprovalService {
   }
 
   static async getPoDetail(poId: number) {
-    return Api.get<any>(`/approval/po/${poId}`);
+    return Api.get<{ lines: any[]; approvals: IApprovalHistory[] }>(`/approval/po/${poId}`);
   }
 
   static async getBorrowApprovalHistory(
@@ -32,7 +32,7 @@ export class ApprovalService {
 
   static async approvePo(
     poId: number,
-    data: { Action: 'APPROVE' | 'REJECT'; Remark?: string; SimulateAs?: string }
+    data: { Action: 'APPROVE' | 'REJECT' | 'REWORK'; Remark?: string; SimulateAs?: string }
   ) {
     return Api.post(`/approval/po/${poId}/approve`, data);
   }

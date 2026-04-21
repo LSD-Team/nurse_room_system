@@ -1,48 +1,69 @@
 {
-  "version": "2.0.0",
-  "tasks": [
-    {
-      "label": "start-dev",
-      "dependsOn": [
-        "start-client",
-        "start-server"
-      ],
-      "dependsOrder": "parallel",
-      "problemMatcher": [
-        "$tsc"
-      ]
-    },
-    {
-      "label": "start-client",
-      "type": "shell",
-      "command": "cd client && npm run dev",
-      "isBackground": true,
-      "problemMatcher": {
-        "pattern": {
-          "regexp": "^.*$"
-        },
-        "background": {
-          "activeOnStart": true,
-          "beginsPattern": ".*",
-          "endsPattern": "ready in.*"
-        }
-      }
-    },
-    {
-      "label": "start-server",
-      "type": "shell",
-      "command": "cd server && npm run dev",
-      "isBackground": true,
-      "problemMatcher": {
-        "pattern": {
-          "regexp": "^.*$"
-        },
-        "background": {
-          "activeOnStart": true,
-          "beginsPattern": ".*",
-          "endsPattern": ".*started.*"
-        }
-      }
-    }
-  ]
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "start-dev",
+			"dependsOn": [
+				"start-client",
+				"start-server"
+			],
+			"dependsOrder": "parallel",
+			"problemMatcher": [
+				"$tsc"
+			]
+		},
+		{
+			"label": "start-client",
+			"type": "shell",
+			"command": "cd client && npm run dev",
+			"isBackground": true,
+			"problemMatcher": {
+				"pattern": {
+					"regexp": "^.*$"
+				},
+				"background": {
+					"activeOnStart": true,
+					"beginsPattern": ".*",
+					"endsPattern": "ready in.*"
+				}
+			}
+		},
+		{
+			"label": "start-server",
+			"type": "shell",
+			"command": "cd server && npm run dev",
+			"isBackground": true,
+			"problemMatcher": {
+				"pattern": {
+					"regexp": "^.*$"
+				},
+				"background": {
+					"activeOnStart": true,
+					"beginsPattern": ".*",
+					"endsPattern": ".*started.*"
+				}
+			}
+		},
+		{
+			"label": "build-client",
+			"type": "shell",
+			"command": "cd client && npm run build",
+			"problemMatcher": [
+				"$tsc"
+			],
+			"group": "build"
+		},
+		{
+			"label": "build-client",
+			"type": "shell",
+			"command": "cd client && npm run build",
+			"group": "build"
+		},
+		{
+			"label": "build-client-final",
+			"type": "shell",
+			"command": "cd client && npm run build",
+			"group": "build"
+		}
+	]
 }
