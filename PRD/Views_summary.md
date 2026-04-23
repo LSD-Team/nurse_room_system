@@ -70,4 +70,16 @@
 
 ---
 
+## 12. view_gr_headers_full
+- **หน้าที่:** แสดงข้อมูลหัวเอกสารรับของ (GR Header) พร้อมชื่อ supplier และเลขที่ PO ที่อ้างอิง
+- **ตารางที่เกี่ยวข้อง:** gr_headers, suppliers, po_headers
+
+---
+
+## 13. view_gr_lines_full
+- **หน้าที่:** แสดงรายละเอียดรายการรับของ (GR Lines) พร้อมข้อมูลเอกสาร GR, item และเลขที่ PO
+- **ตารางที่เกี่ยวข้อง:** gr_lines, gr_headers, items, po_lines, po_headers
+
+---
+
 > หมายเหตุ: สามารถดู SQL statement เต็มได้ในไฟล์ Views.md เดิม
