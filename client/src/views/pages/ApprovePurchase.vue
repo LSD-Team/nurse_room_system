@@ -134,13 +134,18 @@
   }
 
   function canApprove(item: IPendingApprovalItem): boolean {
-    return item.current_approver_id === currentUserId.value;
+    // Normalize to string for comparison (approver_id might be number or string)
+    const approverId = String(item.current_approver_id || '').trim();
+    const userId = String(currentUserId.value || '').trim();
+    const match = approverId === userId;
+    return match;
   }
 
   async function loadPendingApprovals() {
     try {
-      pendingItems.value = await ApprovalService.getPendingApprovals();
-    } catch {
+      const data = await ApprovalService.getPendingApprovals();
+      pendingItems.value = data;
+    } catch (error) {
       // handled by axios interceptor
     }
   }
@@ -262,13 +267,6 @@
   <div class="card">
     <div class="flex justify-between items-center mb-4">
       <div class="font-semibold text-xl">อนุมัติการสั่งซื้อ / ยืม</div>
-      <!-- Current user display -->
-      <div class="flex items-center gap-2">
-        <Tag
-          :value="'กำลังใช้งาน: ' + currentUserId"
-          severity="info"
-        />
-      </div>
     </div>
 
     <DataTable
@@ -388,7 +386,7 @@
             </span>
             <Tag
               v-if="canApprove(data)"
-              value="To approve"
+              value="ต้องอนุมัติ"
               severity="danger"
               icon="pi pi-bell"
             />
