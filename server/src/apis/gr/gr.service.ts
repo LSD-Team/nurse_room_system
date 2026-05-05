@@ -172,4 +172,104 @@ export class GrService {
       );
     }
   }
+
+  // ─── POST: สร้าง GR ใหม่ (sp_GR_02_CreateGR) ───
+  // หมายเหตุ: SP ใหม่สร้าง JsonLines เอง ไม่ต้องส่งมาจาก client
+  async createGr(
+    poId: number,
+    note: string | null,
+    createdBy: string,
+  ): Promise<{ gr_id: number; gr_no: string }> {
+    try {
+      console.log('[GrService] createGr called:', {
+        poId,
+        note,
+        createdBy,
+      });
+
+      // SP ใหม่: เพียง 3 parameters (PoId, Note, CreatedBy)
+      // JsonLines สร้างภายใน SP จาก po_lines ที่มี line_type='ORDER' และ qty_received < qty_order
+      const result = await this.databaseService.executeStoredProcedure(
+        this.DATABASE_NAME,
+        'sp_GR_02_CreateGR',
+        {
+          PoId: poId.toString(),
+          Note: note,
+          CreatedBy: createdBy,
+        },
+      );
+
+      if (!result || result.length === 0) {
+        throw new Error('No result from sp_GR_02_CreateGR');
+      }
+
+      interface SpResponse {
+        Status: string;
+        Message: string;
+        gr_id?: number;
+        gr_no?: string;
+      }
+      const response = result[0] as SpResponse;
+      if (response.Status !== 'Success') {
+        throw new Error(response.Message || 'Failed to create GR');
+      }
+
+      console.log('[GrService] GR created successfully:', response);
+      return {
+        gr_id: response.gr_id || 0,
+        gr_no: response.gr_no || '',
+      };
+    } catch (error) {
+      console.error('[GrService] Error in createGr:', error);
+      throw new InternalServerErrorException(
+        error instanceof Error ? error.message : 'Failed to create GR',
+      );
+    }
+  }
+
+  // ─── POST: ยืนยัน GR (sp_GR_03_ConfirmGR) ───
+  async confirmGr(
+    grId: number,
+    confirmedBy: string,
+  ): Promise<{ status: string; message: string }> {
+    try {
+      console.log('[GrService] confirmGr called:', {
+        grId,
+        confirmedBy,
+      });
+
+      const result = await this.databaseService.executeStoredProcedure(
+        this.DATABASE_NAME,
+        'sp_GR_03_ConfirmGR',
+        {
+          GrId: grId.toString(),
+          ConfirmedBy: confirmedBy,
+        },
+      );
+
+      if (!result || result.length === 0) {
+        throw new Error('No result from sp_GR_03_ConfirmGR');
+      }
+
+      interface SpResponse {
+        Status: string;
+        Message: string;
+      }
+      const response = result[0] as SpResponse;
+      if (response.Status !== 'Success') {
+        throw new Error(response.Message || 'Failed to confirm GR');
+      }
+
+      console.log('[GrService] GR confirmed successfully:', response);
+      return {
+        status: response.Status,
+        message: response.Message,
+      };
+    } catch (error) {
+      console.error('[GrService] Error in confirmGr:', error);
+      throw new InternalServerErrorException(
+        error instanceof Error ? error.message : 'Failed to confirm GR',
+      );
+    }
+  }
 }
