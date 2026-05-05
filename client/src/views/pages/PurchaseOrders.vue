@@ -63,7 +63,7 @@
   const borrowDetailLoading = ref(false);
   const borrowDetailNo = ref('');
 
-  const selectedStatusFilter = ref<string>('');
+  const selectedStatusFilter = ref<string>('DRAFT');
 
   const filters = ref({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
