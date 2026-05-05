@@ -24,19 +24,8 @@
   const approvalHistory = ref<IApprovalHistory[]>([]);
   const approvalLogs = ref<IBorrowApprovalLog[]>([]);
 
-  // ─── Simulate user for testing ───
-  const simulateUsers = [
-    { id: '0027', label: '0027 - GROUP_LEAD' },
-    { id: '1547', label: '1547 - MANAGER' },
-    { id: '3346', label: '3346 - DEPARTMENT' },
-    {
-      id: '',
-      label: '8300 (ผู้ใช้งาน)',
-    },
-  ];
-  const simulatedUserId = ref('');
-
-  const realUserId = computed(() => {
+  // ─── Use actual logged-in user ID ───
+  const currentUserId = computed(() => {
     try {
       const token = localStorage.getItem('token');
       if (!token) return '';
@@ -46,10 +35,6 @@
       return '';
     }
   });
-
-  const currentUserId = computed(
-    () => simulatedUserId.value || realUserId.value
-  );
 
   const displayItems = computed(() => {
     return viewMode.value === 'pending'
@@ -249,18 +234,15 @@
     }
 
     try {
-      const simAs = simulatedUserId.value || undefined;
       if (item.type === 'PO') {
         await ApprovalService.approvePo(item.id, {
           Action: action as 'APPROVE' | 'REJECT' | 'REWORK',
           Remark: remark,
-          SimulateAs: simAs,
         });
       } else {
         await ApprovalService.approveBorrow(item.id, {
           Action: action,
           Remark: remark,
-          SimulateAs: simAs,
         });
       }
       selectedItem.value = null;
@@ -280,19 +262,10 @@
   <div class="card">
     <div class="flex justify-between items-center mb-4">
       <div class="font-semibold text-xl">อนุมัติการสั่งซื้อ / ยืม</div>
-      <!-- Simulate user buttons (DEV) -->
+      <!-- Current user display -->
       <div class="flex items-center gap-2">
-        <span class="text-sm text-surface-500">จำลองสิทธิ์:</span>
-        <SelectButton
-          v-model="simulatedUserId"
-          :options="simulateUsers"
-          optionLabel="label"
-          optionValue="id"
-          :allowEmpty="false"
-          size="small"
-        />
         <Tag
-          :value="'กำลังใช้งาน: ' + (currentUserId || realUserId)"
+          :value="'กำลังใช้งาน: ' + currentUserId"
           severity="info"
         />
       </div>
