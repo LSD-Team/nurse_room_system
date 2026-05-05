@@ -15,6 +15,7 @@
   const grHeaders = ref<IGrHeaderList[]>([]);
   const grLoading = ref(false);
   const grError = ref('');
+  const selectedGrStatusFilter = ref<string>('DRAFT'); // Default to DRAFT
 
   const grFilters = ref({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
@@ -67,6 +68,25 @@
 
   const numberedGrHeaders = computed(() =>
     grHeaders.value.map((item, index) => ({ ...item, rowNo: index + 1 }))
+  );
+
+  const filteredGrHeaders = computed(() => {
+    if (!selectedGrStatusFilter.value) return numberedGrHeaders.value;
+    return numberedGrHeaders.value.filter(
+      item => item.status === selectedGrStatusFilter.value
+    );
+  });
+
+  const countDraft = computed(
+    () => numberedGrHeaders.value.filter(item => item.status === 'DRAFT').length
+  );
+
+  const countConfirmed = computed(
+    () => numberedGrHeaders.value.filter(item => item.status === 'CONFIRMED').length
+  );
+
+  const countCancelled = computed(
+    () => numberedGrHeaders.value.filter(item => item.status === 'CANCELLED').length
   );
 
   async function openGrDetailDialog(gr: IGrHeaderList): Promise<void> {
@@ -248,8 +268,49 @@
           <Skeleton height="400px" />
         </template>
         <template v-else>
+          <!-- Status Filter Buttons -->
+          <div class="mb-4 flex gap-2 flex-wrap items-center">
+            <span class="text-sm font-semibold">Filter by Status:</span>
+            <Button
+              label="ALL"
+              :variant="selectedGrStatusFilter === '' ? 'contained' : 'outlined'"
+              size="small"
+              @click="selectedGrStatusFilter = ''"
+            />
+            <Button
+              label="DRAFT"
+              :variant="selectedGrStatusFilter === 'DRAFT' ? 'contained' : 'outlined'"
+              size="small"
+              @click="selectedGrStatusFilter = 'DRAFT'"
+            >
+              <template #icon>
+                <span class="mr-1">{{ countDraft }}</span>
+              </template>
+            </Button>
+            <Button
+              label="CONFIRMED"
+              :variant="selectedGrStatusFilter === 'CONFIRMED' ? 'contained' : 'outlined'"
+              size="small"
+              @click="selectedGrStatusFilter = 'CONFIRMED'"
+            >
+              <template #icon>
+                <span class="mr-1">{{ countConfirmed }}</span>
+              </template>
+            </Button>
+            <Button
+              label="CANCELLED"
+              :variant="selectedGrStatusFilter === 'CANCELLED' ? 'contained' : 'outlined'"
+              size="small"
+              @click="selectedGrStatusFilter = 'CANCELLED'"
+            >
+              <template #icon>
+                <span class="mr-1">{{ countCancelled }}</span>
+              </template>
+            </Button>
+          </div>
+
           <DataTable
-            :value="numberedGrHeaders"
+            :value="filteredGrHeaders"
             :paginator="true"
             :rows="10"
             :rowsPerPageOptions="[5, 10, 20]"
