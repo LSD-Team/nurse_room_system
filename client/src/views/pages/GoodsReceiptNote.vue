@@ -763,43 +763,10 @@
               {{ formatNumber(data.qty_receive || 0, 2) }}
             </template>
           </Column>
-          <Column
-            v-if="selectedGr.header.status === 'DRAFT'"
-            header="Qty to Receive"
-            style="min-width: 140px"
-          >
+          <Column header="Qty to Receive" style="min-width: 140px">
             <template #body="{ data }">
-              <div class="flex items-center gap-2">
-                <Button
-                  icon="pi pi-minus"
-                  size="small"
-                  text
-                  @click="
-                    grQtyToReceive[data.gr_line_id] = Math.max(
-                      0,
-                      (grQtyToReceive[data.gr_line_id] || 0) - 1
-                    )
-                  "
-                />
-                <InputNumber
-                  v-model="grQtyToReceive[data.gr_line_id]"
-                  :min="0"
-                  :max="data.qty_receive || 0"
-                  class="w-20"
-                  input-class="text-center text-sm"
-                />
-                <Button
-                  icon="pi pi-plus"
-                  size="small"
-                  text
-                  @click="
-                    grQtyToReceive[data.gr_line_id] = Math.min(
-                      data.qty_receive || 0,
-                      (grQtyToReceive[data.gr_line_id] || 0) + 1
-                    )
-                  "
-                />
-              </div>
+              <!-- Show as read-only in confirm dialog (cannot edit) -->
+              {{ formatNumber(grQtyToReceive[data.gr_line_id] || 0, 2) }}
             </template>
           </Column>
           <Column
