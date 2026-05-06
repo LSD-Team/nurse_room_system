@@ -228,6 +228,21 @@ export class ApprovalService {
     );
   }
 
+  // ─── GET: User approval roles ───
+  async getUserApprovalRoles(userId: string): Promise<string[]> {
+    const query = `
+      SELECT DISTINCT ar.role_code
+      FROM approval_roles ar
+      WHERE ar.approver_id = @param0 AND ar.is_active = 1
+    `;
+    const result = await this.databaseService.query<{ role_code: string }>(
+      this.DATABASE_NAME,
+      query,
+      [userId],
+    );
+    return result.map(r => r.role_code);
+  }
+
   // ─── POST: Approve PO (sp_PO_04_ApprovePO) ───
   async approvePo(
     poId: string,

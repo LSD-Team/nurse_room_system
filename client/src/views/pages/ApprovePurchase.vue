@@ -17,6 +17,7 @@
   const viewMode = ref<'pending' | 'history'>('pending');
   const showDetailDialog = ref(false);
   const selectedItem = ref<IPendingApprovalItem | null>(null);
+  const userApprovalRoles = ref<string[]>([]);
 
   // Detail data
   const poLines = ref<IPoLine[]>([]);
@@ -27,7 +28,14 @@
   // ─── Use actual logged-in user ID ───
   const currentUserId = computed(() => {
     try {
-      const token = localStorage.getItem('token');
+      // Try localStorage first
+      let token = localStorage.getItem('token');
+
+      // Fallback to VITE_DEV_TOKEN in development mode
+      if (!token && import.meta.env.MODE === 'development') {
+        token = import.meta.env.VITE_DEV_TOKEN;
+      }
+
       if (!token) return '';
       const payload = JSON.parse(atob(token.split('.')[1]));
       return String(payload.UserID || '');
@@ -134,18 +142,29 @@
   }
 
   function canApprove(item: IPendingApprovalItem): boolean {
-    // Normalize to string for comparison (approver_id might be number or string)
-    const approverId = String(item.current_approver_id || '').trim();
-    const userId = String(currentUserId.value || '').trim();
-    const match = approverId === userId;
-    return match;
+    // Check if user has the required approval role
+    const requiredRole = String(item.current_approval_role || '').trim();
+    const hasRole = userApprovalRoles.value.includes(requiredRole);
+    return hasRole;
   }
 
   async function loadPendingApprovals() {
     try {
+      console.log('[loadPendingApprovals] starting...');
       const data = await ApprovalService.getPendingApprovals();
+      console.log('[loadPendingApprovals] success, data:', data);
       pendingItems.value = data;
     } catch (error) {
+      // handled by axios interceptor
+    }
+  }
+
+  async function loadUserRoles() {
+    try {
+      const roles = await ApprovalService.getUserRoles();
+      userApprovalRoles.value = roles;
+    } catch (error) {
+      console.error('[loadUserRoles] error:', error);
       // handled by axios interceptor
     }
   }
@@ -259,7 +278,8 @@
   }
 
   onMounted(async () => {
-    await loadPendingApprovals();
+    console.log('[ApprovePurchase] onMounted - loading pending approvals and user roles');
+    await Promise.all([loadUserRoles(), loadPendingApprovals()]);
   });
 </script>
 

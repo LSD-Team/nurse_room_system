@@ -6,6 +6,10 @@ import type {
 } from '@/interfaces/approval.interfaces';
 
 export class ApprovalService {
+  static async getUserRoles(): Promise<string[]> {
+    return Api.get<string[]>('/approval/user-roles');
+  }
+
   static async getPendingApprovals(): Promise<IPendingApprovalItem[]> {
     return Api.get<IPendingApprovalItem[]>('/approval/pending');
   }
@@ -15,7 +19,9 @@ export class ApprovalService {
   }
 
   static async getPoDetail(poId: number) {
-    return Api.get<{ lines: any[]; approvals: IApprovalHistory[] }>(`/approval/po/${poId}`);
+    return Api.get<{ lines: any[]; approvals: IApprovalHistory[] }>(
+      `/approval/po/${poId}`
+    );
   }
 
   static async getBorrowApprovalHistory(
@@ -32,7 +38,11 @@ export class ApprovalService {
 
   static async approvePo(
     poId: number,
-    data: { Action: 'APPROVE' | 'REJECT' | 'REWORK'; Remark?: string; SimulateAs?: string }
+    data: {
+      Action: 'APPROVE' | 'REJECT' | 'REWORK';
+      Remark?: string;
+      SimulateAs?: string;
+    }
   ) {
     return Api.post(`/approval/po/${poId}/approve`, data);
   }

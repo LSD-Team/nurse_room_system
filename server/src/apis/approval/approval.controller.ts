@@ -12,6 +12,16 @@ export class ApprovalController {
     return (global.jwtPayload as JwtPayloadData)?.UserID || 'UNKNOWN';
   }
 
+  // ─── GET /approval/user-roles ───
+  @Get('user-roles')
+  @ApiOperation({
+    summary: 'Get current user approval roles',
+  })
+  async getUserRoles() {
+    const userId = this.currentUser;
+    return this.approvalService.getUserApprovalRoles(userId);
+  }
+
   // ─── GET /approval/pending ───
   @Get('pending')
   @ApiOperation({
