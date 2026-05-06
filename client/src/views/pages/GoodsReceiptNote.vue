@@ -2,14 +2,10 @@
   import { ref, onMounted, computed } from 'vue';
   import { FilterMatchMode } from '@primevue/core/api';
   import { GrService } from '@/services/gr.service';
-  import { PoService } from '@/services/po.service';
-  import { useMainStore } from '@/stores/main.store';
-  import type { IGrHeaderList, IGrDetail, IGrHeader, IGrLine } from '@/interfaces/gr.interfaces';
-  import type { IPoHeader, IPoLine } from '@/interfaces/po.interfaces';
+  import type { IGrHeaderList, IGrDetail } from '@/interfaces/gr.interfaces';
+  import type { IPoHeader } from '@/interfaces/po.interfaces';
   import { formatDate, formatNumber } from '@/utils/format.utils';
   import Swal from 'sweetalert2';
-
-  const mainStore = useMainStore();
 
   // ─── State: Tab 1 - View Existing GRs ───
   const grHeaders = ref<IGrHeaderList[]>([]);
@@ -27,6 +23,7 @@
   const showDetailDialog = ref(false);
   const selectedGr = ref<IGrDetail | null>(null);
   const detailLoading = ref(false);
+  const grQtyToReceive = ref<Record<number, number>>({}); // Map of line_id -> qty_to_receive
 
   // ─── State: Tab 2 - Create New GR ───
   const poHeaders = ref<IPoHeader[]>([]);
@@ -41,9 +38,10 @@
 
   const showCreateDialog = ref(false);
   const selectedPo = ref<IPoHeader | null>(null);
-  const poLines = ref<IPoLine[]>([]);
+  const poLines = ref<any[]>([]); // Changed to hold pending items
   const createDialogLoading = ref(false);
   const createFormNote = ref('');
+  const qtyToReceive = ref<Record<number, number>>({}); // Map of item_id -> qty to receive
 
   onMounted(async () => {
     await loadGrList();
@@ -82,17 +80,26 @@
   );
 
   const countConfirmed = computed(
-    () => numberedGrHeaders.value.filter(item => item.status === 'CONFIRMED').length
+    () =>
+      numberedGrHeaders.value.filter(item => item.status === 'CONFIRMED').length
   );
 
   const countCancelled = computed(
-    () => numberedGrHeaders.value.filter(item => item.status === 'CANCELLED').length
+    () =>
+      numberedGrHeaders.value.filter(item => item.status === 'CANCELLED').length
   );
 
   async function openGrDetailDialog(gr: IGrHeaderList): Promise<void> {
     detailLoading.value = true;
+    grQtyToReceive.value = {}; // Reset
     try {
       selectedGr.value = await GrService.getGrDetail(gr.gr_id);
+      // Initialize qty_to_receive with current qty_receive
+      if (selectedGr.value?.lines) {
+        selectedGr.value.lines.forEach(line => {
+          grQtyToReceive.value[line.gr_line_id] = line.qty_receive || 0;
+        });
+      }
       showDetailDialog.value = true;
     } catch (err: unknown) {
       Swal.fire({
@@ -108,6 +115,9 @@
   async function confirmGr(): Promise<void> {
     if (!selectedGr.value?.header) return;
 
+    // Close dialog first so alert is visible
+    showDetailDialog.value = false;
+
     const confirmed = await Swal.fire({
       icon: 'warning',
       title: 'Confirm GR',
@@ -117,23 +127,25 @@
       cancelButtonText: 'ยกเลิก',
     });
 
-    if (!confirmed.isConfirmed) return;
+    if (!confirmed.isConfirmed) {
+      selectedGr.value = null;
+      return;
+    }
 
     detailLoading.value = true;
     try {
       await GrService.confirmGr(selectedGr.value.header.gr_id);
 
-      Swal.fire({
+      await Swal.fire({
         icon: 'success',
         title: 'Success',
         text: 'GR confirmed successfully',
       });
 
-      showDetailDialog.value = false;
       selectedGr.value = null;
       await loadGrList();
     } catch (err: unknown) {
-      Swal.fire({
+      await Swal.fire({
         icon: 'error',
         title: 'Error',
         text: getErrorMessage(err),
@@ -166,11 +178,15 @@
   async function openCreateDialog(po: IPoHeader): Promise<void> {
     selectedPo.value = po;
     createFormNote.value = '';
+    qtyToReceive.value = {}; // Reset quantities
     createDialogLoading.value = true;
     try {
-      poLines.value = await PoService.getPoLines(po.po_id);
-      // Only show lines with pending qty
-      poLines.value = poLines.value.filter(l => (l.qty_order || 0) > (l.qty_received || 0));
+      // Fetch pending items from this specific PO
+      poLines.value = await GrService.getPendingItems(po.po_id);
+      // Initialize qty_to_receive with qty_remaining
+      poLines.value.forEach(line => {
+        qtyToReceive.value[line.item_id] = line.qty_remaining || 0;
+      });
       showCreateDialog.value = true;
     } catch (err: unknown) {
       Swal.fire({
@@ -186,12 +202,28 @@
   async function saveGr(): Promise<void> {
     if (!selectedPo.value) return;
 
-    // SP ใหม่สร้าง JsonLines เองจาก PO ที่มี line_type='ORDER' และ qty_received < qty_order
-    // ไม่ต้องส่ง jsonLines จากที่ฟอร์ม เพียงส่ง po_id และ note
+    // Build jsonLines from qtyToReceive
+    const jsonLines = poLines.value
+      .filter(line => (qtyToReceive.value[line.item_id] || 0) > 0)
+      .map(line => ({
+        item_id: line.item_id,
+        qty: qtyToReceive.value[line.item_id] || 0,
+      }));
+
+    if (jsonLines.length === 0) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Warning',
+        text: 'Please specify quantity to receive for at least one item',
+      });
+      return;
+    }
+
     createDialogLoading.value = true;
     try {
       const result = await GrService.createGr(
         selectedPo.value.po_id,
+        JSON.stringify(jsonLines),
         createFormNote.value
       );
 
@@ -205,6 +237,7 @@
       selectedPo.value = null;
       poLines.value = [];
       createFormNote.value = '';
+      qtyToReceive.value = {};
       await loadGrList();
       await loadAvailablePos();
     } catch (err: unknown) {
@@ -253,7 +286,9 @@
       <h2 class="text-2xl font-bold text-surface-900 dark:text-surface-0">
         Goods Receipt Note (GRN)
       </h2>
-      <p class="text-surface-500 mt-1">Manage goods receiving with real GR workflow</p>
+      <p class="text-surface-500 mt-1">
+        Manage goods receiving with real GR workflow
+      </p>
     </div>
 
     <!-- Tabs -->
@@ -273,13 +308,17 @@
             <span class="text-sm font-semibold">Filter by Status:</span>
             <Button
               label="ALL"
-              :variant="selectedGrStatusFilter === '' ? 'contained' : 'outlined'"
+              :variant="
+                selectedGrStatusFilter === '' ? 'contained' : 'outlined'
+              "
               size="small"
               @click="selectedGrStatusFilter = ''"
             />
             <Button
               label="DRAFT"
-              :variant="selectedGrStatusFilter === 'DRAFT' ? 'contained' : 'outlined'"
+              :variant="
+                selectedGrStatusFilter === 'DRAFT' ? 'contained' : 'outlined'
+              "
               size="small"
               @click="selectedGrStatusFilter = 'DRAFT'"
             >
@@ -289,7 +328,11 @@
             </Button>
             <Button
               label="CONFIRMED"
-              :variant="selectedGrStatusFilter === 'CONFIRMED' ? 'contained' : 'outlined'"
+              :variant="
+                selectedGrStatusFilter === 'CONFIRMED'
+                  ? 'contained'
+                  : 'outlined'
+              "
               size="small"
               @click="selectedGrStatusFilter = 'CONFIRMED'"
             >
@@ -299,7 +342,11 @@
             </Button>
             <Button
               label="CANCELLED"
-              :variant="selectedGrStatusFilter === 'CANCELLED' ? 'contained' : 'outlined'"
+              :variant="
+                selectedGrStatusFilter === 'CANCELLED'
+                  ? 'contained'
+                  : 'outlined'
+              "
               size="small"
               @click="selectedGrStatusFilter = 'CANCELLED'"
             >
@@ -335,22 +382,61 @@
             <template #empty>No GRs found</template>
             <template #loading>Loading...</template>
 
-            <Column field="rowNo" header="#" sortable style="min-width: 60px" frozen />
-            <Column field="gr_no" header="GR No" sortable style="min-width: 120px" frozen />
+            <Column
+              field="rowNo"
+              header="#"
+              sortable
+              style="min-width: 60px"
+              frozen
+            />
+            <Column
+              field="gr_no"
+              header="GR No"
+              sortable
+              style="min-width: 120px"
+              frozen
+            />
             <Column field="gr_date" header="Date" style="min-width: 120px">
               <template #body="{ data }">
                 {{ formatDate(data.gr_date) }}
               </template>
             </Column>
-            <Column field="supplier_name" header="Supplier" sortable style="min-width: 200px" />
-            <Column field="po_no" header="PO No" sortable style="min-width: 100px" />
-            <Column field="status" header="Status" sortable style="min-width: 100px">
+            <Column
+              field="supplier_name"
+              header="Supplier"
+              sortable
+              style="min-width: 200px"
+            />
+            <Column
+              field="po_no"
+              header="PO No"
+              sortable
+              style="min-width: 100px"
+            />
+            <Column
+              field="status"
+              header="Status"
+              sortable
+              style="min-width: 100px"
+            >
               <template #body="{ data }">
-                <Tag :value="data.status" :severity="getGrStatusSeverity(data.status)" />
+                <Tag
+                  :value="data.status"
+                  :severity="getGrStatusSeverity(data.status)"
+                />
               </template>
             </Column>
-            <Column field="created_by" header="Created By" style="min-width: 120px" />
-            <Column header="Action" style="min-width: 100px" frozen alignFrozen="right">
+            <Column
+              field="created_by"
+              header="Created By"
+              style="min-width: 120px"
+            />
+            <Column
+              header="Action"
+              style="min-width: 100px"
+              frozen
+              alignFrozen="right"
+            >
               <template #body="{ data }">
                 <Button
                   icon="pi pi-eye"
@@ -402,20 +488,42 @@
             <template #empty>No pending POs for receiving</template>
             <template #loading>Loading...</template>
 
-            <Column field="rowNo" header="#" sortable style="min-width: 60px" frozen />
-            <Column field="po_no" header="PO No" sortable style="min-width: 120px" frozen />
+            <Column
+              field="rowNo"
+              header="#"
+              sortable
+              style="min-width: 60px"
+              frozen
+            />
+            <Column
+              field="po_no"
+              header="PO No"
+              sortable
+              style="min-width: 120px"
+              frozen
+            />
             <Column field="po_date" header="PO Date" style="min-width: 120px">
               <template #body="{ data }">
                 {{ formatDate(data.po_date) }}
               </template>
             </Column>
-            <Column field="supplier_name" header="Supplier" sortable style="min-width: 200px" />
+            <Column
+              field="supplier_name"
+              header="Supplier"
+              sortable
+              style="min-width: 200px"
+            />
             <Column field="due_date" header="Due Date" style="min-width: 120px">
               <template #body="{ data }">
                 {{ formatDate(data.due_date) }}
               </template>
             </Column>
-            <Column field="po_status" header="Status" sortable style="min-width: 100px">
+            <Column
+              field="po_status"
+              header="Status"
+              sortable
+              style="min-width: 100px"
+            >
               <template #body="{ data }">
                 <Tag
                   :value="data.po_status"
@@ -423,7 +531,12 @@
                 />
               </template>
             </Column>
-            <Column header="Action" style="min-width: 100px" frozen alignFrozen="right">
+            <Column
+              header="Action"
+              style="min-width: 100px"
+              frozen
+              alignFrozen="right"
+            >
               <template #body="{ data }">
                 <Button
                   icon="pi pi-arrow-right"
@@ -462,17 +575,21 @@
           </div>
           <div>
             <span class="text-sm text-muted-color">Date</span>
-            <div class="text-lg font-semibold">{{ formatDate(selectedPo.po_date) }}</div>
+            <div class="text-lg font-semibold">
+              {{ formatDate(selectedPo.po_date) }}
+            </div>
           </div>
           <div>
             <span class="text-sm text-muted-color">Supplier</span>
-            <div class="text-lg font-semibold">{{ selectedPo.supplier_name }}</div>
+            <div class="text-lg font-semibold">
+              {{ selectedPo.supplier_name }}
+            </div>
           </div>
           <div>
             <span class="text-sm text-muted-color">Status</span>
             <Tag
-              :value="selectedPo.po_status"
-              :severity="getPoStatusSeverity(selectedPo.po_status)"
+              :value="selectedPo.status"
+              :severity="getPoStatusSeverity(selectedPo.status)"
             />
           </div>
         </div>
@@ -489,32 +606,55 @@
         />
       </div>
 
-      <!-- Lines Table -->
+      <!-- Lines Table with Quantity Input -->
       <div class="mb-4">
-        <h4 class="font-semibold mb-3">Items to Receive (All Pending)</h4>
+        <h4 class="font-semibold mb-3">
+          Items to Receive - Specify Quantities
+        </h4>
         <p class="text-sm text-surface-500 mb-2">
-          All items with line_type='ORDER' and qty_received &lt; qty_order will be received
+          Enter the quantity you want to receive for each item
         </p>
         <DataTable :value="poLines" class="p-datatable-sm">
-          <Column field="item_code" header="Item Code" style="min-width: 100px" />
-          <Column field="item_name_th" header="Name (TH)" style="min-width: 150px" />
-          <Column field="item_name_en" header="Name (EN)" style="min-width: 150px" />
-          <Column field="qty_order" header="PO Qty" style="min-width: 80px">
+          <Column
+            field="item_code"
+            header="Item Code"
+            style="min-width: 100px"
+          />
+          <Column
+            field="item_name_th"
+            header="Name (TH)"
+            style="min-width: 150px"
+          />
+          <Column
+            field="qty_remaining"
+            header="Pending Qty"
+            style="min-width: 100px"
+          >
             <template #body="{ data }">
-              {{ formatNumber(data.qty_order || 0, 2) }}
+              {{ formatNumber(data.qty_remaining || 0, 2) }}
             </template>
           </Column>
-          <Column field="qty_received" header="Already Received" style="min-width: 100px">
+          <Column field="unit_name_th" header="Unit" style="min-width: 100px">
             <template #body="{ data }">
-              {{ formatNumber(data.qty_received || 0, 2) }}
+              {{ data.unit_name_th || '-' }}
             </template>
           </Column>
-          <Column header="Pending" style="min-width: 100px">
+          <Column header="Qty to Receive" style="min-width: 120px">
             <template #body="{ data }">
-              {{ formatNumber((data.qty_order || 0) - (data.qty_received || 0), 2) }}
+              <InputNumber
+                v-model="qtyToReceive[data.item_id]"
+                :min="0"
+                :max="data.qty_remaining || 0"
+                :maxFractionDigits="4"
+                class="w-full"
+              />
             </template>
           </Column>
-          <Column field="unit_price" header="Unit Price" style="min-width: 100px">
+          <Column
+            field="unit_price"
+            header="Unit Price"
+            style="min-width: 100px"
+          >
             <template #body="{ data }">
               ฿{{ formatNumber(data.unit_price || 0) }}
             </template>
@@ -524,8 +664,15 @@
     </template>
 
     <template #footer>
-      <div v-if="!createDialogLoading && selectedPo" class="flex gap-2 justify-end">
-        <Button label="Cancel" icon="pi pi-times" @click="showCreateDialog = false" />
+      <div
+        v-if="!createDialogLoading && selectedPo"
+        class="flex gap-2 justify-end"
+      >
+        <Button
+          label="Cancel"
+          icon="pi pi-times"
+          @click="showCreateDialog = false"
+        />
         <Button
           label="Create GR"
           icon="pi pi-check"
@@ -554,19 +701,27 @@
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div>
             <span class="text-sm text-muted-color">GR No</span>
-            <div class="text-lg font-semibold">{{ selectedGr.header.gr_no }}</div>
+            <div class="text-lg font-semibold">
+              {{ selectedGr.header.gr_no }}
+            </div>
           </div>
           <div>
             <span class="text-sm text-muted-color">Date</span>
-            <div class="text-lg font-semibold">{{ formatDate(selectedGr.header.gr_date) }}</div>
+            <div class="text-lg font-semibold">
+              {{ formatDate(selectedGr.header.gr_date) }}
+            </div>
           </div>
           <div>
             <span class="text-sm text-muted-color">Supplier</span>
-            <div class="text-lg font-semibold">{{ selectedGr.header.supplier_name }}</div>
+            <div class="text-lg font-semibold">
+              {{ selectedGr.header.supplier_name }}
+            </div>
           </div>
           <div>
             <span class="text-sm text-muted-color">PO No</span>
-            <div class="text-lg font-semibold">{{ selectedGr.header.po_no }}</div>
+            <div class="text-lg font-semibold">
+              {{ selectedGr.header.po_no }}
+            </div>
           </div>
           <div>
             <span class="text-sm text-muted-color">Status</span>
@@ -577,7 +732,9 @@
           </div>
           <div>
             <span class="text-sm text-muted-color">Created By</span>
-            <div class="text-lg font-semibold">{{ selectedGr.header.created_by }}</div>
+            <div class="text-lg font-semibold">
+              {{ selectedGr.header.created_by }}
+            </div>
           </div>
         </div>
         <div v-if="selectedGr.header.note" class="mt-4">
@@ -591,14 +748,65 @@
         <h4 class="font-semibold mb-3">Items Received</h4>
         <DataTable :value="selectedGr.lines" class="p-datatable-sm">
           <Column field="item_code" header="Code" style="min-width: 100px" />
-          <Column field="item_name_th" header="Name (TH)" style="min-width: 150px" />
-          <Column field="item_name_en" header="Name (EN)" style="min-width: 150px" />
+          <Column
+            field="item_name_th"
+            header="Name (TH)"
+            style="min-width: 150px"
+          />
+          <Column
+            field="item_name_en"
+            header="Name (EN)"
+            style="min-width: 150px"
+          />
           <Column field="qty_receive" header="Qty" style="min-width: 80px">
             <template #body="{ data }">
               {{ formatNumber(data.qty_receive || 0, 2) }}
             </template>
           </Column>
-          <Column field="unit_price" header="Unit Price" style="min-width: 100px">
+          <Column
+            v-if="selectedGr.header.status === 'DRAFT'"
+            header="Qty to Receive"
+            style="min-width: 140px"
+          >
+            <template #body="{ data }">
+              <div class="flex items-center gap-2">
+                <Button
+                  icon="pi pi-minus"
+                  size="small"
+                  text
+                  @click="
+                    grQtyToReceive[data.gr_line_id] = Math.max(
+                      0,
+                      (grQtyToReceive[data.gr_line_id] || 0) - 1
+                    )
+                  "
+                />
+                <InputNumber
+                  v-model="grQtyToReceive[data.gr_line_id]"
+                  :min="0"
+                  :max="data.qty_receive || 0"
+                  class="w-20"
+                  input-class="text-center text-sm"
+                />
+                <Button
+                  icon="pi pi-plus"
+                  size="small"
+                  text
+                  @click="
+                    grQtyToReceive[data.gr_line_id] = Math.min(
+                      data.qty_receive || 0,
+                      (grQtyToReceive[data.gr_line_id] || 0) + 1
+                    )
+                  "
+                />
+              </div>
+            </template>
+          </Column>
+          <Column
+            field="unit_price"
+            header="Unit Price"
+            style="min-width: 100px"
+          >
             <template #body="{ data }">
               ฿{{ formatNumber(data.unit_price || 0) }}
             </template>
@@ -613,8 +821,15 @@
     </template>
 
     <template #footer>
-      <div v-if="!detailLoading && selectedGr?.header" class="flex gap-2 justify-end items-center">
-        <Button label="Close" icon="pi pi-times" @click="showDetailDialog = false" />
+      <div
+        v-if="!detailLoading && selectedGr?.header"
+        class="flex gap-2 justify-end items-center"
+      >
+        <Button
+          label="Close"
+          icon="pi pi-times"
+          @click="showDetailDialog = false"
+        />
         <template v-if="selectedGr.header.status === 'DRAFT'">
           <Button
             label="Confirm GR"

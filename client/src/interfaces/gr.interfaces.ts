@@ -13,6 +13,21 @@ export interface IGrHeaderList {
   created_by: string;
 }
 
+// Pending items from PO
+export interface IPendingItem {
+  po_line_id: number;
+  item_id: number;
+  item_code?: string;
+  item_name_th?: string;
+  qty_order: number;
+  qty_received: number;
+  qty_remaining: number;
+  unit_price: number;
+  conversion_factor: number;
+  unit_name_th?: string;
+  unit_code?: string;
+}
+
 // Detail view
 export interface IGrHeader {
   gr_id: number;

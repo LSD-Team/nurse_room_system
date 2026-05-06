@@ -1,5 +1,9 @@
 import { Api } from '@/services/api.service';
-import type { IGrHeaderList, IGrDetail } from '@/interfaces/gr.interfaces';
+import type {
+  IGrHeaderList,
+  IGrDetail,
+  IPendingItem,
+} from '@/interfaces/gr.interfaces';
 
 export class GrService {
   // ─── รายการ GR ทั้งหมด ───
@@ -17,20 +21,31 @@ export class GrService {
     return Api.get<any[]>('/gr/available-po');
   }
 
+  // ─── Pending items จาก specific PO ───
+  static async getPendingItems(poId: number): Promise<IPendingItem[]> {
+    return Api.get<IPendingItem[]>(`/gr/pending-items/${poId}`);
+  }
+
   // ─── สร้าง GR ใหม่ (DRAFT) ───
-  // หมายเหตุ: jsonLines สร้างภายใน SP จาก PO ที่มี line_type='ORDER' และ qty_received < qty_order
   static async createGr(
     poId: number,
+    jsonLines?: string | null,
     note?: string | null
   ): Promise<{ gr_id: number; gr_no: string }> {
     return Api.post<{ gr_id: number; gr_no: string }>('/gr/create', {
       po_id: poId,
+      json_lines: jsonLines || null,
       note: note || null,
     });
   }
 
   // ─── ยืนยัน GR (CONFIRMED) ───
-  static async confirmGr(grId: number): Promise<{ status: string; message: string }> {
-    return Api.post<{ status: string; message: string }>(`/gr/${grId}/confirm`, {});
+  static async confirmGr(
+    grId: number
+  ): Promise<{ status: string; message: string }> {
+    return Api.post<{ status: string; message: string }>(
+      `/gr/${grId}/confirm`,
+      {}
+    );
   }
 }

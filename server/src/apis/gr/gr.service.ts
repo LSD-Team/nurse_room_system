@@ -6,6 +6,7 @@ import {
   IGrHeader,
   IGrHeaderList,
   IGrLine,
+  IPendingItem,
 } from './gr.interface';
 import { ConfigService } from '@nestjs/config';
 
@@ -173,27 +174,80 @@ export class GrService {
     }
   }
 
+  // ─── GET: pending items จาก specific PO ───
+  async getPendingItems(poId: number): Promise<IPendingItem[]> {
+    try {
+      console.log('[GrService] getPendingItems called with poId=', poId);
+
+      const query = `
+        SELECT 
+          pl.po_line_id,
+          pl.item_id,
+          i.item_code,
+          i.item_name_th,
+          pl.qty_order,
+          pl.qty_received,
+          (pl.qty_order - pl.qty_received) AS qty_remaining,
+          spl.unit_price,
+          spl.conversion_factor,
+          u.unit_name_th,
+          u.unit_code
+        FROM [${this.DATABASE_NAME}].dbo.po_lines pl
+        LEFT JOIN [${this.DATABASE_NAME}].dbo.items i ON pl.item_id = i.item_id
+        LEFT JOIN [${this.DATABASE_NAME}].dbo.supplier_price_list spl 
+          ON spl.item_id = pl.item_id 
+          AND spl.supplier_id = (SELECT supplier_id FROM [${this.DATABASE_NAME}].dbo.po_headers WHERE po_id = ${poId})
+          AND spl.is_active = 1
+          AND spl.effective_date <= CAST(GETDATE() AS DATE)
+          AND (spl.expire_date IS NULL OR spl.expire_date >= CAST(GETDATE() AS DATE))
+        LEFT JOIN [${this.DATABASE_NAME}].dbo.units u ON u.unit_id = spl.unit_id
+        WHERE pl.po_id = ${poId}
+          AND pl.qty_received < pl.qty_order
+        ORDER BY pl.po_line_id
+      `;
+
+      const results = await this.databaseService.query<IPendingItem>(
+        this.DATABASE_NAME,
+        query,
+      );
+
+      console.log(
+        '[GrService] getPendingItems returned:',
+        results?.length || 0,
+        'pending items',
+      );
+      return results || [];
+    } catch (error) {
+      console.error('[GrService] Error in getPendingItems:', error);
+      throw new InternalServerErrorException(
+        'Failed to fetch pending items',
+      );
+    }
+  }
+
   // ─── POST: สร้าง GR ใหม่ (sp_GR_02_CreateGR) ───
-  // หมายเหตุ: SP ใหม่สร้าง JsonLines เอง ไม่ต้องส่งมาจาก client
   async createGr(
     poId: number,
+    jsonLines: string | undefined,
     note: string | null,
     createdBy: string,
   ): Promise<{ gr_id: number; gr_no: string }> {
     try {
       console.log('[GrService] createGr called:', {
         poId,
+        jsonLines: jsonLines ? 'provided' : 'not provided',
         note,
         createdBy,
       });
 
-      // SP ใหม่: เพียง 3 parameters (PoId, Note, CreatedBy)
-      // JsonLines สร้างภายใน SP จาก po_lines ที่มี line_type='ORDER' และ qty_received < qty_order
+      // SP params: PoId, JsonLines, Note, CreatedBy
+      // JsonLines can be provided by client, or SP will build it from po_lines
       const result = await this.databaseService.executeStoredProcedure(
         this.DATABASE_NAME,
         'sp_GR_02_CreateGR',
         {
           PoId: poId.toString(),
+          JsonLines: jsonLines || null,
           Note: note,
           CreatedBy: createdBy,
         },

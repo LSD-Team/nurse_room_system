@@ -7,10 +7,11 @@ import {
   ApiBody,
 } from '@nestjs/swagger';
 import { GrService } from './gr.service';
-import { IAvailablePo, IGrDetail, IGrHeaderList } from './gr.interface';
+import { IAvailablePo, IGrDetail, IGrHeaderList, IPendingItem } from './gr.interface';
 
 interface CreateGrRequestDto {
   po_id: number;
+  json_lines?: string; // Optional JSON array of items to receive
   note?: string | null;
 }
 
@@ -51,6 +52,20 @@ export class GrController {
     return this.grService.getAvailablePos();
   }
 
+  // ─── GET /gr/pending-items/:poId ───
+  @Get('pending-items/:poId')
+  @ApiOperation({ summary: 'Get pending items from a specific PO' })
+  @ApiParam({ name: 'poId', type: Number })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns pending items with quantities',
+  })
+  async getPendingItems(
+    @Param('poId', ParseIntPipe) poId: number,
+  ): Promise<IPendingItem[]> {
+    return this.grService.getPendingItems(poId);
+  }
+
   // ─── POST /gr/create ───
   @Post('create')
   @ApiOperation({ summary: 'Create a new GR (sp_GR_02_CreateGR)' })
@@ -59,6 +74,11 @@ export class GrController {
       type: 'object',
       properties: {
         po_id: { type: 'number', example: 1 },
+        json_lines: {
+          type: 'string',
+          example: '[{"item_id": 1, "qty": 10.0000}, {"item_id": 2, "qty": 5.0000}]',
+          nullable: true,
+        },
         note: { type: 'string', example: 'Some remark', nullable: true },
       },
       required: ['po_id'],
@@ -73,6 +93,7 @@ export class GrController {
     const createdBy = 'SYSTEM'; // Replace with actual user from context
     return this.grService.createGr(
       dto.po_id,
+      dto.json_lines,
       dto.note || null,
       createdBy,
     );
