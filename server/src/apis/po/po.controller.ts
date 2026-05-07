@@ -73,6 +73,33 @@ export class PoController {
     return this.poService.getPoApprovals(id);
   }
 
+  // ─── GET /po/draft-count ───
+  @Get('draft-count')
+  @ApiOperation({ summary: 'Get count of POs with DRAFT status' })
+  @ApiResponse({ status: 200, description: 'Returns count of DRAFT POs' })
+  async getPoDraftCount() {
+    const count = await this.poService.getPoDraftCount();
+    return { count };
+  }
+
+  // ─── GET /po/pending-count ───
+  @Get('pending-count')
+  @ApiOperation({ summary: 'Get count of POs with ORDERED or PARTIAL status' })
+  @ApiResponse({ status: 200, description: 'Returns count of ORDERED/PARTIAL POs' })
+  async getPoPendingCount() {
+    const count = await this.poService.getPoPendingCount();
+    return { count };
+  }
+
+  // ─── GET /po/approval-pending-count ───
+  @Get('approval-pending-count')
+  @ApiOperation({ summary: 'Get count of POs pending approval' })
+  @ApiResponse({ status: 200, description: 'Returns count of POs pending approval' })
+  async getApprovalPendingCount() {
+    const count = await this.poService.getApprovalPendingCount();
+    return { count };
+  }
+
   // ─── POST /po ───
   @Post()
   @ApiOperation({ summary: 'Create a new PO (sp_PO_01_CreatePO)' })

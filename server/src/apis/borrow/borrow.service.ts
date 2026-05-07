@@ -43,6 +43,7 @@ export class BorrowService {
         purchase_unit_code, purchase_unit_name_th,
         qty_borrow, unit_price, total_price,
         po_line_id, note,
+        ISNULL(conversion_factor, 1.0) AS conversion_factor,
         created_by, created_at, updated_by, updated_at
       FROM view_borrowed_items
       WHERE borrow_id = @param0
@@ -192,5 +193,25 @@ export class BorrowService {
         Reason: reason,
       },
     );
+  }
+
+  // GET: Count borrows with DRAFT or APPROVED status
+  async getBorrowPendingCount(): Promise<number> {
+    try {
+      const DATABASE_NAME = this.databaseService.getDatabaseName();
+      const query = `
+        SELECT COUNT(*) as count
+        FROM [${DATABASE_NAME}].dbo.borrow_headers
+        WHERE borrow_status IN ('DRAFT', 'APPROVED')
+      `;
+      const result = await this.databaseService.query<{ count: number }>(
+        DATABASE_NAME,
+        query,
+      );
+      return result?.[0]?.count || 0;
+    } catch (error) {
+      console.error('[BorrowService] Error getting borrow pending count:', error);
+      return 0;
+    }
   }
 }

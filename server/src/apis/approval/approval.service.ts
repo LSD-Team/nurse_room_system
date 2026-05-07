@@ -148,7 +148,8 @@ export class ApprovalService {
         pl.qty_order,
         pl.qty_received,
         pl.unit_price,
-        pl.total_price
+        pl.total_price,
+        pl.line_type
       FROM po_lines pl
       LEFT JOIN view_items vi ON pl.item_id = vi.item_id
       WHERE pl.po_id = @param0

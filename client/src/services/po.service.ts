@@ -35,9 +35,7 @@ export class PoService {
   static async getSupplierPrices(
     supplierId: number
   ): Promise<ISupplierItemPrice[]> {
-    return Api.get<ISupplierItemPrice[]>(
-      `/po/supplier-prices/${supplierId}`
-    );
+    return Api.get<ISupplierItemPrice[]>(`/po/supplier-prices/${supplierId}`);
   }
 
   // ─── การยืมที่รอ settle ───
@@ -104,10 +102,7 @@ export class PoService {
   }
 
   // ─── อัปเดต qty_received (GRN) ───
-  static async updateQtyReceived(
-    poId: number,
-    jsonLines: string
-  ) {
+  static async updateQtyReceived(poId: number, jsonLines: string) {
     return Api.put(`/po/${poId}/receiving`, { JsonLines: jsonLines });
   }
 }

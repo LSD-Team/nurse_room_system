@@ -150,7 +150,9 @@
       <h2 class="text-2xl font-bold text-surface-900 dark:text-surface-0">
         Goods Receipt Note (GRN)
       </h2>
-      <p class="text-surface-500 mt-1">Record goods received from purchase orders</p>
+      <p class="text-surface-500 mt-1">
+        Record goods received from purchase orders
+      </p>
     </div>
 
     <Message v-if="errorMsg" severity="error" class="mb-4">
@@ -187,20 +189,42 @@
         <template #empty>No pending POs for receiving</template>
         <template #loading>Loading...</template>
 
-        <Column field="rowNo" header="#" sortable style="min-width: 60px" frozen />
-        <Column field="po_no" header="PO No" sortable style="min-width: 120px" frozen />
+        <Column
+          field="rowNo"
+          header="#"
+          sortable
+          style="min-width: 60px"
+          frozen
+        />
+        <Column
+          field="po_no"
+          header="PO No"
+          sortable
+          style="min-width: 120px"
+          frozen
+        />
         <Column field="po_date" header="PO Date" style="min-width: 120px">
           <template #body="{ data }">
             {{ formatDate(data.po_date) }}
           </template>
         </Column>
-        <Column field="supplier_name" header="Supplier" sortable style="min-width: 200px" />
+        <Column
+          field="supplier_name"
+          header="Supplier"
+          sortable
+          style="min-width: 200px"
+        />
         <Column field="due_date" header="Due Date" style="min-width: 120px">
           <template #body="{ data }">
             {{ formatDate(data.due_date) }}
           </template>
         </Column>
-        <Column field="po_status" header="Status" sortable style="min-width: 100px">
+        <Column
+          field="po_status"
+          header="Status"
+          sortable
+          style="min-width: 100px"
+        >
           <template #body="{ data }">
             <Tag
               :value="getStatusLabel(data.po_status)"
@@ -208,7 +232,12 @@
             />
           </template>
         </Column>
-        <Column header="Action" style="min-width: 100px" frozen alignFrozen="right">
+        <Column
+          header="Action"
+          style="min-width: 100px"
+          frozen
+          alignFrozen="right"
+        >
           <template #body="{ data }">
             <Button
               icon="pi pi-file-check"
@@ -244,11 +273,15 @@
           </div>
           <div>
             <span class="text-sm text-muted-color">Date</span>
-            <div class="text-lg font-semibold">{{ formatDate(selectedPo.po_date) }}</div>
+            <div class="text-lg font-semibold">
+              {{ formatDate(selectedPo.po_date) }}
+            </div>
           </div>
           <div>
             <span class="text-sm text-muted-color">Supplier</span>
-            <div class="text-lg font-semibold">{{ selectedPo.supplier_name }}</div>
+            <div class="text-lg font-semibold">
+              {{ selectedPo.supplier_name }}
+            </div>
           </div>
           <div>
             <span class="text-sm text-muted-color">Status</span>
@@ -265,7 +298,11 @@
       <div class="mb-4">
         <h3 class="text-lg font-semibold mb-3">Line Items</h3>
         <DataTable :value="poLines" class="p-datatable-sm">
-          <Column field="item_code" header="Item Code" style="min-width: 100px" />
+          <Column
+            field="item_code"
+            header="Item Code"
+            style="min-width: 100px"
+          />
           <Column header="Item Name" style="min-width: 200px">
             <template #body="{ data }">
               <div class="text-sm">
@@ -274,7 +311,12 @@
               </div>
             </template>
           </Column>
-          <Column field="qty_order" header="Qty Order" bodyClass="text-right" style="min-width: 100px">
+          <Column
+            field="qty_order"
+            header="Qty Order"
+            bodyClass="text-right"
+            style="min-width: 100px"
+          >
             <template #body="{ data }">
               {{ formatNumber(data.qty_order || 0, 0) }}
             </template>
@@ -315,7 +357,12 @@
               />
             </template>
           </Column>
-          <Column field="unit_price" header="Unit Price" bodyClass="text-right" style="min-width: 100px">
+          <Column
+            field="unit_price"
+            header="Unit Price"
+            bodyClass="text-right"
+            style="min-width: 100px"
+          >
             <template #body="{ data }">
               {{ formatNumber(data.unit_price || 0) }}
             </template>

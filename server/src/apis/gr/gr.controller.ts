@@ -76,7 +76,7 @@ export class GrController {
         po_id: { type: 'number', example: 1 },
         json_lines: {
           type: 'string',
-          example: '[{"item_id": 1, "qty": 10.0000}, {"item_id": 2, "qty": 5.0000}]',
+          example: '[{"item_id": 1, "qty": 10.0000, "po_line_id": 648}, {"item_id": 2, "qty": 5.0000, "po_line_id": 649}]',
           nullable: true,
         },
         note: { type: 'string', example: 'Some remark', nullable: true },
@@ -88,6 +88,12 @@ export class GrController {
   async createGr(
     @Body() dto: CreateGrRequestDto,
   ): Promise<{ gr_id: number; gr_no: string }> {
+    console.log('[GrController] POST /gr/create - Request Body:', {
+      po_id: dto.po_id,
+      json_lines: dto.json_lines,
+      note: dto.note,
+    });
+
     // TODO: Extract createdBy from JWT context (global.jwtPayload)
     // For now, placeholder
     const createdBy = 'SYSTEM'; // Replace with actual user from context
@@ -111,6 +117,29 @@ export class GrController {
     // For now, placeholder
     const confirmedBy = 'SYSTEM'; // Replace with actual user from context
     return this.grService.confirmGr(grId, confirmedBy);
+  }
+
+  // ─── POST /gr/:id/cancel ───
+  @Post(':id/cancel')
+  @ApiOperation({ summary: 'Cancel GR' })
+  @ApiParam({ name: 'id', type: Number })
+  @ApiResponse({ status: 200, description: 'GR cancelled successfully' })
+  async cancelGr(
+    @Param('id', ParseIntPipe) grId: number,
+  ): Promise<ConfirmGrResponseDto> {
+    // TODO: Extract cancelledBy from JWT context (global.jwtPayload)
+    // For now, placeholder
+    const cancelledBy = 'SYSTEM'; // Replace with actual user from context
+    return this.grService.cancelGr(grId, cancelledBy);
+  }
+
+  // ─── GET /gr/draft-count ───
+  @Get('draft-count')
+  @ApiOperation({ summary: 'Get count of GRs with DRAFT status' })
+  @ApiResponse({ status: 200, description: 'Returns count of DRAFT GRs' })
+  async getGrDraftCount() {
+    const count = await this.grService.getGrDraftCount();
+    return { count };
   }
 
   // ─── GET /gr/:id ───

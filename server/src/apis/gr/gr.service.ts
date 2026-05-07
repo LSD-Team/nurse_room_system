@@ -100,20 +100,40 @@ export class GrService {
 
       const header = headers[0];
 
-      // Get lines
+      // Get lines with conversion_factor from supplier_price_list
       const linesQuery = `
-        SELECT 
+        WITH ranked_prices AS (
+          SELECT
+            spl.item_id,
+            spl.conversion_factor,
+            ROW_NUMBER() OVER (PARTITION BY spl.item_id ORDER BY spl.effective_date DESC, spl.unit_price ASC) AS rn
+          FROM [${this.DATABASE_NAME}].dbo.supplier_price_list spl
+          WHERE spl.is_active = 1
+            AND spl.effective_date <= CAST(GETDATE() AS DATE)
+            AND (spl.expire_date IS NULL OR spl.expire_date >= CAST(GETDATE() AS DATE))
+        )
+        SELECT
           l.gr_line_id,
           l.gr_id,
+          h.gr_no,
+          h.gr_date,
           l.item_id,
           i.item_code,
           i.item_name_th,
+          i.item_name_en,
           l.qty_receive,
           l.unit_price,
           l.total_price,
-          l.po_line_id
+          l.po_line_id,
+          p.po_id,
+          ph.po_no,
+          ISNULL(rp.conversion_factor, 1) AS conversion_factor
         FROM [${this.DATABASE_NAME}].dbo.gr_lines l
+        LEFT JOIN [${this.DATABASE_NAME}].dbo.gr_headers h ON l.gr_id = h.gr_id
         LEFT JOIN [${this.DATABASE_NAME}].dbo.items i ON l.item_id = i.item_id
+        LEFT JOIN [${this.DATABASE_NAME}].dbo.po_lines p ON l.po_line_id = p.po_line_id
+        LEFT JOIN [${this.DATABASE_NAME}].dbo.po_headers ph ON p.po_id = ph.po_id
+        LEFT JOIN ranked_prices rp ON rp.item_id = l.item_id AND rp.rn = 1
         WHERE l.gr_id = ${grId}
         ORDER BY l.gr_line_id
       `;
@@ -185,13 +205,15 @@ export class GrService {
           pl.item_id,
           i.item_code,
           i.item_name_th,
+          i.item_name_en,
           pl.qty_order,
           pl.qty_received,
           (pl.qty_order - pl.qty_received) AS qty_remaining,
           spl.unit_price,
           spl.conversion_factor,
           u.unit_name_th,
-          u.unit_code
+          u.unit_code,
+          pl.line_type
         FROM [${this.DATABASE_NAME}].dbo.po_lines pl
         LEFT JOIN [${this.DATABASE_NAME}].dbo.items i ON pl.item_id = i.item_id
         LEFT JOIN [${this.DATABASE_NAME}].dbo.supplier_price_list spl 
@@ -235,7 +257,7 @@ export class GrService {
     try {
       console.log('[GrService] createGr called:', {
         poId,
-        jsonLines: jsonLines ? 'provided' : 'not provided',
+        jsonLines: jsonLines || 'not provided',
         note,
         createdBy,
       });
@@ -324,6 +346,72 @@ export class GrService {
       throw new InternalServerErrorException(
         error instanceof Error ? error.message : 'Failed to confirm GR',
       );
+    }
+  }
+
+  // ─── POST: ยกเลิก GR (sp_GRCancel) ───
+  async cancelGr(
+    grId: number,
+    cancelledBy: string,
+  ): Promise<{ status: string; message: string }> {
+    try {
+      console.log('[GrService] cancelGr called:', {
+        grId,
+        cancelledBy,
+      });
+
+      const result = await this.databaseService.executeStoredProcedure(
+        this.DATABASE_NAME,
+        'sp_GRCancel',
+        {
+          GrId: grId.toString(),
+          CancelledBy: cancelledBy,
+          Reason: null,
+        },
+      );
+
+      if (!result || result.length === 0) {
+        throw new Error('No result from sp_GRCancel');
+      }
+
+      interface SpResponse {
+        Status: string;
+        Message: string;
+      }
+      const response = result[0] as SpResponse;
+      if (response.Status !== 'Success') {
+        throw new Error(response.Message || 'Failed to cancel GR');
+      }
+
+      console.log('[GrService] GR cancelled successfully:', response);
+      return {
+        status: response.Status,
+        message: response.Message,
+      };
+    } catch (error) {
+      console.error('[GrService] Error in cancelGr:', error);
+      throw new InternalServerErrorException(
+        error instanceof Error ? error.message : 'Failed to cancel GR',
+      );
+    }
+  }
+
+  // ─── GET: Count GRs with DRAFT status ───
+  async getGrDraftCount(): Promise<number> {
+    try {
+      const query = `
+        SELECT COUNT(*) as count
+        FROM [${this.DATABASE_NAME}].dbo.gr_headers
+        WHERE status = 'DRAFT'
+      `;
+      const result = await this.databaseService.query<{ count: number }>(
+        this.DATABASE_NAME,
+        query,
+      );
+      return result?.[0]?.count || 0;
+    } catch (error) {
+      console.error('[GrService] Error getting GR draft count:', error);
+      return 0;
     }
   }
 }

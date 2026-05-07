@@ -12,8 +12,7 @@ const API = axios.create({
   baseURL: import.meta.env.VITE_APP_API_URL,
 });
 
-API.defaults.headers.common['Content-Type'] =
-  'application/x-www-form-urlencoded';
+API.defaults.headers.common['Content-Type'] = 'application/json';
 
 const loginUrl = decodeURIComponent(import.meta.env.VITE_APP_LSDSC);
 const mainUrl = decodeURIComponent(import.meta.env.VITE_APP_LSDSC_SYSTEM);
@@ -45,14 +44,14 @@ API.interceptors.request.use(
 
 // Axios After response
 API.interceptors.response.use(
-  async config => {
+  async response => {
     try {
       //  Loading Overlay
       const mainStore = useMainStore();
       setTimeout(async () => {
         await mainStore.setLoading(false);
       }, 800);
-      return config;
+      return response;
     } catch (error) {
       return Promise.reject(error);
     }

@@ -18,7 +18,7 @@ export function formatDate(dateString: string | null | undefined): string {
     return date.toLocaleDateString('th-TH', {
       year: 'numeric',
       month: 'long',
-      day: 'numeric'
+      day: 'numeric',
     });
   } catch (error) {
     console.error('Error formatting date:', error);
@@ -43,7 +43,7 @@ export function formatDateTime(dateString: string | null | undefined): string {
       day: '2-digit',
       hour: '2-digit',
       minute: '2-digit',
-      second: '2-digit'
+      second: '2-digit',
     });
   } catch (error) {
     console.error('Error formatting datetime:', error);
@@ -66,7 +66,7 @@ export function formatNumber(
   try {
     return new Intl.NumberFormat('th-TH', {
       minimumFractionDigits: decimals,
-      maximumFractionDigits: decimals
+      maximumFractionDigits: decimals,
     }).format(value);
   } catch (error) {
     console.error('Error formatting number:', error);
@@ -90,7 +90,7 @@ export function formatCurrency(
     const formatted = new Intl.NumberFormat('th-TH', {
       minimumFractionDigits: decimals,
       maximumFractionDigits: decimals,
-      currency: 'THB'
+      currency: 'THB',
     }).format(value);
 
     return `฿${formatted}`;
@@ -106,7 +106,10 @@ export function formatCurrency(
  * @param itemNameTh Item name in Thai
  * @returns Formatted display string
  */
-export function formatItemDisplay(itemCode: string, itemNameTh: string): string {
+export function formatItemDisplay(
+  itemCode: string,
+  itemNameTh: string
+): string {
   return `${itemCode} - ${itemNameTh}`;
 }
 

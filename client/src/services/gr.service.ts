@@ -48,4 +48,14 @@ export class GrService {
       {}
     );
   }
+
+  // ─── ยกเลิก GR (CANCELLED) ───
+  static async cancelGr(
+    grId: number
+  ): Promise<{ status: string; message: string }> {
+    return Api.post<{ status: string; message: string }>(
+      `/gr/${grId}/cancel`,
+      {}
+    );
+  }
 }

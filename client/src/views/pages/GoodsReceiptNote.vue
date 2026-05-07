@@ -5,6 +5,7 @@
   import type { IGrHeaderList, IGrDetail } from '@/interfaces/gr.interfaces';
   import type { IPoHeader } from '@/interfaces/po.interfaces';
   import { formatDate, formatNumber } from '@/utils/format.utils';
+  import { useMenuNotificationsStore } from '@/stores/menu-notifications.store';
   import Swal from 'sweetalert2';
 
   // ─── State: Tab 1 - View Existing GRs ───
@@ -41,7 +42,7 @@
   const poLines = ref<any[]>([]); // Changed to hold pending items
   const createDialogLoading = ref(false);
   const createFormNote = ref('');
-  const qtyToReceive = ref<Record<number, number>>({}); // Map of item_id -> qty to receive
+  const qtyToReceive = ref<Record<number, number>>({}); // Map of po_line_id -> qty to receive
 
   onMounted(async () => {
     await loadGrList();
@@ -155,6 +156,49 @@
     }
   }
 
+  async function cancelGr(): Promise<void> {
+    if (!selectedGr.value?.header) return;
+
+    // Close dialog first so alert is visible
+    showDetailDialog.value = false;
+
+    const confirmed = await Swal.fire({
+      icon: 'warning',
+      title: 'Cancel GR',
+      text: `ยกเลิกการรับของ GR No. ${selectedGr.value.header.gr_no}?`,
+      showCancelButton: true,
+      confirmButtonText: 'ยกเลิก',
+      cancelButtonText: 'ปิด',
+    });
+
+    if (!confirmed.isConfirmed) {
+      selectedGr.value = null;
+      return;
+    }
+
+    detailLoading.value = true;
+    try {
+      await GrService.cancelGr(selectedGr.value.header.gr_id);
+
+      await Swal.fire({
+        icon: 'success',
+        title: 'Success',
+        text: 'GR cancelled successfully',
+      });
+
+      selectedGr.value = null;
+      await loadGrList();
+    } catch (err: unknown) {
+      await Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: getErrorMessage(err),
+      });
+    } finally {
+      detailLoading.value = false;
+    }
+  }
+
   // ═══════════════════════════════════════════════════════════════
   // TAB 2: Create New GR (from PO)
   // ═══════════════════════════════════════════════════════════════
@@ -183,9 +227,9 @@
     try {
       // Fetch pending items from this specific PO
       poLines.value = await GrService.getPendingItems(po.po_id);
-      // Initialize qty_to_receive with qty_remaining
+      // Initialize qty_to_receive with qty_remaining using po_line_id as key
       poLines.value.forEach(line => {
-        qtyToReceive.value[line.item_id] = line.qty_remaining || 0;
+        qtyToReceive.value[line.po_line_id] = line.qty_remaining || 0;
       });
       showCreateDialog.value = true;
     } catch (err: unknown) {
@@ -202,12 +246,13 @@
   async function saveGr(): Promise<void> {
     if (!selectedPo.value) return;
 
-    // Build jsonLines from qtyToReceive
+    // Build jsonLines from qtyToReceive, excluding BORROW items
     const jsonLines = poLines.value
-      .filter(line => (qtyToReceive.value[line.item_id] || 0) > 0)
+      .filter(line => (qtyToReceive.value[line.po_line_id] || 0) > 0 && line.line_type !== 'BORROW')
       .map(line => ({
         item_id: line.item_id,
-        qty: qtyToReceive.value[line.item_id] || 0,
+        qty: qtyToReceive.value[line.po_line_id] || 0,
+        po_line_id: line.po_line_id,
       }));
 
     if (jsonLines.length === 0) {
@@ -219,11 +264,18 @@
       return;
     }
 
+    const jsonString = JSON.stringify(jsonLines);
+    console.log('[GoodsReceiptNote] Sending to sp_GR_02_CreateGR:');
+    console.log('PO ID:', selectedPo.value.po_id);
+    console.log('JSON Lines:', jsonLines);
+    console.log('JSON String:', jsonString);
+    console.log('Note:', createFormNote.value);
+
     createDialogLoading.value = true;
     try {
       const result = await GrService.createGr(
         selectedPo.value.po_id,
-        JSON.stringify(jsonLines),
+        jsonString,
         createFormNote.value
       );
 
@@ -238,6 +290,14 @@
       poLines.value = [];
       createFormNote.value = '';
       qtyToReceive.value = {};
+      
+      // ─── Refresh badges ───
+      const menuNotificationsStore = useMenuNotificationsStore();
+      await Promise.all([
+        menuNotificationsStore.refreshGrDraftCount(),
+        menuNotificationsStore.refreshPoPendingCount(),
+      ]);
+      
       await loadGrList();
       await loadAvailablePos();
     } catch (err: unknown) {
@@ -519,15 +579,15 @@
               </template>
             </Column>
             <Column
-              field="po_status"
+              field="status"
               header="Status"
               sortable
               style="min-width: 100px"
             >
               <template #body="{ data }">
                 <Tag
-                  :value="data.po_status"
-                  :severity="getPoStatusSeverity(data.po_status)"
+                  :value="data.status"
+                  :severity="getPoStatusSeverity(data.status)"
                 />
               </template>
             </Column>
@@ -614,15 +674,31 @@
         <p class="text-sm text-surface-500 mb-2">
           Enter the quantity you want to receive for each item
         </p>
+        <Message severity="info" class="mb-3">
+          <small>Items marked as "Borrow" are for display only - they were already received and entered into the system previously</small>
+        </Message>
         <DataTable :value="poLines" class="p-datatable-sm">
           <Column
             field="item_code"
             header="Item Code"
             style="min-width: 100px"
           />
+          <Column header="Type" style="min-width: 80px">
+            <template #body="{ data }">
+              <Tag
+                :value="data.line_type === 'BORROW' ? 'Borrow' : 'Order'"
+                :severity="data.line_type === 'BORROW' ? 'warning' : 'info'"
+              />
+            </template>
+          </Column>
           <Column
             field="item_name_th"
             header="Name (TH)"
+            style="min-width: 150px"
+          />
+          <Column
+            field="item_name_en"
+            header="Name (EN)"
             style="min-width: 150px"
           />
           <Column
@@ -639,24 +715,71 @@
               {{ data.unit_name_th || '-' }}
             </template>
           </Column>
-          <Column header="Qty to Receive" style="min-width: 120px">
+          <Column header="Qty to Receive" style="min-width: 150px">
             <template #body="{ data }">
-              <InputNumber
-                v-model="qtyToReceive[data.item_id]"
-                :min="0"
-                :max="data.qty_remaining || 0"
-                :maxFractionDigits="4"
-                class="w-full"
-              />
+              <div v-if="data.line_type === 'BORROW'" class="text-surface-500 italic">
+                —
+              </div>
+              <div v-else class="flex items-center gap-2">
+                <Button
+                  icon="pi pi-minus"
+                  size="small"
+                  text
+                  severity="secondary"
+                  @click="
+                    qtyToReceive[data.po_line_id] = Math.max(
+                      0,
+                      (qtyToReceive[data.po_line_id] || 0) - 1
+                    )
+                  "
+                />
+                <InputNumber
+                  v-model="qtyToReceive[data.po_line_id]"
+                  :min="0"
+                  :max="data.qty_remaining || 0"
+                  :maxFractionDigits="4"
+                  class="w-full"
+                  input-class="text-center text-sm"
+                />
+                <Button
+                  icon="pi pi-plus"
+                  size="small"
+                  text
+                  severity="secondary"
+                  @click="
+                    qtyToReceive[data.po_line_id] = Math.min(
+                      data.qty_remaining || 0,
+                      (qtyToReceive[data.po_line_id] || 0) + 1
+                    )
+                  "
+                />
+              </div>
             </template>
           </Column>
           <Column
-            field="unit_price"
-            header="Unit Price"
+            field="conversion_factor"
+            header="Conversion Factor"
             style="min-width: 100px"
           >
             <template #body="{ data }">
-              ฿{{ formatNumber(data.unit_price || 0) }}
+              <div v-if="data.line_type === 'BORROW'"></div>
+              <div v-else>
+                {{ formatNumber(data.conversion_factor || 0, 2) }}
+              </div>
+            </template>
+          </Column>
+          <Column header="Total (Qty × CF)" style="min-width: 130px">
+            <template #body="{ data }">
+              <div v-if="data.line_type === 'BORROW'"></div>
+              <div v-else>
+                {{
+                  formatNumber(
+                    (qtyToReceive[data.po_line_id] || 0) *
+                      (data.conversion_factor || 0),
+                    2
+                  )
+                }}
+              </div>
             </template>
           </Column>
         </DataTable>
@@ -771,16 +894,21 @@
           </Column>
           <Column
             field="unit_price"
-            header="Unit Price"
+            header="Conversion Factor"
             style="min-width: 100px"
           >
             <template #body="{ data }">
-              ฿{{ formatNumber(data.unit_price || 0) }}
+              {{ formatNumber(data.conversion_factor || 0, 2) }}
             </template>
           </Column>
-          <Column field="total_price" header="Total" style="min-width: 100px">
+          <Column field="total_price" header="Total (Qty × CF)" style="min-width: 130px">
             <template #body="{ data }">
-              ฿{{ formatNumber(data.total_price || 0) }}
+              {{
+                formatNumber(
+                  (data.qty_receive || 0) * (data.conversion_factor || 0),
+                  2
+                )
+              }}
             </template>
           </Column>
         </DataTable>
@@ -798,6 +926,14 @@
           @click="showDetailDialog = false"
         />
         <template v-if="selectedGr.header.status === 'DRAFT'">
+          <Button
+            label="Cancel GR"
+            icon="pi pi-times"
+            severity="danger"
+            text
+            @click="cancelGr"
+            :loading="detailLoading"
+          />
           <Button
             label="Confirm GR"
             icon="pi pi-check"

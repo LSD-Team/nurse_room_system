@@ -35,6 +35,7 @@ export interface IBorrowLine {
   total_price: number;
   po_line_id: number | null;
   note: string | null;
+  conversion_factor: number; // เพิ่มการแปลงหน่วย
   created_by: string;
   created_at: string;
   updated_by: string | null;

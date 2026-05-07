@@ -4,6 +4,7 @@
   import { PoService } from '@/services/po.service';
   import { BorrowService } from '@/services/borrow.service';
   import { StockService, type IStockOnHand } from '@/services/stock.service';
+  import { useMenuNotificationsStore } from '@/stores/menu-notifications.store';
   import type {
     IPoHeader,
     IPoLine,
@@ -421,9 +422,7 @@
       );
       // Merge supplier prices with stock data
       orderItems.value = supplierPrices.value.map(price => {
-        const stock = stockOnHands.value.find(
-          s => s.item_id === price.item_id
-        );
+        const stock = stockOnHands.value.find(s => s.item_id === price.item_id);
         return {
           item_id: price.item_id,
           item_code: price.item_code,
@@ -473,9 +472,7 @@
       return;
     }
 
-    const itemsToOrder = orderItems.value.filter(
-      item => item.qty_order > 0
-    );
+    const itemsToOrder = orderItems.value.filter(item => item.qty_order > 0);
     if (itemsToOrder.length === 0 && selectedBorrowIds.value.length === 0) {
       await Swal.fire(
         'แจ้งเตือน',
@@ -509,11 +506,7 @@
       } else {
         const poDate = formatDateToString(formPoDate.value);
         if (!poDate) {
-          await Swal.fire(
-            'แจ้งเตือน',
-            'กรุณาระบุวันที่สั่งซื้อ',
-            'warning'
-          );
+          await Swal.fire('แจ้งเตือน', 'กรุณาระบุวันที่สั่งซื้อ', 'warning');
           return;
         }
 
@@ -531,6 +524,10 @@
         showFormDialog.value = false;
         await loadPoHeaders();
         await Swal.fire('สำเร็จ', 'สร้าง PO เรียบร้อย', 'success');
+        
+        // Refresh badge
+        const menuNotificationsStore = useMenuNotificationsStore();
+        await menuNotificationsStore.refreshPoDraftCount();
       }
     } catch (err: any) {
       // Error handled by axios interceptor
@@ -644,15 +641,11 @@
           รายละเอียดการสั่งซื้อยา/เวชภัณฑ์ (Purchase Orders)
         </p>
       </div>
-      <Button
-        label="สร้าง PO"
-        icon="pi pi-plus"
-        @click="openCreateDialog"
-      />
+      <Button label="สร้าง PO" icon="pi pi-plus" @click="openCreateDialog" />
     </div>
 
     <Message v-if="errorMsg" severity="error" class="mb-4">
-      <span class="font-semibold">ข้อผิดพลาด: </span>
+      <span class="font-semibold">ข้อผิดพลาด:</span>
       {{ errorMsg }}
     </Message>
 
@@ -730,7 +723,6 @@
                 <Badge
                   v-if="countOrdered > 0"
                   :value="countOrdered"
-
                   class="ml-2"
                 />
               </template>
@@ -1010,11 +1002,7 @@
             :rowsPerPageOptions="[20, 50, 100]"
           >
             <template #empty>ไม่พบรายการ</template>
-            <Column
-              field="item_code"
-              header="รหัส"
-              style="min-width: 100px"
-            />
+            <Column field="item_code" header="รหัส" style="min-width: 100px" />
             <Column
               field="item_name_th"
               header="ชื่อยา"
@@ -1040,20 +1028,12 @@
                 </span>
               </template>
             </Column>
-            <Column
-              header="Min"
-              style="min-width: 70px"
-              bodyClass="text-right"
-            >
+            <Column header="Min" style="min-width: 70px" bodyClass="text-right">
               <template #body="{ data }">
                 {{ data.item_min != null ? formatNumber(data.item_min) : '-' }}
               </template>
             </Column>
-            <Column
-              header="Max"
-              style="min-width: 70px"
-              bodyClass="text-right"
-            >
+            <Column header="Max" style="min-width: 70px" bodyClass="text-right">
               <template #body="{ data }">
                 {{ data.item_max != null ? formatNumber(data.item_max) : '-' }}
               </template>
@@ -1072,10 +1052,7 @@
                 ฿{{ formatNumber(data.unit_price) }}
               </template>
             </Column>
-            <Column
-              header="จำนวนสั่งซื้อ"
-              style="min-width: 150px"
-            >
+            <Column header="จำนวนสั่งซื้อ" style="min-width: 150px">
               <template #body="{ data }">
                 <InputNumber
                   v-model="data.qty_order"
@@ -1110,10 +1087,7 @@
 
         <!-- Borrow Settlement Section -->
         <div
-          v-if="
-            selectedSupplierId &&
-            pendingBorrows.length > 0
-          "
+          v-if="selectedSupplierId && pendingBorrows.length > 0"
           class="flex flex-col gap-2"
         >
           <label class="font-semibold">
@@ -1270,16 +1244,8 @@
           <Column header="#" style="min-width: 50px">
             <template #body="{ index }">{{ index + 1 }}</template>
           </Column>
-          <Column
-            field="item_code"
-            header="รหัสยา"
-            style="min-width: 100px"
-          />
-          <Column
-            field="item_name_th"
-            header="ชื่อยา"
-            style="min-width: 220px"
-          >
+          <Column field="item_code" header="รหัสยา" style="min-width: 100px" />
+          <Column field="item_name_th" header="ชื่อยา" style="min-width: 220px">
             <template #body="{ data }">
               <div>{{ data.item_name_th }}</div>
               <div class="text-sm text-surface-400">
@@ -1287,17 +1253,11 @@
               </div>
             </template>
           </Column>
-          <Column
-            field="line_type"
-            header="ประเภท"
-            style="min-width: 90px"
-          >
+          <Column field="line_type" header="ประเภท" style="min-width: 90px">
             <template #body="{ data }">
               <Tag
                 :value="data.line_type"
-                :severity="
-                  data.line_type === 'ORDER' ? 'info' : 'warn'
-                "
+                :severity="data.line_type === 'ORDER' ? 'info' : 'warn'"
               />
             </template>
           </Column>
@@ -1359,8 +1319,7 @@
                 class="flex items-center justify-center rounded-full border-2 w-8 h-8"
                 :style="{
                   borderColor: approvalStatusColor(item.status),
-                  backgroundColor:
-                    approvalStatusColor(item.status) + '1A',
+                  backgroundColor: approvalStatusColor(item.status) + '1A',
                 }"
               >
                 <i
@@ -1396,10 +1355,7 @@
                     }}
                   </span>
                 </div>
-                <div
-                  v-if="item.remark"
-                  class="text-sm text-surface-500 mt-1"
-                >
+                <div v-if="item.remark" class="text-sm text-surface-500 mt-1">
                   <i class="pi pi-comment mr-1" />
                   {{ item.remark }}
                 </div>
@@ -1428,16 +1384,8 @@
         <Column header="#" style="min-width: 50px">
           <template #body="{ index }">{{ index + 1 }}</template>
         </Column>
-        <Column
-          field="item_code"
-          header="รหัสยา"
-          style="min-width: 100px"
-        />
-        <Column
-          field="item_name_th"
-          header="ชื่อยา"
-          style="min-width: 250px"
-        >
+        <Column field="item_code" header="รหัสยา" style="min-width: 100px" />
+        <Column field="item_name_th" header="ชื่อยา" style="min-width: 250px">
           <template #body="{ data }">
             <div>{{ data.item_name_th }}</div>
             <div class="text-sm text-surface-400">

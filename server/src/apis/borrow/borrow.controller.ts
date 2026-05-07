@@ -61,6 +61,15 @@ export class BorrowController {
     return this.borrowService.getBorrowLines(id);
   }
 
+  // GET /borrow/pending-count
+  @Get('pending-count')
+  @ApiOperation({ summary: 'Get count of borrows with DRAFT or APPROVED status' })
+  @ApiResponse({ status: 200, description: 'Returns count of pending borrows' })
+  async getBorrowPendingCount() {
+    const count = await this.borrowService.getBorrowPendingCount();
+    return { count };
+  }
+
   // โ”€โ”€โ”€ POST /borrow โ”€โ”€โ”€
   @Post()
   @ApiOperation({ summary: 'Create a new borrow (sp_BR_01_Create)' })

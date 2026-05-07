@@ -103,11 +103,17 @@
         class="pi pi-fw pi-angle-down layout-submenu-toggler"
         v-if="item.items"
       ></i>
+      <span v-if="item.badge && item.badge > 0" class="notification-badge">
+        {{ item.badge }}
+      </span>
     </a>
     <router-link
       v-if="item.to && !item.items && item.visible !== false"
       @click="itemClick($event, item)"
-      :class="[item.class, { 'active-route': checkActiveRoute(item), 'cursor-pointer': true }]"
+      :class="[
+        item.class,
+        { 'active-route': checkActiveRoute(item), 'cursor-pointer': true },
+      ]"
       tabindex="0"
       :to="item.to"
     >
@@ -117,6 +123,9 @@
         class="pi pi-fw pi-angle-down layout-submenu-toggler"
         v-if="item.items"
       ></i>
+      <span v-if="item.badge && item.badge > 0" class="notification-badge">
+        {{ item.badge }}
+      </span>
     </router-link>
     <Transition
       v-if="item.items && item.visible !== false"
@@ -154,5 +163,22 @@
 
   li:not(.layout-root-menuitem) > .layout-menuitem-root-text {
     padding-left: 1.5rem;
+  }
+
+  // ─── Notification Badge Styles ───
+  .notification-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    margin-left: auto;
+    background-color: #ef4444;
+    color: white;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
   }
 </style>

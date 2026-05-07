@@ -540,4 +540,62 @@ export class PoService {
 
     return { success: true, message: 'Qty received updated successfully' };
   }
+
+  // ─── GET: Count POs with DRAFT status ───
+  async getPoDraftCount(): Promise<number> {
+    try {
+      const query = `
+        SELECT COUNT(*) as count
+        FROM [${this.DATABASE_NAME}].dbo.po_headers
+        WHERE status = 'DRAFT'
+      `;
+      const result = await this.databaseService.query<{ count: number }>(
+        this.DATABASE_NAME,
+        query,
+      );
+      return result?.[0]?.count || 0;
+    } catch (error) {
+      console.error('[PoService] Error getting PO draft count:', error);
+      return 0;
+    }
+  }
+
+  // ─── GET: Count POs with ORDERED or PARTIAL status ───
+  async getPoPendingCount(): Promise<number> {
+    try {
+      const query = `
+        SELECT COUNT(*) as count
+        FROM [${this.DATABASE_NAME}].dbo.po_headers
+        WHERE status IN ('ORDERED', 'PARTIAL')
+      `;
+      const result = await this.databaseService.query<{ count: number }>(
+        this.DATABASE_NAME,
+        query,
+      );
+      return result?.[0]?.count || 0;
+    } catch (error) {
+      console.error('[PoService] Error getting PO pending count:', error);
+      return 0;
+    }
+  }
+
+  // ─── GET: Count POs pending approval ───
+  async getApprovalPendingCount(): Promise<number> {
+    try {
+      const query = `
+        SELECT COUNT(DISTINCT ph.po_id) as count
+        FROM [${this.DATABASE_NAME}].dbo.po_headers ph
+        JOIN [${this.DATABASE_NAME}].dbo.po_approvals pa ON ph.po_id = pa.po_id
+        WHERE pa.status = 'PENDING_APPROVAL'
+      `;
+      const result = await this.databaseService.query<{ count: number }>(
+        this.DATABASE_NAME,
+        query,
+      );
+      return result?.[0]?.count || 0;
+    } catch (error) {
+      console.error('[PoService] Error getting approval pending count:', error);
+      return 0;
+    }
+  }
 }

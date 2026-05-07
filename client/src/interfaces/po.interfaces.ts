@@ -4,21 +4,22 @@ export interface IPoHeader {
   po_no: string;
   po_date: string;
   supplier_id: number;
-  supplier_code: string;
+  supplier_code?: string;
   supplier_name: string;
-  due_date: string | null;
-  po_status: string;
-  note: string | null;
-  created_by: string;
-  created_by_eng_name: string | null;
-  created_at: string;
-  approval_level: number | null;
-  approval_role: string | null;
-  approval_status: string | null;
-  actioned_by: string | null;
-  actioned_by_eng_name: string | null;
-  actioned_at: string | null;
-  approval_remark: string | null;
+  due_date?: string | null;
+  status: string; // ← Backend ส่ง 'status' ไม่ใช่ 'po_status'
+  po_status?: string;
+  note?: string | null;
+  created_by?: string;
+  created_by_eng_name?: string | null;
+  created_at?: string;
+  approval_level?: number | null;
+  approval_role?: string | null;
+  approval_status?: string | null;
+  actioned_by?: string | null;
+  actioned_by_eng_name?: string | null;
+  actioned_at?: string | null;
+  approval_remark?: string | null;
 }
 
 // ===== PO Line (detail) =====

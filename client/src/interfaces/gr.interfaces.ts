@@ -19,6 +19,7 @@ export interface IPendingItem {
   item_id: number;
   item_code?: string;
   item_name_th?: string;
+  item_name_en?: string;
   qty_order: number;
   qty_received: number;
   qty_remaining: number;
@@ -55,10 +56,16 @@ export interface IGrLine {
   item_id: number;
   item_code?: string;
   item_name_th?: string;
+  item_name_en?: string;
   qty_receive: number;
   unit_price: number;
   total_price: number;
   po_line_id: number;
+  gr_no?: string;
+  gr_date?: string;
+  po_id?: number;
+  po_no?: string;
+  conversion_factor?: number;
 }
 
 export interface IGrDetail {

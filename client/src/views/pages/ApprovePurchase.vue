@@ -3,6 +3,7 @@
   import { FilterMatchMode } from '@primevue/core/api';
   import { ApprovalService } from '@/services/approval.service';
   import { BorrowService } from '@/services/borrow.service';
+  import { useMenuNotificationsStore } from '@/stores/menu-notifications.store';
   import type {
     IPendingApprovalItem,
     IPoLine,
@@ -272,13 +273,23 @@
       selectedItem.value = null;
       await Swal.fire('สำเร็จ', actionLabel[action] + 'เรียบร้อย', 'success');
       await loadPendingApprovals();
+      
+      // Refresh badges
+      const menuNotificationsStore = useMenuNotificationsStore();
+      await Promise.all([
+        menuNotificationsStore.refreshApprovalPendingCount(),
+        menuNotificationsStore.refreshPoPendingCount(),
+        menuNotificationsStore.refreshBorrowPendingCount(),
+      ]);
     } catch {
       // handled by axios interceptor
     }
   }
 
   onMounted(async () => {
-    console.log('[ApprovePurchase] onMounted - loading pending approvals and user roles');
+    console.log(
+      '[ApprovePurchase] onMounted - loading pending approvals and user roles'
+    );
     await Promise.all([loadUserRoles(), loadPendingApprovals()]);
   });
 </script>
@@ -484,6 +495,14 @@
       <div v-if="selectedItem.type === 'PO' && poLines.length > 0" class="mb-4">
         <div class="font-semibold mb-2">รายการสั่งซื้อ</div>
         <DataTable :value="poLines" size="small" stripedRows>
+          <Column :header="'ประเภท'" style="min-width: 80px">
+            <template #body="{ data }">
+              <Tag
+                :value="data.line_type === 'BORROW' ? 'ยืม' : 'ใบสั่งซื้อ'"
+                :severity="data.line_type === 'BORROW' ? 'warning' : 'info'"
+              />
+            </template>
+          </Column>
           <Column
             field="item_name_th"
             :header="'ชื่อรายการ'"
@@ -533,6 +552,14 @@
       >
         <div class="font-semibold mb-2">รายการยืม</div>
         <DataTable :value="borrowLines" size="small" stripedRows>
+          <Column :header="'ประเภท'" style="min-width: 80px">
+            <template #body="{ data }">
+              <Tag
+                :value="data.line_type === 'ORDER' ? 'ใบสั่งซื้อ' : 'ยืม'"
+                :severity="data.line_type === 'ORDER' ? 'info' : 'warning'"
+              />
+            </template>
+          </Column>
           <Column
             field="item_name_th"
             :header="'ชื่อรายการ'"
