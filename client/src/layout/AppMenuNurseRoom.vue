@@ -48,7 +48,7 @@
             icon: 'pi pi-fw pi-shopping-cart',
             color: 'text-cyan-300',
             badge: (() => {
-              const total = menuNotificationsStore.poDraftCount + menuNotificationsStore.grDraftCount + menuNotificationsStore.poPendingCount + menuNotificationsStore.borrowPendingCount;
+              const total = menuNotificationsStore.all;
               return total > 0 ? total : undefined;
             })(),
             items: [
@@ -57,21 +57,21 @@
                 icon: 'pi pi-fw pi-shopping-cart',
                 color: 'text-cyan-300',
                 to: '/purchase-orders',
-                badge: menuNotificationsStore.poDraftCount > 0 ? menuNotificationsStore.poDraftCount : undefined,
+                badge: menuNotificationsStore.po > 0 ? menuNotificationsStore.po : undefined,
               },
               {
                 label: 'รับเข้า',
                 icon: 'pi pi-fw pi-inbox',
                 color: 'text-cyan-300',
                 to: '/goods-receipt',
-                badge: (menuNotificationsStore.grDraftCount + menuNotificationsStore.poPendingCount) > 0 ? (menuNotificationsStore.grDraftCount + menuNotificationsStore.poPendingCount) : undefined,
+                badge: menuNotificationsStore.rec > 0 ? menuNotificationsStore.rec : undefined,
               },
               {
                 label: 'ยืม',
                 icon: 'pi pi-fw pi-share-alt',
                 color: 'text-cyan-300',
                 to: '/borrow-medicines',
-                badge: menuNotificationsStore.borrowPendingCount > 0 ? menuNotificationsStore.borrowPendingCount : undefined,
+                badge: menuNotificationsStore.borrow > 0 ? menuNotificationsStore.borrow : undefined,
               },
             {
               label: 'รายการยา/เวชภัณฑ์',
@@ -216,7 +216,7 @@
           icon: 'pi pi-fw pi-check-square',
           color: 'text-lime-400',
           to: '/approve-purchase',
-          badge: menuNotificationsStore.approvalPendingCount > 0 ? menuNotificationsStore.approvalPendingCount : undefined,
+          badge: menuNotificationsStore.apv > 0 ? menuNotificationsStore.apv : undefined,
         },
         {
           label: 'เบิกยากรณีพิเศษ',
