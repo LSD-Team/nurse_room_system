@@ -87,12 +87,14 @@ export class EmailService {
     }
 
     const placeholders = employeeIds.map((_, i) => `@param${i}`).join(',');
+    // Query view_employee_all directly since po_headers.created_by stores numeric IDs
+    // view_employee_all joins to email via IT database
     const query = `
-      SELECT DISTINCT email 
-      FROM view_email 
-      WHERE employee_id IN (${placeholders})
-      AND email IS NOT NULL
-      AND email != ''
+      SELECT DISTINCT vea.email
+      FROM view_employee_all vea
+      WHERE CAST(vea.ID AS nvarchar(100)) IN (${placeholders})
+      AND vea.email IS NOT NULL
+      AND vea.email != ''
     `;
 
     try {
