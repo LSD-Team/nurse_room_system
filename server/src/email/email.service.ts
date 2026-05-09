@@ -118,13 +118,13 @@ export class EmailService {
    */
   private async getApproverEmailsByRoleCode(roleCode: string): Promise<string[]> {
     const query = `
-      SELECT DISTINCT ve.email
+      SELECT DISTINCT vea.email
       FROM approval_roles ar
-      JOIN view_email ve ON ar.approver_id = ve.employee_id
+      JOIN view_employee_all vea ON ar.approver_id = vea.ID
       WHERE ar.role_code = @param0
       AND ar.is_active = 1
-      AND ve.email IS NOT NULL
-      AND ve.email != ''
+      AND vea.email IS NOT NULL
+      AND vea.email != ''
     `;
 
     try {
