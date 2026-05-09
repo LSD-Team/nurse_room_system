@@ -8,6 +8,7 @@ import { firstValueFrom } from 'rxjs';
 
 //  ----- ⚙️ Services ⚙️ -----
 import { DatabaseService } from '@/src/database/database.service';
+import { EmailLogService } from '@/src/email/services/email-log.service';
 
 //  ----- 📂 DTO 📂 -----
 import { SendEmailDto } from '@/src/email/dto/sent-email.dto';
@@ -22,6 +23,7 @@ export class EmailService {
     private readonly httpService: HttpService,
     private readonly databaseService: DatabaseService,
     private readonly configService: ConfigService,
+    private readonly emailLogService: EmailLogService,
   ) {
     const testOverride = this.configService.get<string>('TEST_EMAIL_OVERRIDE');
     const nodeEnv = this.configService.get<string>('NODE_ENV');
@@ -347,14 +349,23 @@ export class EmailService {
     documentDescription: string,
   ): Promise<void> {
     try {
+      // Debug: Log the query params
+      this.logger.debug(
+        `[sendApprovalRequestByRoleCode] Querying approvers for role_code: ${roleCode}`,
+      );
+
       const approverEmails = await this.getApproverEmailsByRoleCode(roleCode);
 
       if (approverEmails.length === 0) {
         this.logger.warn(
-          `No approvers found for role_code: ${roleCode}`,
+          `⚠️ No approvers found for role_code: ${roleCode}. Check approval_roles table and view_employee_all data.`,
         );
         return;
       }
+
+      this.logger.debug(
+        `[sendApprovalRequestByRoleCode] Found ${approverEmails.length} approver(s) for ${roleCode}: ${approverEmails.join(', ')}`,
+      );
 
       // Load template
       const notifyType = documentType === 'PO' ? ENotifyType.APPROVAL_PO : ENotifyType.APPROVAL_BORROW;
@@ -403,8 +414,27 @@ export class EmailService {
 
       await this.send_email_service(emailData);
 
+      // Create email log
+      try {
+        const notifyTypeStr =
+          documentType === 'PO' ? 'APPROVAL_PO' : 'APPROVAL_BORROW';
+        await this.emailLogService.create({
+          document_type: documentType,
+          document_id: documentId,
+          document_no: documentNo,
+          notify_type: notifyTypeStr,
+          recipient_emails: finalToEmails.join(', '),
+          subject: subject,
+          sent_status: 'SUCCESS',
+          is_test_override: isTestMode,
+        });
+        this.logger.log(`✅ Email log created for approval request: ${documentNo}`);
+      } catch (logError) {
+        this.logger.warn(`Failed to log approval request email: ${logError.message}`);
+      }
+
       this.logger.log(
-        `✅ Approval request email sent for ${documentType} ${documentNo}${isTestMode ? ' (TEST MODE)' : ''}`,
+        `✅ Approval request email sent for ${documentType} ${documentNo} to ${roleCode}${isTestMode ? ' (TEST MODE)' : ''}`,
       );
     } catch (error: any) {
       this.logger.error(
