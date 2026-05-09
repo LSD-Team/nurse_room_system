@@ -28,6 +28,7 @@
 - ใช้ shared interfaces ระหว่าง client/server ผ่าน alias (`@/shared`) เพื่อให้ types ตรงกัน
 - Loading UX: centralized loading handling (debounce/delay) ใน Api service เพื่อป้องกัน flicker
 - Logging: console.info ถูกใช้อย่างจำกัดสำหรับ debugging ควรใช้ logger ที่ปรับได้สำหรับ production
+- **Date Formatting**: ใช้ `en-GB` locale กับ `timeZone: 'Asia/Bangkok'` (ไม่ใช่ th-TH) เพื่อแสดงผล DD/MM/YYYY 24-hour Bangkok time ปกติ (ไม่ใช่ Buddhist Era)
 
 ## Backend เทคนิคที่ควรยึดตาม
 - NestJS module pattern: แยก controller, service, interface, module ให้ชัดเจน
@@ -37,6 +38,8 @@
 - Auth & Guards: ใช้ JWT + Passport และ global AppGuard; แยก AdminGuard / UserGuard สำหรับสิทธิ์เฉพาะทาง
 - Swagger: ใช้ @nestjs/swagger ในการสร้างเอกสาร API อัตโนมัติ
 - Config: ใช้ @nestjs/config และโหลดไฟล์ .env ตาม NODE_ENV
+- **Database Queries**: จะต้อง reference actual database schema (tables/views) — ตรวจสอบว่า column มีอยู่จริงใน table/view หรือเป็น computed column ใน view ก่อนเขียน SELECT (หลีกเลี่ยง "Invalid column name" errors)
+- **Timezone Handling**: ตั้ง `TZ=Asia/Bangkok` ใน .env files และ `process.env.TZ` ใน main.ts; ใช้ `DATEADD(HOUR, 7, GETUTCDATE())` ใน MSSQL เพื่อ UTC+7; ใช้ `en-GB` locale กับ `timeZone: 'Asia/Bangkok'` parameter ใน JavaScript `toLocaleString()` (ไม่ใช่ th-TH เพื่อหลีกเลี่ยง Buddhist Era calendar)
 
 ## TypeScript & Typing
 - รองรับ TS ทั้ง frontend/backend — แนะนำใส่ types ให้ครบใน public API และ service boundaries
@@ -52,6 +55,7 @@
 - Validate และ sanitize input ทั้งฝั่ง client และ server
 - คืนค่า error ที่เหมาะสม (ไม่เผย stack trace ใน production)
 - เปิด CORS อย่างระมัดระวังใน production — ปัจจุบันเป็น origin: '*' สำหรับ dev
+- **Email Service Pattern**: Centralize email logging ใน `email.service.ts` (sendApprovalEmail, sendApprovalRequestByRoleCode) เท่านั้น หลีกเลี่ยงการ log ใน po/borrow services — ทำให้ดูแล logs ได้อย่างง่าย และหลีกเลี่ยง duplicates
 
 ## Performance & Maintainability
 - Centralize HTTP logic (Api service) → ง่ายต่อการเพิ่ม retry, timeout, request/response transform
