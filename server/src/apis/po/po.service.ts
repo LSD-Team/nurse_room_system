@@ -739,8 +739,7 @@ export class PoService {
         h.po_no,
         h.status,
         h.note,
-        h.created_by,
-        h.created_at
+        h.created_by
       FROM po_headers h
       WHERE h.po_id = @param0
     `;
