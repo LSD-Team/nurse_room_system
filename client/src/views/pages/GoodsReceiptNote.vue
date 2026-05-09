@@ -144,7 +144,22 @@
       });
 
       selectedGr.value = null;
-      await loadGrList();
+      
+      // ─── Reset status filter to ALL to see newly confirmed GR ───
+      selectedGrStatusFilter.value = '';
+      
+      // ─── Refresh all data ───
+      await Promise.all([
+        loadGrList(),
+        loadAvailablePos(),
+      ]);
+      
+      // ─── Refresh menu badges ───
+      const menuNotificationsStore = useMenuNotificationsStore();
+      await Promise.all([
+        menuNotificationsStore.refreshGrDraftCount(),
+        menuNotificationsStore.refreshPoPendingCount(),
+      ]);
     } catch (err: unknown) {
       await Swal.fire({
         icon: 'error',
@@ -187,7 +202,22 @@
       });
 
       selectedGr.value = null;
-      await loadGrList();
+      
+      // ─── Reset status filter to ALL ───
+      selectedGrStatusFilter.value = '';
+      
+      // ─── Refresh all data ───
+      await Promise.all([
+        loadGrList(),
+        loadAvailablePos(),
+      ]);
+      
+      // ─── Refresh menu badges ───
+      const menuNotificationsStore = useMenuNotificationsStore();
+      await Promise.all([
+        menuNotificationsStore.refreshGrDraftCount(),
+        menuNotificationsStore.refreshPoPendingCount(),
+      ]);
     } catch (err: unknown) {
       await Swal.fire({
         icon: 'error',
@@ -554,17 +584,31 @@
               sortable
               style="min-width: 60px"
               frozen
-            />
+            >
+              <template #body="{ data }">
+                <div :style="{ backgroundColor: data.has_gr === 1 ? '#fef3c7' : 'transparent' }" class="px-3 py-2">
+                  {{ data.rowNo }}
+                </div>
+              </template>
+            </Column>
             <Column
               field="po_no"
               header="PO No"
               sortable
               style="min-width: 120px"
               frozen
-            />
+            >
+              <template #body="{ data }">
+                <div :style="{ backgroundColor: data.has_gr === 1 ? '#fef3c7' : 'transparent' }" class="px-3 py-2">
+                  {{ data.po_no }}
+                </div>
+              </template>
+            </Column>
             <Column field="po_date" header="PO Date" style="min-width: 120px">
               <template #body="{ data }">
-                {{ formatDate(data.po_date) }}
+                <div :style="{ backgroundColor: data.has_gr === 1 ? '#fef3c7' : 'transparent' }" class="px-3 py-2">
+                  {{ formatDate(data.po_date) }}
+                </div>
               </template>
             </Column>
             <Column
@@ -572,10 +616,18 @@
               header="Supplier"
               sortable
               style="min-width: 200px"
-            />
+            >
+              <template #body="{ data }">
+                <div :style="{ backgroundColor: data.has_gr === 1 ? '#fef3c7' : 'transparent' }" class="px-3 py-2">
+                  {{ data.supplier_name }}
+                </div>
+              </template>
+            </Column>
             <Column field="due_date" header="Due Date" style="min-width: 120px">
               <template #body="{ data }">
-                {{ formatDate(data.due_date) }}
+                <div :style="{ backgroundColor: data.has_gr === 1 ? '#fef3c7' : 'transparent' }" class="px-3 py-2">
+                  {{ formatDate(data.due_date) }}
+                </div>
               </template>
             </Column>
             <Column
@@ -585,10 +637,12 @@
               style="min-width: 100px"
             >
               <template #body="{ data }">
-                <Tag
-                  :value="data.status"
-                  :severity="getPoStatusSeverity(data.status)"
-                />
+                <div :style="{ backgroundColor: data.has_gr === 1 ? '#fef3c7' : 'transparent' }" class="px-3 py-2">
+                  <Tag
+                    :value="data.status"
+                    :severity="getPoStatusSeverity(data.status)"
+                  />
+                </div>
               </template>
             </Column>
             <Column
@@ -598,15 +652,17 @@
               alignFrozen="right"
             >
               <template #body="{ data }">
-                <Button
-                  icon="pi pi-arrow-right"
-                  rounded
-                  outlined
-                  severity="info"
-                  size="small"
-                  @click="openCreateDialog(data)"
-                  title="Create GR"
-                />
+                <div :style="{ backgroundColor: data.has_gr === 1 ? '#fef3c7' : 'transparent' }" class="px-3 py-2">
+                  <Button
+                    icon="pi pi-arrow-right"
+                    rounded
+                    outlined
+                    severity="info"
+                    size="small"
+                    @click="openCreateDialog(data)"
+                    title="Create GR"
+                  />
+                </div>
               </template>
             </Column>
           </DataTable>

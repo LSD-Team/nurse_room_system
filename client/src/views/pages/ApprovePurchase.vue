@@ -152,11 +152,21 @@
   async function loadPendingApprovals() {
     try {
       console.log('[loadPendingApprovals] starting...');
-      const data = await ApprovalService.getPendingApprovals();
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('API request timeout after 30s')), 30000)
+      );
+      
+      const data = await Promise.race([
+        ApprovalService.getPendingApprovals(),
+        timeoutPromise,
+      ]) as IPendingApprovalItem[];
+      
       console.log('[loadPendingApprovals] success, data:', data);
       pendingItems.value = data;
     } catch (error) {
-      // handled by axios interceptor
+      console.error('[loadPendingApprovals] error:', error);
+      // Re-throw so axios interceptor can handle it
+      throw error;
     }
   }
 
@@ -272,16 +282,27 @@
       }
       selectedItem.value = null;
       await Swal.fire('สำเร็จ', actionLabel[action] + 'เรียบร้อย', 'success');
-      await loadPendingApprovals();
+      
+      try {
+        await loadPendingApprovals();
+      } catch (loadError) {
+        console.error('[handleApprove] Error reloading pending approvals:', loadError);
+        // Still continue to refresh badges
+      }
       
       // Refresh badges
       const menuNotificationsStore = useMenuNotificationsStore();
-      await Promise.all([
-        menuNotificationsStore.refreshApprovalPendingCount(),
-        menuNotificationsStore.refreshPoPendingCount(),
-        menuNotificationsStore.refreshBorrowPendingCount(),
-      ]);
-    } catch {
+      try {
+        await Promise.all([
+          menuNotificationsStore.refreshApprovalPendingCount(),
+          menuNotificationsStore.refreshPoPendingCount(),
+          menuNotificationsStore.refreshBorrowPendingCount(),
+        ]);
+      } catch (badgeError) {
+        console.error('[handleApprove] Error refreshing badges:', badgeError);
+      }
+    } catch (error) {
+      console.error('[handleApprove] Error in approval action:', error);
       // handled by axios interceptor
     }
   }

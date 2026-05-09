@@ -20,6 +20,7 @@ export interface IPoHeader {
   actioned_by_eng_name?: string | null;
   actioned_at?: string | null;
   approval_remark?: string | null;
+  has_gr?: number; // 1 if GR exists for this PO, 0 otherwise
 }
 
 // ===== PO Line (detail) =====

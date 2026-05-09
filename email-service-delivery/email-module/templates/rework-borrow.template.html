@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ต้องแก้ไข - เอกสารยืมของ</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      margin: 0;
+      padding: 0;
+      background-color: #f4f4f4;
+    }
+    .container {
+      max-width: 600px;
+      margin: 20px auto;
+      background-color: #ffffff;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+    }
+    .header {
+      background-color: #d35400;
+      color: #ffffff;
+      padding: 30px 20px;
+      text-align: center;
+    }
+    .header h1 {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 600;
+    }
+    .content {
+      padding: 30px 20px;
+    }
+    .section {
+      margin-bottom: 20px;
+    }
+    .section-title {
+      font-weight: 600;
+      color: #d35400;
+      margin-bottom: 10px;
+      border-bottom: 2px solid #d35400;
+      padding-bottom: 8px;
+    }
+    .detail-row {
+      display: flex;
+      margin-bottom: 8px;
+    }
+    .label {
+      font-weight: 600;
+      width: 120px;
+      color: #d35400;
+    }
+    .value {
+      flex: 1;
+      color: #555;
+    }
+    .warning {
+      background-color: #fadbd8;
+      border-left: 4px solid #d35400;
+      padding: 12px;
+      margin: 15px 0;
+      border-radius: 4px;
+    }
+    .message {
+      background-color: #f4d3c3;
+      border-left: 4px solid #c0392b;
+      padding: 12px;
+      margin: 15px 0;
+      border-radius: 4px;
+    }
+    .action-button {
+      display: inline-block;
+      background-color: #d35400;
+      color: white;
+      padding: 12px 30px;
+      text-decoration: none;
+      border-radius: 4px;
+      margin-top: 15px;
+      font-weight: 600;
+    }
+    .footer {
+      background-color: #f8f9fa;
+      padding: 20px;
+      text-align: center;
+      font-size: 12px;
+      color: #666;
+      border-top: 1px solid #e0e0e0;
+    }
+    .timestamp {
+      font-size: 11px;
+      color: #999;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>⚠️ ต้องแก้ไขเอกสารยืมของ</h1>
+    </div>
+    
+    <div class="content">
+      <p>สวัสดี,</p>
+      <p>เอกสารยืมของของคุณต้องมีการแก้ไขบางส่วนตามความเห็นของผู้อนุมัติ</p>
+      
+      <div class="section">
+        <div class="section-title">📄 รายละเอียดเอกสาร</div>
+        <div class="detail-row">
+          <div class="label">เลขที่เอกสาร:</div>
+          <div class="value"><strong>{{document_no}}</strong></div>
+        </div>
+        <div class="detail-row">
+          <div class="label">ประเภท:</div>
+          <div class="value">{{document_type}} (เอกสารยืมของ)</div>
+        </div>
+      </div>
+
+      <div class="warning">
+        <strong>⚠️ สถานะ: ต้องแก้ไข (Rework)</strong>
+      </div>
+
+      {{#if additional_message}}
+      <div class="message">
+        <strong>💬 ความเห็นของผู้อนุมัติ:</strong>
+        <p>{{additional_message}}</p>
+      </div>
+      {{/if}}
+
+      <div class="message">
+        <strong>ℹ️ กรุณาแก้ไขตามความเห็นและส่งอีกครั้งเพื่อการอนุมัติต่อ</strong>
+      </div>
+
+      <a href="#" class="action-button">ไปยังระบบเพื่อแก้ไข →</a>
+
+      <div class="section" style="margin-top: 30px;">
+        <p><small>ข้อความนี้เป็นการแจ้งอัตโนมัติจากระบบ Nurse Room System</small></p>
+      </div>
+    </div>
+
+    <div class="footer">
+      <p>Nurse Room System - Shindengen Medical Supply Management</p>
+      <p class="timestamp">ส่งเวลา: {{sent_at}}</p>
+    </div>
+  </div>
+</body>
+</html>

@@ -168,7 +168,11 @@ export class GrService {
           p.po_date,
           s.supplier_id,
           s.supplier_name,
-          p.status
+          p.status,
+          CASE WHEN EXISTS (
+            SELECT 1 FROM [${this.DATABASE_NAME}].dbo.gr_headers 
+            WHERE po_id = p.po_id AND status != 'CANCELLED'
+          ) THEN 1 ELSE 0 END AS has_gr
         FROM [${this.DATABASE_NAME}].dbo.po_headers p
         LEFT JOIN [${this.DATABASE_NAME}].dbo.suppliers s ON p.supplier_id = s.supplier_id
         WHERE p.status IN ('ORDERED', 'PARTIAL')
@@ -307,12 +311,22 @@ export class GrService {
   async confirmGr(
     grId: number,
     confirmedBy: string,
-  ): Promise<{ status: string; message: string }> {
+  ): Promise<{ status: string; message: string; po_id?: number }> {
     try {
       console.log('[GrService] confirmGr called:', {
         grId,
         confirmedBy,
       });
+
+      // Get the GR's PO ID before confirming
+      const grQueryBeforeConfirm = `
+        SELECT po_id FROM [${this.DATABASE_NAME}].dbo.gr_headers WHERE gr_id = ${grId}
+      `;
+      const grDataBefore = await this.databaseService.query<{ po_id: number }>(
+        this.DATABASE_NAME,
+        grQueryBeforeConfirm,
+      );
+      const poIdFromGr = grDataBefore?.[0]?.po_id;
 
       const result = await this.databaseService.executeStoredProcedure(
         this.DATABASE_NAME,
@@ -330,6 +344,7 @@ export class GrService {
       interface SpResponse {
         Status: string;
         Message: string;
+        po_id?: number;
       }
       const response = result[0] as SpResponse;
       if (response.Status !== 'Success') {
@@ -337,6 +352,17 @@ export class GrService {
       }
 
       console.log('[GrService] GR confirmed successfully:', response);
+      
+      // ─── After confirming GR, update PO status (as background task, don't block response) ───
+      const targetPoId = response.po_id || poIdFromGr;
+      
+      // Fire and forget to update PO status without blocking the response
+      if (targetPoId) {
+        this.updatePoStatusAfterGrConfirm(targetPoId).catch(err => {
+          console.error('[GrService] Error updating PO status in background:', err);
+        });
+      }
+
       return {
         status: response.Status,
         message: response.Message,
@@ -346,6 +372,43 @@ export class GrService {
       throw new InternalServerErrorException(
         error instanceof Error ? error.message : 'Failed to confirm GR',
       );
+    }
+  }
+
+  // ─── Background task: Update PO status after GR confirmation ───
+  private async updatePoStatusAfterGrConfirm(poId: number): Promise<void> {
+    try {
+      const query = `
+        SELECT 
+          ph.po_id,
+          CASE 
+            WHEN SUM(pl.qty_order) = SUM(pl.qty_received) THEN 'RECEIVED'
+            WHEN SUM(pl.qty_received) > 0 THEN 'PARTIAL'
+            ELSE ph.status
+          END AS new_status
+        FROM [${this.DATABASE_NAME}].dbo.po_headers ph
+        JOIN [${this.DATABASE_NAME}].dbo.po_lines pl ON ph.po_id = pl.po_id
+        WHERE ph.po_id = ${poId}
+        GROUP BY ph.po_id, ph.status
+      `;
+      
+      const statusCheckResult = await this.databaseService.query<{
+        po_id: number;
+        new_status: string;
+      }>(this.DATABASE_NAME, query);
+      
+      if (statusCheckResult && statusCheckResult.length > 0) {
+        const { new_status } = statusCheckResult[0];
+        const updateQuery = `
+          UPDATE [${this.DATABASE_NAME}].dbo.po_headers 
+          SET status = '${new_status}', updated_at = GETDATE()
+          WHERE po_id = ${poId}
+        `;
+        await this.databaseService.query(this.DATABASE_NAME, updateQuery);
+        console.log(`[GrService] Updated PO ${poId} status to ${new_status}`);
+      }
+    } catch (error) {
+      console.error(`[GrService] Failed to update PO ${poId} status:`, error);
     }
   }
 
@@ -359,6 +422,16 @@ export class GrService {
         grId,
         cancelledBy,
       });
+
+      // Get the GR's PO ID before cancelling
+      const grQueryBeforeCancel = `
+        SELECT po_id FROM [${this.DATABASE_NAME}].dbo.gr_headers WHERE gr_id = ${grId}
+      `;
+      const grDataBefore = await this.databaseService.query<{ po_id: number }>(
+        this.DATABASE_NAME,
+        grQueryBeforeCancel,
+      );
+      const poIdFromGr = grDataBefore?.[0]?.po_id;
 
       const result = await this.databaseService.executeStoredProcedure(
         this.DATABASE_NAME,
@@ -384,6 +457,14 @@ export class GrService {
       }
 
       console.log('[GrService] GR cancelled successfully:', response);
+      
+      // ─── After cancelling GR, update PO status (as background task, don't block response) ───
+      if (poIdFromGr) {
+        this.updatePoStatusAfterGrConfirm(poIdFromGr).catch(err => {
+          console.error('[GrService] Error updating PO status in background:', err);
+        });
+      }
+
       return {
         status: response.Status,
         message: response.Message,

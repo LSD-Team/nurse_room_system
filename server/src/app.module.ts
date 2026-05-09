@@ -13,6 +13,7 @@ import { PoModule } from '@/src/apis/po/po.module';
 import { StockModule } from '@/src/apis/stock/stock.module';
 import { AuthModule } from '@/src/auth/auth.module';
 import { DatabaseModule } from '@/src/database/database.module';
+import { EmailModule } from '@/src/email/email.module';
 
 //  ----- ⚙️ Providers & Services ⚙️ -----
 import { AppService } from '@/src/app.service';
@@ -26,10 +27,11 @@ import { AppController } from '@/src/app.controller';
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath:
-        process.env.NODE_ENV === 'production' ? '.env.production' : '.env',
+        process.env.NODE_ENV === 'production' ? '.env.production' : '.env.development',
     }),
     AuthModule,
     DatabaseModule,
+    EmailModule,
     ApprovalModule,
     BorrowModule,
     BulletModule,

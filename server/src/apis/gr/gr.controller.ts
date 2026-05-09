@@ -94,9 +94,7 @@ export class GrController {
       note: dto.note,
     });
 
-    // TODO: Extract createdBy from JWT context (global.jwtPayload)
-    // For now, placeholder
-    const createdBy = 'SYSTEM'; // Replace with actual user from context
+    const createdBy = (global.jwtPayload as any)?.UserID || 'SYSTEM';
     return this.grService.createGr(
       dto.po_id,
       dto.json_lines,
@@ -113,9 +111,7 @@ export class GrController {
   async confirmGr(
     @Param('id', ParseIntPipe) grId: number,
   ): Promise<ConfirmGrResponseDto> {
-    // TODO: Extract confirmedBy from JWT context (global.jwtPayload)
-    // For now, placeholder
-    const confirmedBy = 'SYSTEM'; // Replace with actual user from context
+    const confirmedBy = (global.jwtPayload as any)?.UserID || 'SYSTEM';
     return this.grService.confirmGr(grId, confirmedBy);
   }
 
@@ -127,9 +123,7 @@ export class GrController {
   async cancelGr(
     @Param('id', ParseIntPipe) grId: number,
   ): Promise<ConfirmGrResponseDto> {
-    // TODO: Extract cancelledBy from JWT context (global.jwtPayload)
-    // For now, placeholder
-    const cancelledBy = 'SYSTEM'; // Replace with actual user from context
+    const cancelledBy = (global.jwtPayload as any)?.UserID || 'SYSTEM';
     return this.grService.cancelGr(grId, cancelledBy);
   }
 

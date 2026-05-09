@@ -1,5 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { DatabaseService } from '@/src/database/database.service';
+import { EmailService } from '@/src/email/email.service';
+import { EmailLogService } from '@/src/email/services/email-log.service';
+import { ENotifyType } from '@/src/email/dto/send-approval-email.dto';
 import type {
   IPoHeader,
   IPoLine,
@@ -10,7 +13,13 @@ import type {
 
 @Injectable()
 export class PoService {
-  constructor(private readonly databaseService: DatabaseService) {}
+  private readonly logger = new Logger(PoService.name);
+
+  constructor(
+    private readonly databaseService: DatabaseService,
+    private readonly emailService: EmailService,
+    private readonly emailLogService: EmailLogService,
+  ) {}
 
   private get DATABASE_NAME(): string {
     return this.databaseService.getDatabaseName();
@@ -131,13 +140,17 @@ export class PoService {
   async getSupplierPrices(supplierId: number): Promise<ISupplierItemPrice[]> {
     const query = `
       SELECT
-        supplier_id, supplier_code, supplier_name,
-        item_id, item_code, item_name_th, item_name_en,
-        unit_id, unit_code, unit_name_th, unit_name_en,
-        unit_price, conversion_factor, effective_date, expire_date
-      FROM view_supplier_item_prices_current
-      WHERE supplier_id = @param0
-      ORDER BY item_code
+        sip.supplier_id, sip.supplier_code, sip.supplier_name,
+        sip.item_id, sip.item_code, sip.item_name_th, sip.item_name_en,
+        sip.unit_id, sip.unit_code, sip.unit_name_th, sip.unit_name_en,
+        sip.unit_price, sip.conversion_factor, sip.effective_date, sip.expire_date,
+        i.item_min_po, i.item_max_po,
+        uu.unit_name_th AS usage_unit_name_th
+      FROM view_supplier_item_prices_current sip
+      LEFT JOIN items i ON sip.item_id = i.item_id
+      LEFT JOIN units uu ON i.usage_unit_id = uu.unit_id
+      WHERE sip.supplier_id = @param0
+      ORDER BY sip.item_code
     `;
     return this.databaseService.query<ISupplierItemPrice>(
       this.DATABASE_NAME,
@@ -383,7 +396,8 @@ export class PoService {
 
   // ─── POST: ส่งอนุมัติ (sp_PO_03_SubmitPO) ───
   async submitPo(poId: string, submitBy: string) {
-    return this.databaseService.executeStoredProcedure(
+    // Call stored procedure
+    const result = await this.databaseService.executeStoredProcedure(
       this.DATABASE_NAME,
       'sp_PO_03_SubmitPO',
       {
@@ -391,6 +405,52 @@ export class PoService {
         SubmitBy: submitBy,
       },
     );
+
+    // Send approval notification email
+    try {
+      const poHeader = await this.getPoHeaderById(parseInt(poId, 10));
+
+      if (poHeader) {
+        // Send email to approvers of the first approval level
+        await this.emailService.sendApprovalRequestByRoleCode(
+          'GROUP_LEAD',
+          poHeader.po_no,
+          'PO',
+          poHeader.po_id,
+          `Purchase Order ${poHeader.po_no}`,
+          poHeader.note || '',
+        );
+
+        // Log email to database
+        try {
+          await this.emailLogService.create({
+            document_type: 'PO',
+            document_id: poHeader.po_id,
+            document_no: poHeader.po_no,
+            notify_type: 'APPROVAL_PO',
+            recipient_emails: 'GROUP_LEAD_APPROVERS', // Will be resolved in service
+            subject: `[Nurse Room System] ${poHeader.po_no} : Waiting for Approval - PO`,
+            sent_status: 'SUCCESS',
+            is_test_override: false,
+            sent_by_employee_id: parseInt(submitBy, 10) || undefined,
+          });
+        } catch (logError) {
+          this.logger.warn(`Failed to log email: ${logError.message}`);
+        }
+
+        this.logger.log(
+          `✅ [PoService] Approval email sent for PO: ${poHeader.po_no}`,
+        );
+      }
+    } catch (error: any) {
+      this.logger.error(
+        `❌ [PoService] Failed to send approval email: ${error.message}`,
+        error.stack,
+      );
+      // Don't let email error interrupt the main flow
+    }
+
+    return result;
   }
 
   // ─── POST: อนุมัติ/ปฏิเสธ (sp_PO_04_ApprovePO) ───
@@ -400,7 +460,11 @@ export class PoService {
     actionedBy: string,
     remark: string | null,
   ) {
-    return this.databaseService.executeStoredProcedure(
+    // Get PO info before approval
+    const poHeader = await this.getPoHeaderById(parseInt(poId, 10));
+
+    // Call stored procedure
+    const result = await this.databaseService.executeStoredProcedure(
       this.DATABASE_NAME,
       'sp_PO_04_ApprovePO',
       {
@@ -410,6 +474,99 @@ export class PoService {
         Remark: remark,
       },
     );
+
+    // Send email based on action
+    if (poHeader) {
+      // Both REJECT and REWORK trigger rework notification
+      if (action === 'REJECT' || action === 'REJECTED' || action === 'REWORK') {
+        // Send rework notification to PO creator
+        try {
+          await this.emailService.sendApprovalEmail({
+            notifyType: ENotifyType.PO_REWORK,
+            documentId: poHeader.po_id,
+            documentNo: poHeader.po_no,
+            documentType: 'PO',
+            toEmployeeIds: [parseInt(poHeader.created_by, 10)],
+            rejectedByName: actionedBy,
+            additionalMessage: remark || 'Please revise and resubmit your PO',
+          });
+
+          // Log email
+          try {
+            await this.emailLogService.create({
+              document_type: 'PO',
+              document_id: poHeader.po_id,
+              document_no: poHeader.po_no,
+              notify_type: 'PO_REWORK',
+              recipient_emails: `${poHeader.created_by}`,
+              subject: `[Nurse Room System] ${poHeader.po_no} : Rework Required - PO`,
+              sent_status: 'SUCCESS',
+              is_test_override: false,
+              sent_by_employee_id: parseInt(actionedBy, 10) || undefined,
+            });
+          } catch (logError) {
+            this.logger.warn(`Failed to log email: ${logError.message}`);
+          }
+
+          this.logger.log(
+            `✅ [PoService] Rework notification sent for PO: ${poHeader.po_no}`,
+          );
+        } catch (error: any) {
+          this.logger.error(
+            `❌ [PoService] Failed to send rework email: ${error.message}`,
+            error.stack,
+          );
+        }
+      } else if (action === 'APPROVE' || action === 'APPROVED') {
+        // Check if this is final approval (all approvals done)
+        try {
+          const pendingApprovals = await this.getPendingApprovals(
+            poHeader.po_id,
+          );
+
+          // If no more pending approvals, this was the final approval
+          if (pendingApprovals.length === 0) {
+            await this.emailService.sendApprovalEmail({
+              notifyType: ENotifyType.PO_COMPLETED,
+              documentId: poHeader.po_id,
+              documentNo: poHeader.po_no,
+              documentType: 'PO',
+              toEmployeeIds: [parseInt(poHeader.created_by, 10)],
+              approvedByName: actionedBy,
+              additionalMessage:
+                'Your PO has been fully approved and is ready for ordering',
+            });
+
+            // Log email
+            try {
+              await this.emailLogService.create({
+                document_type: 'PO',
+                document_id: poHeader.po_id,
+                document_no: poHeader.po_no,
+                notify_type: 'PO_COMPLETED',
+                recipient_emails: `${poHeader.created_by}`,
+                subject: `[Nurse Room System] ${poHeader.po_no} : Approved - PO`,
+                sent_status: 'SUCCESS',
+                is_test_override: false,
+                sent_by_employee_id: parseInt(actionedBy, 10) || undefined,
+              });
+            } catch (logError) {
+              this.logger.warn(`Failed to log email: ${logError.message}`);
+            }
+
+            this.logger.log(
+              `✅ [PoService] Completion notification sent for PO: ${poHeader.po_no}`,
+            );
+          }
+        } catch (error: any) {
+          this.logger.error(
+            `❌ [PoService] Failed to send completion email: ${error.message}`,
+          );
+        }
+      }
+    }
+
+    return result;
   }
 
   // ─── POST: ยกเลิก PO (sp_POCancel) ───
@@ -597,5 +754,40 @@ export class PoService {
       console.error('[PoService] Error getting approval pending count:', error);
       return 0;
     }
+  }
+
+  // ─── HELPER: Get PO header by ID (for email service) ───
+  private async getPoHeaderById(poId: number): Promise<any> {
+    const query = `
+      SELECT TOP 1
+        h.po_id,
+        h.po_no,
+        h.status,
+        h.note,
+        h.created_by,
+        h.created_at
+      FROM po_headers h
+      WHERE h.po_id = @param0
+    `;
+    const result = await this.databaseService.query(this.DATABASE_NAME, query, [
+      poId,
+    ]);
+    return result?.[0] || null;
+  }
+
+  // ─── HELPER: Get pending approvals for a PO ───
+  private async getPendingApprovals(poId: number): Promise<any[]> {
+    const query = `
+      SELECT
+        a.approval_id,
+        a.po_id,
+        a.approval_level,
+        a.approval_role,
+        a.status
+      FROM po_approvals a
+      WHERE a.po_id = @param0 AND a.status = 'PENDING'
+      ORDER BY a.approval_level
+    `;
+    return this.databaseService.query(this.DATABASE_NAME, query, [poId]);
   }
 }

@@ -1,14 +1,23 @@
 import { Injectable } from '@nestjs/common';
 import { DatabaseService } from '@/src/database/database.service';
+import { PoService } from '@/src/apis/po/po.service';
+import { BorrowService } from '@/src/apis/borrow/borrow.service';
 import type {
   IPendingApprovalItem,
   IApprovalHistory,
   IBorrowApprovalLog,
 } from './approval.interface';
 
+// Note: We delegate to PoService and BorrowService for approval logic
+// They handle both the stored procedures and email notifications
+
 @Injectable()
 export class ApprovalService {
-  constructor(private readonly databaseService: DatabaseService) {}
+  constructor(
+    private readonly databaseService: DatabaseService,
+    private readonly poService: PoService,
+    private readonly borrowService: BorrowService,
+  ) {}
 
   private get DATABASE_NAME(): string {
     return this.databaseService.getDatabaseName();
@@ -251,16 +260,8 @@ export class ApprovalService {
     actionedBy: string,
     remark: string | null,
   ) {
-    return this.databaseService.executeStoredProcedure(
-      this.DATABASE_NAME,
-      'sp_PO_04_ApprovePO',
-      {
-        PoId: poId,
-        Action: action,
-        ActionedBy: actionedBy,
-        Remark: remark,
-      },
-    );
+    // Call PoService which includes email logic
+    return this.poService.approvePo(poId, action, actionedBy, remark);
   }
 
   // ─── POST: Approve Borrow (sp_BR_04_Approve) ───
@@ -270,15 +271,7 @@ export class ApprovalService {
     actionedBy: string,
     remark: string | null,
   ) {
-    return this.databaseService.executeStoredProcedure(
-      this.DATABASE_NAME,
-      'sp_BR_04_Approve',
-      {
-        BorrowId: borrowId,
-        Action: action,
-        ActionedBy: actionedBy,
-        Remark: remark,
-      },
-    );
+    // Call BorrowService which includes email logic
+    return this.borrowService.approveBorrow(borrowId, action, actionedBy, remark);
   }
 }

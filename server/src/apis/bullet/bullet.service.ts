@@ -20,14 +20,14 @@ export class BulletService {
     `;
 
     try {
-      const results = await this.databaseService.query(
-        query,
-        this.DATABASE_NAME,
-      );
+      const results = await this.databaseService.query<{
+        list: string;
+        count: number;
+      }>(this.DATABASE_NAME, query);
 
       // Transform results array into object keyed by 'list'
       const countsMap: Record<string, number> = {};
-      results.forEach((row: { list: string; count: number }) => {
+      results.forEach((row) => {
         countsMap[row.list] = row.count;
       });
 

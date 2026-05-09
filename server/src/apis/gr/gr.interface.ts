@@ -23,6 +23,7 @@ export interface IAvailablePo {
   supplier_id: number;
   supplier_name: string;
   status: string;
+  has_gr?: number; // 1 if GR exists for this PO, 0 otherwise
 }
 
 export interface IPendingItem {

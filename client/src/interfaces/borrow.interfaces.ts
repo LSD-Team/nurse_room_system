@@ -66,6 +66,9 @@ export interface ISupplierItemPrice {
   conversion_factor: number;
   effective_date: string;
   expire_date: string | null;
+  item_min_po?: number | null;
+  item_max_po?: number | null;
+  usage_unit_name_th?: string | null;
 }
 
 // ===== Borrow Line Form (for create/edit) =====

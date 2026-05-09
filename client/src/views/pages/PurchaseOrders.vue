@@ -46,6 +46,10 @@
     qty_base: number | null;
     item_min: number | null;
     item_max: number | null;
+    item_min_po: number | null;
+    item_max_po: number | null;
+    usage_unit_name_th: string | null;
+    conversion_factor: number;
     qty_order: number;
   }
 
@@ -182,6 +186,24 @@
     if (item.item_max != null && item.qty_base > item.item_max)
       return 'text-yellow-600 font-bold';
     return 'text-blue-600 font-semibold';
+  }
+
+  function autoInputMin(): void {
+    for (const item of orderItems.value) {
+      if (item.item_min_po != null && item.qty_base != null) {
+        const calculated = item.item_min_po - item.qty_base;
+        item.qty_order = calculated > 0 ? calculated : 0;
+      }
+    }
+  }
+
+  function autoInputMax(): void {
+    for (const item of orderItems.value) {
+      if (item.item_max_po != null && item.qty_base != null) {
+        const calculated = item.item_max_po - item.qty_base;
+        item.qty_order = calculated > 0 ? calculated : 0;
+      }
+    }
   }
 
   function printPo(): void {
@@ -433,6 +455,10 @@
           qty_base: stock?.qty_base ?? null,
           item_min: stock?.item_min ?? null,
           item_max: stock?.item_max ?? null,
+          item_min_po: price.item_min_po ?? null,
+          item_max_po: price.item_max_po ?? null,
+          usage_unit_name_th: price.usage_unit_name_th ?? null,
+          conversion_factor: price.conversion_factor,
           qty_order: 0,
         };
       });
@@ -991,6 +1017,22 @@
               </IconField>
             </div>
           </div>
+          <div class="flex gap-2">
+            <Button
+              label="Auto input MIN"
+              icon="pi pi-arrow-down"
+              severity="info"
+              size="small"
+              @click="autoInputMin()"
+            />
+            <Button
+              label="Auto input MAX"
+              icon="pi pi-arrow-up"
+              severity="success"
+              size="small"
+              @click="autoInputMax()"
+            />
+          </div>
           <DataTable
             :value="filteredOrderItems"
             dataKey="item_id"
@@ -1028,14 +1070,28 @@
                 </span>
               </template>
             </Column>
+            <Column
+              field="usage_unit_name_th"
+              header="หน่วยใช้"
+              style="min-width: 80px"
+            />
             <Column header="Min" style="min-width: 70px" bodyClass="text-right">
               <template #body="{ data }">
-                {{ data.item_min != null ? formatNumber(data.item_min) : '-' }}
+                {{ data.item_min_po != null ? formatNumber(data.item_min_po) : '-' }}
               </template>
             </Column>
             <Column header="Max" style="min-width: 70px" bodyClass="text-right">
               <template #body="{ data }">
-                {{ data.item_max != null ? formatNumber(data.item_max) : '-' }}
+                {{ data.item_max_po != null ? formatNumber(data.item_max_po) : '-' }}
+              </template>
+            </Column>
+            <Column header="คงเหลือโดยประมาณ" style="min-width: 120px" bodyClass="text-right">
+              <template #body="{ data }">
+                {{
+                  data.qty_base != null && data.conversion_factor
+                    ? formatNumber(data.qty_base / data.conversion_factor)
+                    : '-'
+                }}
               </template>
             </Column>
             <Column
