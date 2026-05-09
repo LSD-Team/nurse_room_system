@@ -347,10 +347,9 @@ export class BorrowService {
       SELECT TOP 1
         b.borrow_id,
         b.borrow_no,
-        b.borrow_status,
         b.note,
         b.created_by
-      FROM view_borrowed_items_header b
+      FROM borrow_headers b
       WHERE b.borrow_id = @param0
     `;
     const result = await this.databaseService.query(this.DATABASE_NAME, query, [
