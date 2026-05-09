@@ -518,14 +518,36 @@ export class PoService {
           );
         }
       } else if (action === 'APPROVE' || action === 'APPROVED') {
-        // Check if this is final approval (all approvals done)
+        // Check if there are more pending approvals
         try {
           const pendingApprovals = await this.getPendingApprovals(
             poHeader.po_id,
           );
 
-          // If no more pending approvals, this was the final approval
-          if (pendingApprovals.length === 0) {
+          // If there are more approvals pending, send email to next approver
+          if (pendingApprovals.length > 0) {
+            const nextApproval = pendingApprovals[0]; // Get the first pending (lowest level)
+            
+            try {
+              await this.emailService.sendApprovalRequestByRoleCode(
+                nextApproval.approval_role,
+                poHeader.po_no,
+                'PO',
+                poHeader.po_id,
+                poHeader.po_no,
+                'Waiting for your approval',
+              );
+
+              this.logger.log(
+                `✅ [PoService] Approval request sent to ${nextApproval.approval_role} for PO: ${poHeader.po_no}`,
+              );
+            } catch (emailError: any) {
+              this.logger.error(
+                `❌ [PoService] Failed to send approval request email: ${emailError.message}`,
+              );
+            }
+          } else {
+            // No more pending approvals - this was the final approval
             await this.emailService.sendApprovalEmail({
               notifyType: ENotifyType.PO_COMPLETED,
               documentId: poHeader.po_id,
@@ -560,7 +582,7 @@ export class PoService {
           }
         } catch (error: any) {
           this.logger.error(
-            `❌ [PoService] Failed to send completion email: ${error.message}`,
+            `❌ [PoService] Failed to process approval workflow: ${error.message}`,
           );
         }
       }

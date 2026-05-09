@@ -237,14 +237,36 @@ export class BorrowService {
           );
         }
       } else if (action === 'APPROVE' || action === 'APPROVED') {
-        // Check if this is final approval
+        // Check if there are more pending approvals
         try {
           const pendingApprovals = await this.getPendingApprovals(
             borrowHeader.borrow_id,
           );
 
-          // If no more pending approvals, this was the final approval
-          if (pendingApprovals.length === 0) {
+          // If there are more approvals pending, send email to next approver
+          if (pendingApprovals.length > 0) {
+            const nextApproval = pendingApprovals[0]; // Get the first pending (lowest level)
+            
+            try {
+              await this.emailService.sendApprovalRequestByRoleCode(
+                nextApproval.approval_role,
+                borrowHeader.borrow_no,
+                'BORROW',
+                borrowHeader.borrow_id,
+                borrowHeader.borrow_no,
+                'Waiting for your approval',
+              );
+
+              this.logger.log(
+                `✅ [BorrowService] Approval request sent to ${nextApproval.approval_role} for Borrow: ${borrowHeader.borrow_no}`,
+              );
+            } catch (emailError: any) {
+              this.logger.error(
+                `❌ [BorrowService] Failed to send approval request email: ${emailError.message}`,
+              );
+            }
+          } else {
+            // No more pending approvals - this was the final approval
             await this.emailService.sendApprovalEmail({
               notifyType: ENotifyType.BORROW_COMPLETED,
               documentId: borrowHeader.borrow_id,
@@ -274,12 +296,12 @@ export class BorrowService {
             }
 
             this.logger.log(
-              `โœ… [BorrowService] Completion notification sent for Borrow: ${borrowHeader.borrow_no}`,
+              `✅ [BorrowService] Completion notification sent for Borrow: ${borrowHeader.borrow_no}`,
             );
           }
         } catch (error: any) {
           this.logger.error(
-            `โŒ [BorrowService] Failed to send completion email: ${error.message}`,
+            `❌ [BorrowService] Failed to process approval workflow: ${error.message}`,
             error.stack,
           );
         }
