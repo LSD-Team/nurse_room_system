@@ -86,10 +86,11 @@ export class EmailService {
       return [];
     }
 
+    const placeholders = employeeIds.map((_, i) => `@param${i}`).join(',');
     const query = `
       SELECT DISTINCT email 
       FROM view_email 
-      WHERE employee_id IN (${employeeIds.join(',')})
+      WHERE employee_id IN (${placeholders})
       AND email IS NOT NULL
       AND email != ''
     `;
@@ -98,6 +99,7 @@ export class EmailService {
       const results = await this.databaseService.query<{ email: string }>(
         this.DATABASE_NAME,
         query,
+        employeeIds,
       );
       return results.map((r) => r.email);
     } catch (error: any) {
@@ -117,7 +119,7 @@ export class EmailService {
       SELECT DISTINCT ve.email
       FROM approval_roles ar
       JOIN view_email ve ON ar.approver_id = ve.employee_id
-      WHERE ar.role_code = '${roleCode}'
+      WHERE ar.role_code = @param0
       AND ar.is_active = 1
       AND ve.email IS NOT NULL
       AND ve.email != ''
@@ -127,6 +129,7 @@ export class EmailService {
       const results = await this.databaseService.query<{ email: string }>(
         this.DATABASE_NAME,
         query,
+        [roleCode],
       );
       return results.map((r) => r.email);
     } catch (error: any) {
