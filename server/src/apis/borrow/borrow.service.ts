@@ -205,7 +205,7 @@ export class BorrowService {
             documentId: borrowHeader.borrow_id,
             documentNo: borrowHeader.borrow_no,
             documentType: 'BORROW',
-            toEmployeeIds: [parseInt(borrowHeader.created_by, 10)],
+            toEmployeeIds: [borrowHeader.created_by],
             rejectedByName: actionedBy,
             additionalMessage: remark || 'Please revise and resubmit your borrow request',
           });
@@ -250,7 +250,7 @@ export class BorrowService {
               documentId: borrowHeader.borrow_id,
               documentNo: borrowHeader.borrow_no,
               documentType: 'BORROW',
-              toEmployeeIds: [parseInt(borrowHeader.created_by, 10)],
+              toEmployeeIds: [borrowHeader.created_by],
               approvedByName: actionedBy,
               additionalMessage:
                 'Your borrow request has been fully approved',

@@ -12,14 +12,14 @@ export interface ISendApprovalEmailPayload {
   documentId: number;
   documentNo: string;
   documentType: 'PO' | 'BORROW';
-  toEmployeeIds: number[];
-  ccEmployeeIds?: number[];
+  toEmployeeIds: string[];
+  ccEmployeeIds?: string[];
   documentTitle?: string;
   documentDescription?: string;
-  createdByEmployeeId?: number;
-  approvedByEmployeeId?: number;
+  createdByEmployeeId?: string;
+  approvedByEmployeeId?: string;
   approvedByName?: string;
-  rejectedByEmployeeId?: number;
+  rejectedByEmployeeId?: string;
   rejectedByName?: string;
   additionalMessage?: string;
 }

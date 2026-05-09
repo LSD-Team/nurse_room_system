@@ -81,7 +81,7 @@ export class EmailService {
   /**
    * ดึง email จาก employee IDs
    */
-  private async getEmailsByEmployeeIds(employeeIds: number[]): Promise<string[]> {
+  private async getEmailsByEmployeeIds(employeeIds: string[]): Promise<string[]> {
     if (!employeeIds || employeeIds.length === 0) {
       return [];
     }

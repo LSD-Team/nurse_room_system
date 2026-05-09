@@ -486,7 +486,7 @@ export class PoService {
             documentId: poHeader.po_id,
             documentNo: poHeader.po_no,
             documentType: 'PO',
-            toEmployeeIds: [parseInt(poHeader.created_by, 10)],
+            toEmployeeIds: [poHeader.created_by],
             rejectedByName: actionedBy,
             additionalMessage: remark || 'Please revise and resubmit your PO',
           });
@@ -531,7 +531,7 @@ export class PoService {
               documentId: poHeader.po_id,
               documentNo: poHeader.po_no,
               documentType: 'PO',
-              toEmployeeIds: [parseInt(poHeader.created_by, 10)],
+              toEmployeeIds: [poHeader.created_by],
               approvedByName: actionedBy,
               additionalMessage:
                 'Your PO has been fully approved and is ready for ordering',
