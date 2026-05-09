@@ -206,10 +206,11 @@
     // Get creator name and today's date
     const creatorName = detailBorrow.value.created_by_eng_name || '-';
     const today = new Date();
-    const todayDate = today.toLocaleDateString('th-TH', {
+    const todayDate = today.toLocaleDateString('en-GB', {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
+      timeZone: 'Asia/Bangkok',
     });
 
     const html = `
@@ -1306,7 +1307,7 @@
                     {{ item.actioned_by_name || item.actioned_by }}
                   </span>
                   <span class="text-surface-400 ml-2">
-                    {{ new Date(item.actioned_at).toLocaleString('th-TH') }}
+                    {{ new Date(item.actioned_at).toLocaleString('en-GB', { timeZone: 'Asia/Bangkok' }) }}
                   </span>
                 </div>
                 <div v-if="item.remark" class="text-sm text-surface-500 mt-1">

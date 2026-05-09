@@ -286,7 +286,7 @@ export class EmailService {
         approved_by_name: payload.approvedByName || '',
         rejected_by_name: payload.rejectedByName || '',
         additional_message: payload.additionalMessage || '',
-        sent_at: new Date().toLocaleString('th-TH'),
+        sent_at: new Date().toLocaleString('en-GB', { timeZone: 'Asia/Bangkok' }),
       };
 
       const html = this.renderTemplate(template, variables);
@@ -325,6 +325,27 @@ export class EmailService {
 
       await this.send_email_service(emailData);
 
+      // Create email log
+      try {
+        const notifyTypeStr = payload.notifyType as 'APPROVAL_PO' | 'APPROVAL_BORROW' | 'PO_REWORK' | 'BORROW_REWORK' | 'PO_COMPLETED' | 'BORROW_COMPLETED';
+        const recipientEmails = finalToEmails.join(', ');
+        await this.emailLogService.create({
+          document_type: payload.documentType,
+          document_id: payload.documentId,
+          document_no: payload.documentNo,
+          notify_type: notifyTypeStr,
+          recipient_emails: recipientEmails,
+          cc_emails: finalCcEmails.length > 0 ? finalCcEmails.join(', ') : undefined,
+          subject: subject,
+          sent_status: 'SUCCESS',
+          is_test_override: isTestMode,
+          sent_by_employee_id: payload.sentByEmployeeId || undefined,
+        });
+        this.logger.log(`✅ Email log created for approval email: ${payload.documentNo}`);
+      } catch (logError) {
+        this.logger.warn(`Failed to log approval email: ${logError.message}`);
+      }
+
       this.logger.log(
         `✅ Approval email sent for ${payload.documentType} ${payload.documentNo}${isTestMode ? ' (TEST MODE)' : ''}`,
       );
@@ -347,6 +368,7 @@ export class EmailService {
     documentId: number,
     documentTitle: string,
     documentDescription: string,
+    sentByEmployeeId?: string,
   ): Promise<void> {
     try {
       // Debug: Log the query params
@@ -381,7 +403,7 @@ export class EmailService {
         approved_by_name: '',
         rejected_by_name: '',
         additional_message: '',
-        sent_at: new Date().toLocaleString('th-TH'),
+        sent_at: new Date().toLocaleString('en-GB', { timeZone: 'Asia/Bangkok' }),
       };
 
       const html = this.renderTemplate(template, variables);
@@ -423,10 +445,11 @@ export class EmailService {
           document_id: documentId,
           document_no: documentNo,
           notify_type: notifyTypeStr,
-          recipient_emails: finalToEmails.join(', '),
+          recipient_emails: roleCode,
           subject: subject,
           sent_status: 'SUCCESS',
           is_test_override: isTestMode,
+          sent_by_employee_id: sentByEmployeeId || undefined,
         });
         this.logger.log(`✅ Email log created for approval request: ${documentNo}`);
       } catch (logError) {

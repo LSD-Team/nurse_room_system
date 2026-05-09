@@ -5,9 +5,9 @@
 // ====================================================
 
 /**
- * Format date string to Thai locale format
+ * Format date string to Thai locale format (AD/Common Era, not Buddhist Era)
  * @param dateString ISO 8601 date string (e.g., "2024-04-09")
- * @returns Formatted date in Thai format (e.g., "09 เมษายน 2567")
+ * @returns Formatted date in Thai format (e.g., "09 เมษายน 2024")
  */
 export function formatDate(dateString: string | null | undefined): string {
   if (!dateString) return '-';
@@ -15,10 +15,11 @@ export function formatDate(dateString: string | null | undefined): string {
     const date = new Date(dateString);
     if (isNaN(date.getTime())) return '-';
 
-    return date.toLocaleDateString('th-TH', {
+    return date.toLocaleDateString('en-GB', {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
+      timeZone: 'Asia/Bangkok',
     });
   } catch (error) {
     console.error('Error formatting date:', error);
@@ -27,9 +28,9 @@ export function formatDate(dateString: string | null | undefined): string {
 }
 
 /**
- * Format date and time to Thai locale format
+ * Format date and time to Thai locale format (AD/Common Era, not Buddhist Era)
  * @param dateString ISO 8601 datetime string
- * @returns Formatted date and time (e.g., "09 เม.ย. 24 14:30")
+ * @returns Formatted date and time (e.g., "04/09/2024, 2:30:45 PM")
  */
 export function formatDateTime(dateString: string | null | undefined): string {
   if (!dateString) return '-';
@@ -37,13 +38,14 @@ export function formatDateTime(dateString: string | null | undefined): string {
     const date = new Date(dateString);
     if (isNaN(date.getTime())) return '-';
 
-    return date.toLocaleString('th-TH', {
+    return date.toLocaleString('en-GB', {
       year: 'numeric',
-      month: 'short',
+      month: '2-digit',
       day: '2-digit',
       hour: '2-digit',
       minute: '2-digit',
       second: '2-digit',
+      timeZone: 'Asia/Bangkok',
     });
   } catch (error) {
     console.error('Error formatting datetime:', error);

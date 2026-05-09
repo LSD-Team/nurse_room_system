@@ -53,7 +53,7 @@ export class BorrowService {
         qty_borrow, unit_price, total_price,
         po_line_id, note,
         ISNULL(conversion_factor, 1.0) AS conversion_factor,
-        created_by, created_at, updated_by, updated_at
+        NULL AS created_by, NULL AS created_at, NULL AS updated_by, NULL AS updated_at
       FROM view_borrowed_items
       WHERE borrow_id = @param0
       ORDER BY borrow_line_id
@@ -158,6 +158,7 @@ export class BorrowService {
           borrowHeader.borrow_id,
           `Borrow Request ${borrowHeader.borrow_no}`,
           borrowHeader.note || '',
+          submitBy,
         );
         console.log(
           `โœ… [BorrowService] Approval email sent for Borrow: ${borrowHeader.borrow_no}`,
@@ -208,24 +209,8 @@ export class BorrowService {
             toEmployeeIds: [borrowHeader.created_by],
             rejectedByName: actionedBy,
             additionalMessage: remark || 'Please revise and resubmit your borrow request',
+            sentByEmployeeId: actionedBy,
           });
-
-          // Log email
-          try {
-            await this.emailLogService.create({
-              document_type: 'BORROW',
-              document_id: borrowHeader.borrow_id,
-              document_no: borrowHeader.borrow_no,
-              notify_type: 'BORROW_REWORK',
-              recipient_emails: `${borrowHeader.created_by}`,
-              subject: `[Nurse Room System] ${borrowHeader.borrow_no} : Rework Required - BORROW`,
-              sent_status: 'SUCCESS',
-              is_test_override: false,
-              sent_by_employee_id: parseInt(actionedBy, 10) || undefined,
-            });
-          } catch (logError) {
-            this.logger.warn(`Failed to log email: ${logError.message}`);
-          }
 
           this.logger.log(
             `โœ… [BorrowService] Rework notification sent for Borrow: ${borrowHeader.borrow_no}`,
@@ -255,6 +240,7 @@ export class BorrowService {
                 borrowHeader.borrow_id,
                 borrowHeader.borrow_no,
                 'Waiting for your approval',
+                actionedBy,
               );
 
               this.logger.log(
@@ -276,24 +262,8 @@ export class BorrowService {
               approvedByName: actionedBy,
               additionalMessage:
                 'Your borrow request has been fully approved',
+              sentByEmployeeId: actionedBy,
             });
-
-            // Log email
-            try {
-              await this.emailLogService.create({
-                document_type: 'BORROW',
-                document_id: borrowHeader.borrow_id,
-                document_no: borrowHeader.borrow_no,
-                notify_type: 'BORROW_COMPLETED',
-                recipient_emails: `${borrowHeader.created_by}`,
-                subject: `[Nurse Room System] ${borrowHeader.borrow_no} : Approved - BORROW`,
-                sent_status: 'SUCCESS',
-                is_test_override: false,
-                sent_by_employee_id: parseInt(actionedBy, 10) || undefined,
-              });
-            } catch (logError) {
-              this.logger.warn(`Failed to log email: ${logError.message}`);
-            }
 
             this.logger.log(
               `✅ [BorrowService] Completion notification sent for Borrow: ${borrowHeader.borrow_no}`,
@@ -357,7 +327,7 @@ export class BorrowService {
       const DATABASE_NAME = this.databaseService.getDatabaseName();
       const query = `
         SELECT COUNT(*) as count
-        FROM [${DATABASE_NAME}].dbo.borrow_headers
+        FROM [${DATABASE_NAME}].dbo.view_borrowed_items_header
         WHERE borrow_status IN ('DRAFT', 'APPROVED')
       `;
       const result = await this.databaseService.query<{ count: number }>(
@@ -379,9 +349,8 @@ export class BorrowService {
         b.borrow_no,
         b.borrow_status,
         b.note,
-        b.created_by,
-        b.created_at
-      FROM borrow_headers b
+        b.created_by
+      FROM view_borrowed_items_header b
       WHERE b.borrow_id = @param0
     `;
     const result = await this.databaseService.query(this.DATABASE_NAME, query, [

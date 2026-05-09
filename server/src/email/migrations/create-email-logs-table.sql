@@ -26,7 +26,7 @@ CREATE TABLE [dbo].[email_logs] (
     [is_test_override] BIT DEFAULT 0 NOT NULL,                         -- 1 if using TEST_EMAIL_OVERRIDE, 0 if production
     [test_override_original_email] NVARCHAR(MAX) COLLATE Thai_CI_AS,   -- Original recipient emails before override
     [sent_by_employee_id] INT,                                          -- Employee ID who triggered the email
-    [created_at] DATETIME DEFAULT GETDATE() NOT NULL,                  -- When email was sent
+    [created_at] DATETIME DEFAULT CAST(DATEADD(HOUR, 7, GETUTCDATE()) AS DATETIME) NOT NULL,                  -- When email was sent (Thailand Time UTC+7)
     [external_sent_at] DATETIME,                                        -- When external service processed it
     [retry_count] INT DEFAULT 0 NOT NULL,                              -- Number of retry attempts
     [last_retry_at] DATETIME,                                           -- Last retry timestamp

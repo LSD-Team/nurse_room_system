@@ -419,24 +419,8 @@ export class PoService {
           poHeader.po_id,
           `Purchase Order ${poHeader.po_no}`,
           poHeader.note || '',
+          submitBy,
         );
-
-        // Log email to database
-        try {
-          await this.emailLogService.create({
-            document_type: 'PO',
-            document_id: poHeader.po_id,
-            document_no: poHeader.po_no,
-            notify_type: 'APPROVAL_PO',
-            recipient_emails: 'GROUP_LEAD_APPROVERS', // Will be resolved in service
-            subject: `[Nurse Room System] ${poHeader.po_no} : Waiting for Approval - PO`,
-            sent_status: 'SUCCESS',
-            is_test_override: false,
-            sent_by_employee_id: parseInt(submitBy, 10) || undefined,
-          });
-        } catch (logError) {
-          this.logger.warn(`Failed to log email: ${logError.message}`);
-        }
 
         this.logger.log(
           `✅ [PoService] Approval email sent for PO: ${poHeader.po_no}`,
@@ -489,24 +473,8 @@ export class PoService {
             toEmployeeIds: [poHeader.created_by],
             rejectedByName: actionedBy,
             additionalMessage: remark || 'Please revise and resubmit your PO',
+            sentByEmployeeId: actionedBy,
           });
-
-          // Log email
-          try {
-            await this.emailLogService.create({
-              document_type: 'PO',
-              document_id: poHeader.po_id,
-              document_no: poHeader.po_no,
-              notify_type: 'PO_REWORK',
-              recipient_emails: `${poHeader.created_by}`,
-              subject: `[Nurse Room System] ${poHeader.po_no} : Rework Required - PO`,
-              sent_status: 'SUCCESS',
-              is_test_override: false,
-              sent_by_employee_id: parseInt(actionedBy, 10) || undefined,
-            });
-          } catch (logError) {
-            this.logger.warn(`Failed to log email: ${logError.message}`);
-          }
 
           this.logger.log(
             `✅ [PoService] Rework notification sent for PO: ${poHeader.po_no}`,
@@ -536,6 +504,7 @@ export class PoService {
                 poHeader.po_id,
                 poHeader.po_no,
                 'Waiting for your approval',
+                actionedBy,
               );
 
               this.logger.log(
@@ -557,24 +526,8 @@ export class PoService {
               approvedByName: actionedBy,
               additionalMessage:
                 'Your PO has been fully approved and is ready for ordering',
+              sentByEmployeeId: actionedBy,
             });
-
-            // Log email
-            try {
-              await this.emailLogService.create({
-                document_type: 'PO',
-                document_id: poHeader.po_id,
-                document_no: poHeader.po_no,
-                notify_type: 'PO_COMPLETED',
-                recipient_emails: `${poHeader.created_by}`,
-                subject: `[Nurse Room System] ${poHeader.po_no} : Approved - PO`,
-                sent_status: 'SUCCESS',
-                is_test_override: false,
-                sent_by_employee_id: parseInt(actionedBy, 10) || undefined,
-              });
-            } catch (logError) {
-              this.logger.warn(`Failed to log email: ${logError.message}`);
-            }
 
             this.logger.log(
               `✅ [PoService] Completion notification sent for PO: ${poHeader.po_no}`,

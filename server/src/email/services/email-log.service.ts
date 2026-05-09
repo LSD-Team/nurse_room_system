@@ -48,7 +48,7 @@ export class EmailLogService {
       const errorStr = error_message ? `'${error_message.replace(/'/g, "''")}'` : 'NULL';
       const messageIdStr = external_message_id ? `'${external_message_id}'` : 'NULL';
       const originalEmailStr = test_override_original_email ? `'${test_override_original_email.replace(/'/g, "''")}'` : 'NULL';
-      const sentByStr = sent_by_employee_id ? sent_by_employee_id : 'NULL';
+      const sentByStr = sent_by_employee_id ? `'${sent_by_employee_id}'` : 'NULL';
 
       const sql = `
         INSERT INTO email_logs (

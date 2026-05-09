@@ -1406,7 +1406,7 @@
                   <span class="text-surface-400 ml-2">
                     {{
                       item.actioned_at
-                        ? new Date(item.actioned_at).toLocaleString('th-TH')
+                        ? new Date(item.actioned_at).toLocaleString('en-GB', { timeZone: 'Asia/Bangkok' })
                         : ''
                     }}
                   </span>

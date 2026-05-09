@@ -22,4 +22,5 @@ export interface ISendApprovalEmailPayload {
   rejectedByEmployeeId?: string;
   rejectedByName?: string;
   additionalMessage?: string;
+  sentByEmployeeId?: string;
 }

@@ -41,7 +41,7 @@ CREATE TABLE [dbo].[email_logs] (
     
     -- Audit Trail
     [sent_by_employee_id] INT,                                          -- Employee who triggered send
-    [created_at] DATETIME DEFAULT GETDATE() NOT NULL,                  -- When log created
+    [created_at] DATETIME DEFAULT CAST(DATEADD(HOUR, 7, GETUTCDATE()) AS DATETIME) NOT NULL,                  -- When log created (Thailand Time UTC+7)
     [external_sent_at] DATETIME,                                        -- When external service processed
     
     -- Retry Logic

@@ -11,6 +11,9 @@ import { DocumentBuilder } from '@nestjs/swagger/dist/document-builder';
 import { SwaggerModule } from '@nestjs/swagger/dist/swagger-module';
 
 async function bootstrap() {
+  // Set timezone to Asia/Bangkok (UTC+7) for Thailand
+  process.env.TZ = 'Asia/Bangkok';
+
   const app_name: string = process.env.APP_NAME || 'unknown';
   const app_version: string = process.env.APP_VERSION || 'unknown';
   const port: number = parseInt(process.env.APP_PORT || '3000'); // 3000 is default port
@@ -39,6 +42,7 @@ async function bootstrap() {
     logger.verbose(`Database :: ${databaseserver}`);
     logger.verbose(`Database Name :: ${database}`);
     logger.verbose(`MODE :: ${mode}`);
+    logger.verbose(`Timezone :: ${process.env.TZ || 'Not set'}`);
   });
 }
 bootstrap();

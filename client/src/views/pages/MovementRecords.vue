@@ -148,12 +148,13 @@
       >
         <template #body="{ data }">
           {{
-            new Date(data.created_at).toLocaleString('th-TH', {
+            new Date(data.created_at).toLocaleString('en-GB', {
               year: 'numeric',
               month: '2-digit',
               day: '2-digit',
               hour: '2-digit',
               minute: '2-digit',
+              timeZone: 'Asia/Bangkok',
             })
           }}
         </template>

@@ -658,7 +658,7 @@
             <template #body="{ data }">
               {{
                 data.actioned_at
-                  ? new Date(data.actioned_at).toLocaleString('th-TH')
+                  ? new Date(data.actioned_at).toLocaleString('en-GB', { timeZone: 'Asia/Bangkok' })
                   : '-'
               }}
             </template>
@@ -739,7 +739,7 @@
                   {{ item.actioned_by_name || item.actioned_by }}
                 </span>
                 <span class="text-surface-400 ml-2">
-                  {{ new Date(item.actioned_at).toLocaleString('th-TH') }}
+                  {{ new Date(item.actioned_at).toLocaleString('en-GB', { timeZone: 'Asia/Bangkok' }) }}
                 </span>
               </div>
               <div v-if="item.remark" class="text-sm text-surface-500 mt-1">

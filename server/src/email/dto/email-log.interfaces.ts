@@ -18,7 +18,7 @@ export interface IEmailLog {
   external_message_id?: string;
   is_test_override: boolean;
   test_override_original_email?: string; // Original emails before override
-  sent_by_employee_id?: number;
+  sent_by_employee_id?: string;
   created_at?: Date;
   external_sent_at?: Date;
   retry_count?: number;
@@ -40,7 +40,7 @@ export class CreateEmailLogDto {
   external_message_id?: string;
   is_test_override: boolean;
   test_override_original_email?: string;
-  sent_by_employee_id?: number;
+  sent_by_employee_id?: string;
   retry_count?: number;
 }
 
