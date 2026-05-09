@@ -170,14 +170,25 @@ export class EmailService {
   }
 
   /**
-   * สร้าง HTML template โดยแทนที่ placeholder
+   * สร้าง HTML template โดยแทนที่ placeholder (รองรับ Handlebars if conditionals)
    */
   private renderTemplate(
     template: string,
-    variables: Record<string, string | number>,
+    variables: Record<string, string | number | boolean>,
   ): string {
     let html = template;
 
+    // Replace {{#if variable}}...{{/if}} blocks
+    html = html.replace(
+      /\{\{#if\s+(\w+)\}\}([\s\S]*?)\{\{\/if\}\}/g,
+      (match, variable, content) => {
+        const value = variables[variable];
+        // Show content if value is truthy (not empty string, not 0, not false)
+        return value ? content : '';
+      },
+    );
+
+    // Replace simple {{variable}} placeholders
     for (const [key, value] of Object.entries(variables)) {
       const placeholder = `{{${key}}}`;
       html = html.replace(new RegExp(placeholder, 'g'), String(value));
