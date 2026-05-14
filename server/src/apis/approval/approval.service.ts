@@ -1,14 +1,23 @@
 import { Injectable } from '@nestjs/common';
 import { DatabaseService } from '@/src/database/database.service';
+import { PoService } from '@/src/apis/po/po.service';
+import { BorrowService } from '@/src/apis/borrow/borrow.service';
 import type {
   IPendingApprovalItem,
   IApprovalHistory,
   IBorrowApprovalLog,
 } from './approval.interface';
 
+// Note: We delegate to PoService and BorrowService for approval logic
+// They handle both the stored procedures and email notifications
+
 @Injectable()
 export class ApprovalService {
-  constructor(private readonly databaseService: DatabaseService) {}
+  constructor(
+    private readonly databaseService: DatabaseService,
+    private readonly poService: PoService,
+    private readonly borrowService: BorrowService,
+  ) {}
 
   private get DATABASE_NAME(): string {
     return this.databaseService.getDatabaseName();
@@ -75,7 +84,7 @@ export class ApprovalService {
 
       ORDER BY doc_date DESC, doc_no DESC
     `;
-    return this.databaseService.query<IPendingApprovalItem[]>(
+    return this.databaseService.query<IPendingApprovalItem>(
       this.DATABASE_NAME,
       query,
     );
@@ -130,19 +139,51 @@ export class ApprovalService {
 
       ORDER BY doc_date DESC, doc_no DESC
     `;
-    return this.databaseService.query<IPendingApprovalItem[]>(
+    return this.databaseService.query<IPendingApprovalItem>(
       this.DATABASE_NAME,
       query,
     );
   }
 
-  // ─── GET: PO detail with lines + approval history (sp_PO_02_GetPO) ───
+  // ─── GET: PO detail with lines + approval history ───
   async getPoDetail(poId: number) {
-    return this.databaseService.executeStoredProcedure(
-      this.DATABASE_NAME,
-      'sp_PO_02_GetPO',
-      { PoId: String(poId) },
-    );
+    const linesQuery = `
+      SELECT
+        pl.po_line_id,
+        vi.item_code,
+        vi.item_name_th,
+        vi.item_name_en,
+        vi.purchase_unit_name_th,
+        pl.qty_order,
+        pl.qty_received,
+        pl.unit_price,
+        pl.total_price,
+        pl.line_type
+      FROM po_lines pl
+      LEFT JOIN view_items vi ON pl.item_id = vi.item_id
+      WHERE pl.po_id = @param0
+      ORDER BY pl.po_line_id
+    `;
+    const approvalsQuery = `
+      SELECT
+        pa.approval_id,
+        pa.approval_level,
+        pa.approval_role,
+        pa.status,
+        pa.actioned_by,
+        ve.eng_name AS actioned_by_name,
+        pa.actioned_at,
+        pa.remark
+      FROM po_approvals pa
+      LEFT JOIN view_email ve ON pa.actioned_by = ve.employee_id
+      WHERE pa.po_id = @param0
+      ORDER BY pa.approval_level
+    `;
+    const [lines, approvals] = await Promise.all([
+      this.databaseService.query(this.DATABASE_NAME, linesQuery, [poId]),
+      this.databaseService.query(this.DATABASE_NAME, approvalsQuery, [poId]),
+    ]);
+    return { lines, approvals };
   }
 
   // ─── GET: Borrow approval history ───
@@ -165,7 +206,7 @@ export class ApprovalService {
       WHERE ba.borrow_id = @param0
       ORDER BY ba.approval_level
     `;
-    return this.databaseService.query<IApprovalHistory[]>(
+    return this.databaseService.query<IApprovalHistory>(
       this.DATABASE_NAME,
       query,
       [borrowId],
@@ -190,11 +231,26 @@ export class ApprovalService {
       WHERE bal.borrow_id = @param0
       ORDER BY bal.actioned_at ASC, bal.log_id ASC
     `;
-    return this.databaseService.query<IBorrowApprovalLog[]>(
+    return this.databaseService.query<IBorrowApprovalLog>(
       this.DATABASE_NAME,
       query,
       [borrowId],
     );
+  }
+
+  // ─── GET: User approval roles ───
+  async getUserApprovalRoles(userId: string): Promise<string[]> {
+    const query = `
+      SELECT DISTINCT ar.role_code
+      FROM approval_roles ar
+      WHERE ar.approver_id = @param0 AND ar.is_active = 1
+    `;
+    const result = await this.databaseService.query<{ role_code: string }>(
+      this.DATABASE_NAME,
+      query,
+      [userId],
+    );
+    return result.map(r => r.role_code);
   }
 
   // ─── POST: Approve PO (sp_PO_04_ApprovePO) ───
@@ -204,16 +260,8 @@ export class ApprovalService {
     actionedBy: string,
     remark: string | null,
   ) {
-    return this.databaseService.executeStoredProcedure(
-      this.DATABASE_NAME,
-      'sp_PO_04_ApprovePO',
-      {
-        PoId: poId,
-        Action: action,
-        ActionedBy: actionedBy,
-        Remark: remark,
-      },
-    );
+    // Call PoService which includes email logic
+    return this.poService.approvePo(poId, action, actionedBy, remark);
   }
 
   // ─── POST: Approve Borrow (sp_BR_04_Approve) ───
@@ -223,15 +271,7 @@ export class ApprovalService {
     actionedBy: string,
     remark: string | null,
   ) {
-    return this.databaseService.executeStoredProcedure(
-      this.DATABASE_NAME,
-      'sp_BR_04_Approve',
-      {
-        BorrowId: borrowId,
-        Action: action,
-        ActionedBy: actionedBy,
-        Remark: remark,
-      },
-    );
+    // Call BorrowService which includes email logic
+    return this.borrowService.approveBorrow(borrowId, action, actionedBy, remark);
   }
 }

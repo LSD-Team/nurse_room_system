@@ -402,3 +402,51 @@ WHERE spl.is_active = 1
   AND spl.effective_date <= CAST(GETDATE() AS DATE)
   AND (spl.expire_date IS NULL OR spl.expire_date >= CAST(GETDATE() AS DATE));
 GO
+
+#view_gr_headers_full#
+SELECT
+  h.gr_id,
+  h.gr_no,
+  h.gr_date,
+  h.supplier_id,
+  s.supplier_name,   -- สมมติว่า suppliers มีคอลัมน์นี้
+  h.po_id,
+  p.po_no,           -- สมมติว่า po_headers มีคอลัมน์นี้
+  h.status,
+  h.note,
+  h.confirmed_at,
+  h.confirmed_by,
+  h.cancelled_at,
+  h.cancelled_by,
+  h.created_by,
+  h.created_at,
+  h.updated_by,
+  h.updated_at
+FROM
+  dbo.gr_headers h
+  LEFT JOIN dbo.suppliers s    ON h.supplier_id = s.supplier_id
+  LEFT JOIN dbo.po_headers p   ON h.po_id = p.po_id
+
+#view_gr_lines_full#
+SELECT
+  l.gr_line_id,
+  l.gr_id,
+  h.gr_no,
+  h.gr_date,
+  l.item_id,
+  i.item_code,
+  i.item_name_en,
+  i.item_name_th,
+  l.qty_receive,
+  l.unit_price,
+  l.total_price,
+  l.po_line_id,
+  p.po_id,
+  ph.po_no      -- po_no อยู่ใน po_headers
+FROM
+  dbo.gr_lines l
+  LEFT JOIN dbo.gr_headers h   ON l.gr_id = h.gr_id
+  LEFT JOIN dbo.items i        ON l.item_id = i.item_id
+  LEFT JOIN dbo.po_lines p     ON l.po_line_id = p.po_line_id
+  LEFT JOIN dbo.po_headers ph  ON p.po_id = ph.po_id
+

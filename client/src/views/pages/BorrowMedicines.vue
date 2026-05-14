@@ -5,6 +5,8 @@
   import { BorrowService } from '@/services/borrow.service';
   import { ApprovalService } from '@/services/approval.service';
   import { StockService, type IStockOnHand } from '@/services/stock.service';
+  import { useMenuNotificationsStore } from '@/stores/menu-notifications.store';
+  import { formatSysdatetimeoffset } from '@/utils/format.utils';
   import type {
     IBorrowHeader,
     IBorrowLine,
@@ -13,7 +15,11 @@
     IBorrowLineForm,
   } from '@/interfaces/borrow.interfaces';
   import type { IBorrowApprovalLog } from '@/interfaces/approval.interfaces';
-  import { formatDate, formatNumber, formatCurrency } from '@/utils/format.utils';
+  import {
+    formatDate,
+    formatNumber,
+    formatCurrency,
+  } from '@/utils/format.utils';
   import Swal from 'sweetalert2';
 
   const borrowHeaders = ref<IBorrowHeader[]>([]);
@@ -38,8 +44,13 @@
   const detailLines = ref<IBorrowLine[]>([]);
   const detailLogs = ref<IBorrowApprovalLog[]>([]);
   const detailLoading = ref(false);
+  const showDetailTimeline = ref(false);
 
-  const selectedStatusFilter = ref<string>('PENDING_APPROVAL');
+  const showReceiveDialog = ref(false);
+  const receiveConfirmBorrow = ref<IBorrowHeader | null>(null);
+  const receiveConfirmLines = ref<IBorrowLine[]>([]);
+
+  const selectedStatusFilter = ref<string>('DRAFT');
 
   const filters = ref({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
@@ -188,15 +199,19 @@
       )
       .join('');
 
-    const grandTotal = detailLines.value.reduce((sum, line) => sum + (line.total_price || 0), 0);
+    const grandTotal = detailLines.value.reduce(
+      (sum, line) => sum + (line.total_price || 0),
+      0
+    );
 
     // Get creator name and today's date
     const creatorName = detailBorrow.value.created_by_eng_name || '-';
     const today = new Date();
-    const todayDate = today.toLocaleDateString('th-TH', {
+    const todayDate = today.toLocaleDateString('en-GB', {
       year: 'numeric',
       month: 'long',
-      day: 'numeric'
+      day: 'numeric',
+      timeZone: 'Asia/Bangkok',
     });
 
     const html = `
@@ -452,6 +467,10 @@
           '\u0E41\u0E01\u0E49\u0E44\u0E02\u0E43\u0E1A\u0E22\u0E37\u0E21\u0E40\u0E23\u0E35\u0E22\u0E1A\u0E23\u0E49\u0E2D\u0E22',
           'success'
         );
+        
+        // Refresh badge
+        const menuNotificationsStore = useMenuNotificationsStore();
+        await menuNotificationsStore.refreshBorrowPendingCount();
       } else {
         await BorrowService.createBorrow({
           JsonLines: jsonLines,
@@ -465,6 +484,10 @@
           '\u0E2A\u0E23\u0E49\u0E32\u0E07\u0E43\u0E1A\u0E22\u0E37\u0E21\u0E40\u0E23\u0E35\u0E22\u0E1A\u0E23\u0E49\u0E2D\u0E22',
           'success'
         );
+        
+        // Refresh badge
+        const menuNotificationsStore = useMenuNotificationsStore();
+        await menuNotificationsStore.refreshBorrowPendingCount();
       }
     } catch (err: any) {
       // Error handled by axios interceptor
@@ -506,6 +529,11 @@
     detailBorrow.value = row;
     detailLoading.value = true;
     detailLogs.value = [];
+    showDetailTimeline.value = false;
+    // Auto-show timeline for REWORK status so user sees comments immediately
+    if (row.approval_status === 'REWORK') {
+      showDetailTimeline.value = true;
+    }
     showDetailDialog.value = true;
     try {
       const promises: Promise<any>[] = [
@@ -545,26 +573,42 @@
         'success'
       );
       await loadBorrowHeaders();
+      
+      // Refresh badge
+      const menuNotificationsStore = useMenuNotificationsStore();
+      await menuNotificationsStore.refreshBorrowPendingCount();
     } catch (err: any) {
       // Error handled by axios interceptor
     }
   }
 
   async function receiveBorrow(row: IBorrowHeader) {
-    const result = await Swal.fire({
-      title: 'ยืนยันการรับยาเข้าคลัง?',
-      text: 'เลขที่ใบยืม ' + row.borrow_no,
-      icon: 'question',
-      showCancelButton: true,
-      confirmButtonText: 'รับยาเข้าคลัง',
-      cancelButtonText: 'ยกเลิก',
-    });
-    if (!result.isConfirmed) return;
+    receiveConfirmBorrow.value = row;
+    receiveConfirmLines.value = [];
+    showReceiveDialog.value = true;
+    try {
+      const lines = await BorrowService.getBorrowLines(row.borrow_id);
+      receiveConfirmLines.value = lines;
+    } catch (err: any) {
+      errorMsg.value =
+        err?.response?.data?.message || err?.message || String(err);
+    }
+  }
+
+  async function confirmReceiveBorrow() {
+    if (!receiveConfirmBorrow.value) return;
 
     try {
-      await BorrowService.receiveBorrow(row.borrow_id);
+      await BorrowService.receiveBorrow(receiveConfirmBorrow.value.borrow_id);
+      showReceiveDialog.value = false;
+      receiveConfirmBorrow.value = null;
+      receiveConfirmLines.value = [];
       await Swal.fire('สำเร็จ', 'รับยาเข้าคลังสำเร็จ', 'success');
       await loadBorrowHeaders();
+      
+      // Refresh badge
+      const menuNotificationsStore = useMenuNotificationsStore();
+      await menuNotificationsStore.refreshBorrowPendingCount();
     } catch (err: any) {
       // Error handled by axios interceptor
     }
@@ -812,7 +856,11 @@
           {{ data.approval_status || '-' }}
         </template>
       </Column>
-      <Column field="created_by_eng_name" :header="'ผู้สร้าง'" style="min-width: 130px">
+      <Column
+        field="created_by_eng_name"
+        :header="'ผู้สร้าง'"
+        style="min-width: 130px"
+      >
         <template #body="{ data }">
           {{ data.created_by_eng_name || '-' }}
         </template>
@@ -864,7 +912,13 @@
             <template v-else-if="data.borrow_status === 'PENDING_APPROVAL'">
               <Badge value="รอการอนุมัติ" severity="warn" />
             </template>
-            <template v-else-if="['RECEIVED', 'SETTLED', 'CANCELLED'].includes(data.borrow_status)">
+            <template
+              v-else-if="
+                ['RECEIVED', 'SETTLED', 'CANCELLED'].includes(
+                  data.borrow_status
+                )
+              "
+            >
               <Badge value="สำเร็จ" severity="success" />
             </template>
           </div>
@@ -1080,15 +1134,28 @@
       <template #header>
         <div class="flex justify-between items-center w-full">
           <span>รายละเอียดการยืมยา</span>
-          <Button
-            v-if="['APPROVED', 'RECEIVED', 'SETTLED'].includes(detailBorrow?.borrow_status)"
-            icon="pi pi-print"
-            label="Print"
-            severity="info"
-            size="small"
-            class="mr-8"
-            @click="printBorrow"
-          />
+          <div class="flex gap-2 mr-8">
+            <Button
+              v-if="uniqueDetailLogs.length > 0"
+              :icon="showDetailTimeline ? 'pi pi-chevron-up' : 'pi pi-chevron-down'"
+              :label="'Timeline'"
+              :severity="detailBorrow?.approval_status === 'REWORK' ? 'warning' : 'secondary'"
+              size="small"
+              @click="showDetailTimeline = !showDetailTimeline"
+            />
+            <Button
+              v-if="
+                ['APPROVED', 'RECEIVED', 'SETTLED'].includes(
+                  detailBorrow?.borrow_status
+                )
+              "
+              icon="pi pi-print"
+              label="Print"
+              severity="info"
+              size="small"
+              @click="printBorrow"
+            />
+          </div>
         </div>
       </template>
       <div v-if="detailBorrow" class="flex flex-col gap-4">
@@ -1200,7 +1267,7 @@
         </DataTable>
 
         <!-- Approval Timeline -->
-        <div v-if="uniqueDetailLogs.length > 0" class="mt-4">
+        <div v-if="uniqueDetailLogs.length > 0 && showDetailTimeline" class="mt-4 border-t pt-4">
           <div class="font-semibold text-surface-500 mb-2">
             Timeline การอนุมัติ
           </div>
@@ -1241,7 +1308,7 @@
                     {{ item.actioned_by_name || item.actioned_by }}
                   </span>
                   <span class="text-surface-400 ml-2">
-                    {{ new Date(item.actioned_at).toLocaleString('th-TH') }}
+                    {{ formatSysdatetimeoffset(item.actioned_at) }}
                   </span>
                 </div>
                 <div v-if="item.remark" class="text-sm text-surface-500 mt-1">
@@ -1251,6 +1318,106 @@
               </div>
             </template>
           </Timeline>
+        </div>
+      </div>
+    </Dialog>
+
+    <!-- Receive Confirmation Dialog -->
+    <Dialog
+      v-model:visible="showReceiveDialog"
+      modal
+      :style="{ width: '900px' }"
+      :closable="true"
+      header="ยืนยันการรับยาเข้าคลัง"
+    >
+      <div v-if="receiveConfirmBorrow" class="flex flex-col gap-4">
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <span class="font-semibold text-surface-500">เลขที่ใบยืม:</span>
+            <span class="ml-2">{{ receiveConfirmBorrow.borrow_no }}</span>
+          </div>
+          <div>
+            <span class="font-semibold text-surface-500">Supplier:</span>
+            <span class="ml-2">{{ receiveConfirmBorrow.supplier_name }}</span>
+          </div>
+        </div>
+
+        <div class="font-semibold mb-2">รายการยาที่จะรับเข้าคลัง</div>
+        <DataTable :value="receiveConfirmLines" size="small" stripedRows>
+          <Column header="#" style="min-width: 50px">
+            <template #body="{ index }">{{ index + 1 }}</template>
+          </Column>
+          <Column
+            field="item_code"
+            :header="'รหัสยา'"
+            style="min-width: 100px"
+          />
+          <Column
+            field="item_name_th"
+            :header="'ชื่อยา'"
+            style="min-width: 250px"
+          >
+            <template #body="{ data }">
+              <div>{{ data.item_name_th }}</div>
+              <div class="text-sm text-surface-400">
+                {{ data.item_name_en }}
+              </div>
+            </template>
+          </Column>
+          <Column
+            field="qty_borrow"
+            :header="'จำนวนที่สั่งซื้อ'"
+            style="min-width: 100px"
+            bodyClass="text-center"
+          />
+          <Column
+            field="purchase_unit_name_th"
+            :header="'หน่วยซื้อ'"
+            style="min-width: 100px"
+            bodyClass="text-center"
+          />
+          <Column
+            field="conversion_factor"
+            :header="'ตัวแปลง'"
+            style="min-width: 80px"
+            bodyClass="text-center"
+          >
+            <template #body="{ data }">
+              {{ formatNumber(data.conversion_factor) }}
+            </template>
+          </Column>
+          <Column
+            :header="'จำนวนที่รับจริง'"
+            style="min-width: 120px"
+            bodyClass="text-center font-semibold"
+          >
+            <template #body="{ data }">
+              <span class="text-primary">
+                {{ formatNumber(data.qty_borrow * data.conversion_factor) }}
+              </span>
+            </template>
+          </Column>
+          <Column
+            field="usage_unit_name_th"
+            :header="'หน่วยรับ'"
+            style="min-width: 100px"
+            bodyClass="text-center"
+          />
+        </DataTable>
+
+        <div class="border-t pt-4 flex gap-2 justify-end">
+          <Button
+            :label="'ยกเลิก'"
+            icon="pi pi-times"
+            severity="secondary"
+            @click="showReceiveDialog = false"
+          />
+          <Button
+            :label="'ยืนยันรับยาเข้าคลัง'"
+            icon="pi pi-check"
+            severity="success"
+            @click="confirmReceiveBorrow"
+          />
         </div>
       </div>
     </Dialog>

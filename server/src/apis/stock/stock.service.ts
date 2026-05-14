@@ -48,7 +48,7 @@ export class StockService {
       FROM view_items
       ORDER BY item_code
     `;
-    return this.databaseService.query<IStockOnHand[]>(
+    return this.databaseService.query<IStockOnHand>(
       this.DATABASE_NAME,
       query,
     );
@@ -75,7 +75,7 @@ export class StockService {
       LEFT JOIN view_employee_all e ON sm.created_by = e.ID
       ORDER BY sm.created_at DESC
     `;
-    return this.databaseService.query<IStockMovement[]>(
+    return this.databaseService.query<IStockMovement>(
       this.DATABASE_NAME,
       query,
     );

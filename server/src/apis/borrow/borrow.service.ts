@@ -1,5 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { DatabaseService } from '@/src/database/database.service';
+import { EmailService } from '@/src/email/email.service';
+import { EmailLogService } from '@/src/email/services/email-log.service';
+import { ENotifyType } from '@/src/email/dto/send-approval-email.dto';
 import type {
   IBorrowHeader,
   IBorrowLine,
@@ -9,7 +12,13 @@ import type {
 
 @Injectable()
 export class BorrowService {
-  constructor(private readonly databaseService: DatabaseService) {}
+  private readonly logger = new Logger(BorrowService.name);
+
+  constructor(
+    private readonly databaseService: DatabaseService,
+    private readonly emailService: EmailService,
+    private readonly emailLogService: EmailLogService,
+  ) {}
 
   private get DATABASE_NAME(): string {
     return this.databaseService.getDatabaseName();
@@ -27,7 +36,7 @@ export class BorrowService {
       FROM view_borrowed_items_header
       ORDER BY borrow_id DESC
     `;
-    return this.databaseService.query<IBorrowHeader[]>(
+    return this.databaseService.query<IBorrowHeader>(
       this.DATABASE_NAME,
       query,
     );
@@ -43,12 +52,13 @@ export class BorrowService {
         purchase_unit_code, purchase_unit_name_th,
         qty_borrow, unit_price, total_price,
         po_line_id, note,
-        created_by, created_at, updated_by, updated_at
+        ISNULL(conversion_factor, 1.0) AS conversion_factor,
+        NULL AS created_by, NULL AS created_at, NULL AS updated_by, NULL AS updated_at
       FROM view_borrowed_items
       WHERE borrow_id = @param0
       ORDER BY borrow_line_id
     `;
-    return this.databaseService.query<IBorrowLine[]>(
+    return this.databaseService.query<IBorrowLine>(
       this.DATABASE_NAME,
       query,
       [borrowId],
@@ -63,7 +73,7 @@ export class BorrowService {
       WHERE is_active = 1
       ORDER BY supplier_code
     `;
-    return this.databaseService.query<ISupplier[]>(this.DATABASE_NAME, query);
+    return this.databaseService.query<ISupplier>(this.DATABASE_NAME, query);
   }
 
   // โ”€โ”€โ”€ GET: เธฃเธฒเธเธฒเธขเธฒเธ•เธฒเธก supplier (view_supplier_item_prices_current) โ”€โ”€โ”€
@@ -78,7 +88,7 @@ export class BorrowService {
       WHERE supplier_id = @param0
       ORDER BY item_code
     `;
-    return this.databaseService.query<ISupplierItemPrice[]>(
+    return this.databaseService.query<ISupplierItemPrice>(
       this.DATABASE_NAME,
       query,
       [supplierId],
@@ -125,7 +135,8 @@ export class BorrowService {
 
   // โ”€โ”€โ”€ POST: เธชเนเธเธญเธเธธเธกเธฑเธ•เธด (sp_BR_03_Submit) โ”€โ”€โ”€
   async submitBorrow(borrowId: string, submitBy: string) {
-    return this.databaseService.executeStoredProcedure(
+    // Call stored procedure
+    const result = await this.databaseService.executeStoredProcedure(
       this.DATABASE_NAME,
       'sp_BR_03_Submit',
       {
@@ -133,6 +144,33 @@ export class BorrowService {
         SubmitBy: submitBy,
       },
     );
+
+    // Send approval notification email
+    try {
+      const borrowHeader = await this.getBorrowHeaderById(parseInt(borrowId, 10));
+
+      if (borrowHeader) {
+        // Send email to approvers of the first approval level
+        await this.emailService.sendApprovalRequestByRoleCode(
+          'GROUP_LEAD',
+          borrowHeader.borrow_no,
+          'BORROW',
+          borrowHeader.borrow_id,
+          `Borrow Request ${borrowHeader.borrow_no}`,
+          borrowHeader.note || '',
+          submitBy,
+        );
+        console.log(
+          `โœ… [BorrowService] Approval email sent for Borrow: ${borrowHeader.borrow_no}`,
+        );
+      }
+    } catch (error) {
+      console.error(
+        `โŒ [BorrowService] Failed to send approval email: ${error.message}`,
+      );
+    }
+
+    return result;
   }
 
   // โ”€โ”€โ”€ POST: เธญเธเธธเธกเธฑเธ•เธด/เธเธเธดเน€เธชเธ/เธชเนเธเธเธฅเธฑเธ (sp_BR_04_Approve) โ”€โ”€โ”€
@@ -142,7 +180,11 @@ export class BorrowService {
     actionedBy: string,
     remark: string | null,
   ) {
-    return this.databaseService.executeStoredProcedure(
+    // Get Borrow info before approval
+    const borrowHeader = await this.getBorrowHeaderById(parseInt(borrowId, 10));
+
+    // Call stored procedure
+    const result = await this.databaseService.executeStoredProcedure(
       this.DATABASE_NAME,
       'sp_BR_04_Approve',
       {
@@ -152,6 +194,91 @@ export class BorrowService {
         Remark: remark,
       },
     );
+
+    // Send email based on action
+    if (borrowHeader) {
+      // Both REJECT and REWORK trigger rework notification
+      if (action === 'REJECT' || action === 'REJECTED' || action === 'REWORK') {
+        // Send rework notification to Borrow creator
+        try {
+          await this.emailService.sendApprovalEmail({
+            notifyType: ENotifyType.BORROW_REWORK,
+            documentId: borrowHeader.borrow_id,
+            documentNo: borrowHeader.borrow_no,
+            documentType: 'BORROW',
+            toEmployeeIds: [borrowHeader.created_by],
+            rejectedByName: actionedBy,
+            additionalMessage: remark || 'Please revise and resubmit your borrow request',
+            sentByEmployeeId: actionedBy,
+          });
+
+          this.logger.log(
+            `โœ… [BorrowService] Rework notification sent for Borrow: ${borrowHeader.borrow_no}`,
+          );
+        } catch (error: any) {
+          this.logger.error(
+            `โŒ [BorrowService] Failed to send rework email: ${error.message}`,
+            error.stack,
+          );
+        }
+      } else if (action === 'APPROVE' || action === 'APPROVED') {
+        // Check if there are more pending approvals
+        try {
+          const pendingApprovals = await this.getPendingApprovals(
+            borrowHeader.borrow_id,
+          );
+
+          // If there are more approvals pending, send email to next approver
+          if (pendingApprovals.length > 0) {
+            const nextApproval = pendingApprovals[0]; // Get the first pending (lowest level)
+            
+            try {
+              await this.emailService.sendApprovalRequestByRoleCode(
+                nextApproval.approval_role,
+                borrowHeader.borrow_no,
+                'BORROW',
+                borrowHeader.borrow_id,
+                borrowHeader.borrow_no,
+                'Waiting for your approval',
+                actionedBy,
+              );
+
+              this.logger.log(
+                `✅ [BorrowService] Approval request sent to ${nextApproval.approval_role} for Borrow: ${borrowHeader.borrow_no}`,
+              );
+            } catch (emailError: any) {
+              this.logger.error(
+                `❌ [BorrowService] Failed to send approval request email: ${emailError.message}`,
+              );
+            }
+          } else {
+            // No more pending approvals - this was the final approval
+            await this.emailService.sendApprovalEmail({
+              notifyType: ENotifyType.BORROW_COMPLETED,
+              documentId: borrowHeader.borrow_id,
+              documentNo: borrowHeader.borrow_no,
+              documentType: 'BORROW',
+              toEmployeeIds: [borrowHeader.created_by],
+              approvedByName: actionedBy,
+              additionalMessage:
+                'Your borrow request has been fully approved',
+              sentByEmployeeId: actionedBy,
+            });
+
+            this.logger.log(
+              `✅ [BorrowService] Completion notification sent for Borrow: ${borrowHeader.borrow_no}`,
+            );
+          }
+        } catch (error: any) {
+          this.logger.error(
+            `❌ [BorrowService] Failed to process approval workflow: ${error.message}`,
+            error.stack,
+          );
+        }
+      }
+    }
+
+    return result;
   }
 
   // โ”€โ”€โ”€ POST: เธฃเธฑเธเธขเธทเธกเน€เธเนเธฒเธชเธ•เนเธญเธ (sp_BR_05_Receive) โ”€โ”€โ”€
@@ -192,5 +319,58 @@ export class BorrowService {
         Reason: reason,
       },
     );
+  }
+
+  // GET: Count borrows with DRAFT or APPROVED status
+  async getBorrowPendingCount(): Promise<number> {
+    try {
+      const DATABASE_NAME = this.databaseService.getDatabaseName();
+      const query = `
+        SELECT COUNT(*) as count
+        FROM [${DATABASE_NAME}].dbo.view_borrowed_items_header
+        WHERE borrow_status IN ('DRAFT', 'APPROVED')
+      `;
+      const result = await this.databaseService.query<{ count: number }>(
+        DATABASE_NAME,
+        query,
+      );
+      return result?.[0]?.count || 0;
+    } catch (error) {
+      console.error('[BorrowService] Error getting borrow pending count:', error);
+      return 0;
+    }
+  }
+
+  // โ"€โ"€โ"€ HELPER: Get Borrow header by ID (for email service) โ"€โ"€โ"€
+  private async getBorrowHeaderById(borrowId: number): Promise<any> {
+    const query = `
+      SELECT TOP 1
+        b.borrow_id,
+        b.borrow_no,
+        b.note,
+        b.created_by
+      FROM borrow_headers b
+      WHERE b.borrow_id = @param0
+    `;
+    const result = await this.databaseService.query(this.DATABASE_NAME, query, [
+      borrowId,
+    ]);
+    return result?.[0] || null;
+  }
+
+  // โ"€โ"€โ"€ HELPER: Get pending approvals for a Borrow โ"€โ"€โ"€
+  private async getPendingApprovals(borrowId: number): Promise<any[]> {
+    const query = `
+      SELECT
+        a.approval_id,
+        a.borrow_id,
+        a.approval_level,
+        a.approval_role,
+        a.status
+      FROM borrow_approvals a
+      WHERE a.borrow_id = @param0 AND a.status = 'PENDING'
+      ORDER BY a.approval_level
+    `;
+    return this.databaseService.query(this.DATABASE_NAME, query, [borrowId]);
   }
 }

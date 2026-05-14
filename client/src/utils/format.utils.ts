@@ -5,9 +5,36 @@
 // ====================================================
 
 /**
- * Format date string to Thai locale format
+ * Format datetime from SYSDATETIMEOFFSET() format
+ * SQL Server stores Bangkok local time but labels offset as +00:00
+ * So we extract the date/time portion directly without any timezone conversion
+ * Input:  "2026-05-11 09:10:29.8000000 +00:00"
+ * Output: "11/05/2026, 09:10"
+ * @param dateString SYSDATETIMEOFFSET format string
+ * @returns Formatted datetime as stored in DB (DD/MM/YYYY, HH:MM)
+ */
+export function formatSysdatetimeoffset(dateString: string | null | undefined): string {
+  if (!dateString) return '-';
+  
+  try {
+    // Handle both formats from MSSQL driver:
+    // - SYSDATETIMEOFFSET raw: "2026-05-11 09:10:29.8000000 +00:00"
+    // - After driver serialization: "2026-05-11T09:10:29.800Z"
+    const match = dateString.trim().match(/^(\d{4})-(\d{2})-(\d{2})[T\s]+(\d{2}):(\d{2})/);
+    if (!match) return dateString;
+    
+    const [, year, month, day, hour, minute] = match;
+    return `${day}/${month}/${year} ${hour}:${minute}`;
+  } catch (error) {
+    console.error('Error formatting SYSDATETIMEOFFSET:', error);
+    return dateString;
+  }
+}
+
+/**
+ * Format date string to Thai locale format (AD/Common Era, not Buddhist Era)
  * @param dateString ISO 8601 date string (e.g., "2024-04-09")
- * @returns Formatted date in Thai format (e.g., "09 เมษายน 2567")
+ * @returns Formatted date in Thai format (e.g., "09 เมษายน 2024")
  */
 export function formatDate(dateString: string | null | undefined): string {
   if (!dateString) return '-';
@@ -15,10 +42,11 @@ export function formatDate(dateString: string | null | undefined): string {
     const date = new Date(dateString);
     if (isNaN(date.getTime())) return '-';
 
-    return date.toLocaleDateString('th-TH', {
+    return date.toLocaleDateString('en-GB', {
       year: 'numeric',
       month: 'long',
-      day: 'numeric'
+      day: 'numeric',
+      timeZone: 'Asia/Bangkok',
     });
   } catch (error) {
     console.error('Error formatting date:', error);
@@ -27,9 +55,9 @@ export function formatDate(dateString: string | null | undefined): string {
 }
 
 /**
- * Format date and time to Thai locale format
+ * Format date and time to Thai locale format (AD/Common Era, not Buddhist Era)
  * @param dateString ISO 8601 datetime string
- * @returns Formatted date and time (e.g., "09 เม.ย. 24 14:30")
+ * @returns Formatted date and time (e.g., "04/09/2024, 2:30:45 PM")
  */
 export function formatDateTime(dateString: string | null | undefined): string {
   if (!dateString) return '-';
@@ -37,13 +65,14 @@ export function formatDateTime(dateString: string | null | undefined): string {
     const date = new Date(dateString);
     if (isNaN(date.getTime())) return '-';
 
-    return date.toLocaleString('th-TH', {
+    return date.toLocaleString('en-GB', {
       year: 'numeric',
-      month: 'short',
+      month: '2-digit',
       day: '2-digit',
       hour: '2-digit',
       minute: '2-digit',
-      second: '2-digit'
+      second: '2-digit',
+      timeZone: 'Asia/Bangkok',
     });
   } catch (error) {
     console.error('Error formatting datetime:', error);
@@ -66,7 +95,7 @@ export function formatNumber(
   try {
     return new Intl.NumberFormat('th-TH', {
       minimumFractionDigits: decimals,
-      maximumFractionDigits: decimals
+      maximumFractionDigits: decimals,
     }).format(value);
   } catch (error) {
     console.error('Error formatting number:', error);
@@ -90,7 +119,7 @@ export function formatCurrency(
     const formatted = new Intl.NumberFormat('th-TH', {
       minimumFractionDigits: decimals,
       maximumFractionDigits: decimals,
-      currency: 'THB'
+      currency: 'THB',
     }).format(value);
 
     return `฿${formatted}`;
@@ -106,7 +135,10 @@ export function formatCurrency(
  * @param itemNameTh Item name in Thai
  * @returns Formatted display string
  */
-export function formatItemDisplay(itemCode: string, itemNameTh: string): string {
+export function formatItemDisplay(
+  itemCode: string,
+  itemNameTh: string
+): string {
   return `${itemCode} - ${itemNameTh}`;
 }
 

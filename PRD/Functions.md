@@ -392,10 +392,18 @@ BEGIN
         RETURN;
     END;
 
-    IF @Action NOT IN ('APPROVE', 'REJECT')
+    IF @Action NOT IN ('APPROVE', 'REJECT', 'REWORK')
     BEGIN
         SELECT 'Error' AS Status,
-               'Action ที่รองรับ: APPROVE, REJECT' AS Message;
+               'Action ที่รองรับ: APPROVE, REJECT, REWORK' AS Message;
+        RETURN;
+    END;
+
+    -- REWORK และ REJECT ต้องระบุ Remark
+    IF @Action IN ('REJECT', 'REWORK') AND @Remark IS NULL
+    BEGIN
+        SELECT 'Error' AS Status,
+               'กรุณาระบุ @Remark สำหรับ ' + @Action AS Message;
         RETURN;
     END;
 
@@ -488,6 +496,7 @@ BEGIN
     ------------------------------------------------------------
     DECLARE @NextStatus VARCHAR(30) = CASE
         WHEN @Action = 'REJECT'       THEN 'DRAFT'
+        WHEN @Action = 'REWORK'       THEN 'DRAFT'
         WHEN @Role   = 'GROUP_LEAD'   THEN 'APPROVED_L1'
         WHEN @Role   = 'MANAGER'      THEN 'APPROVED_L2'
         WHEN @Role   = 'DEPARTMENT'   THEN 'ORDERED'
@@ -525,6 +534,19 @@ BEGIN
             WHERE po_id = @PoIdInt AND status = 'PENDING';
         END;
 
+        -- 10) REWORK → Reset approval ทุกระดับกลับเป็น PENDING
+        --              เพื่อให้ส่งอนุมัติใหม่ตั้งแต่ต้น
+        IF @Action = 'REWORK'
+        BEGIN
+            UPDATE po_approvals
+            SET
+                status      = 'PENDING',
+                actioned_by = NULL,
+                actioned_at = NULL,
+                remark      = NULL
+            WHERE po_id = @PoIdInt;
+        END;
+
         COMMIT TRANSACTION;
 
         SELECT 'Success' AS Status,
@@ -537,6 +559,10 @@ BEGIN
                                        + ' โดย ' + @ActionedBy
                                        + ' (' + @Role + ')'
                                        + ' → กลับสู่ DRAFT'
+                   WHEN 'REWORK'  THEN 'ส่งกลับแก้ไข ' + @PoNo
+                                       + ' โดย ' + @ActionedBy
+                                       + ' (' + @Role + ')'
+                                       + ' → DRAFT (Reset ทุกระดับ)'
                END AS Message;
 
         ------------------------------------------------------------

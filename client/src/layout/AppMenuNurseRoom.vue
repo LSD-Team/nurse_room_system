@@ -1,6 +1,7 @@
 <script lang="ts" setup>
-  import { ref } from 'vue';
+  import { onMounted, computed } from 'vue';
   import AppMenuItem from './AppMenuItem.vue';
+  import { useMenuNotificationsStore } from '@/stores/menu-notifications.store';
 
   // Define proper types for menu items
   interface MenuItem {
@@ -13,159 +14,169 @@
     class?: string;
     separator?: boolean;
     color?: string;
+    badge?: number;
   }
 
-  const model = ref<MenuItem[]>([
-    {
-      label: 'Nurse Room System',
-      items: [
-        {
-          label: 'Dashboard',
-          icon: 'pi pi-fw pi-home',
-          color: 'text-blue-400',
-          to: '/',
+  // ─── Use Menu Notifications Store ───
+  const menuNotificationsStore = useMenuNotificationsStore();
+
+  onMounted(() => {
+    menuNotificationsStore.loadAllCounts();
+    // Optional: Auto-refresh every 30 seconds
+    // setInterval(() => menuNotificationsStore.refreshAll(), 30000);
+  });
+
+  const model = computed(() => {
+    const items: MenuItem[] = [
+      {
+        label: 'Nurse Room System',
+        items: [
+          {
+            label: 'Dashboard',
+            icon: 'pi pi-fw pi-home',
+            color: 'text-blue-400',
+            to: '/',
+          },
+          {
+            label: 'บันทึกการรักษาพยาบาล',
+            icon: 'pi pi-fw pi-pencil',
+            color: 'text-red-300',
+            to: '/treatment-record',
+          },
+          {
+            label: 'จัดซื้อ & ยืม ยา/เวชภัณฑ์',
+            icon: 'pi pi-fw pi-shopping-cart',
+            color: 'text-cyan-300',
+            badge: (() => {
+              const total = menuNotificationsStore.all;
+              return total > 0 ? total : undefined;
+            })(),
+            items: [
+              {
+                label: 'สั่งซื้อ',
+                icon: 'pi pi-fw pi-shopping-cart',
+                color: 'text-cyan-300',
+                to: '/purchase-orders',
+                badge: menuNotificationsStore.po > 0 ? menuNotificationsStore.po : undefined,
+              },
+              {
+                label: 'รับเข้า',
+                icon: 'pi pi-fw pi-inbox',
+                color: 'text-cyan-300',
+                to: '/goods-receipt',
+                badge: menuNotificationsStore.rec > 0 ? menuNotificationsStore.rec : undefined,
+              },
+              {
+                label: 'ยืม',
+                icon: 'pi pi-fw pi-share-alt',
+                color: 'text-cyan-300',
+                to: '/borrow-medicines',
+                badge: menuNotificationsStore.borrow > 0 ? menuNotificationsStore.borrow : undefined,
+              },
+            {
+              label: 'รายการยา/เวชภัณฑ์',
+              icon: 'pi pi-fw pi-list',
+              color: 'text-teal-300',
+              to: '/medicine-items',
+            },
+            {
+              label: 'หน่วยนับ',
+              icon: 'pi pi-fw pi-sort-numeric-up',
+              color: 'text-teal-300',
+              to: '/units',
+            },
+            {
+              label: 'ราคายา/เวชภัณฑ์',
+              icon: 'pi pi-fw pi-dollar',
+              color: 'text-teal-300',
+              to: '/medicine-prices',
+            },
+          ],
         },
         {
-          label: 'บันทึกการรักษาพยาบาล',
-          icon: 'pi pi-fw pi-pencil',
-          color: 'text-red-300',
-          to: '/treatment-record',
-        },
-        // ...removed 'การรักษาพยาบาล' and its submenus...
-        {
-          label: 'คลังยา และ ข้อมูลพยาบาล',
-          icon: 'pi pi-fw pi-box',
-          color: 'text-emerald-400',
+          label: 'คลัง/สต็อก ยา/เวชภัณฑ์',
+          icon: 'pi pi-fw pi-database',
+          color: 'text-sky-300',
           items: [
             {
-              label: 'จัดซื้อ & ยืม ยา/เวชภัณฑ์',
-              icon: 'pi pi-fw pi-shopping-cart',
-              color: 'text-cyan-300',
-              items: [
-                {
-                  label: 'สั่งซื้อ',
-                  icon: 'pi pi-fw pi-shopping-cart',
-                  color: 'text-cyan-300',
-                  to: '/purchase-orders',
-                },
-                {
-                  label: 'รับเข้า',
-                  icon: 'pi pi-fw pi-inbox',
-                  color: 'text-cyan-300',
-                  to: '/goods-receipt',
-                },
-                {
-                  label: 'ยืม',
-                  icon: 'pi pi-fw pi-share-alt',
-                  color: 'text-cyan-300',
-                  to: '/borrow-medicines',
-                },
-                {
-                  label: 'รายการยา/เวชภัณฑ์',
-                  icon: 'pi pi-fw pi-list',
-                  color: 'text-teal-300',
-                  to: '/medicine-items',
-                },
-                {
-                  label: 'หน่วยนับ',
-                  icon: 'pi pi-fw pi-sort-numeric-up',
-                  color: 'text-teal-300',
-                  to: '/units',
-                },
-                {
-                  label: 'ราคายา/เวชภัณฑ์',
-                  icon: 'pi pi-fw pi-dollar',
-                  color: 'text-teal-300',
-                  to: '/medicine-prices',
-                },
-              ],
-            },
-            {
-              label: 'คลัง/สต็อก ยา/เวชภัณฑ์',
-              icon: 'pi pi-fw pi-database',
+              label: 'สถานะสต็อก',
+              icon: 'pi pi-fw pi-check-circle',
               color: 'text-sky-300',
-              items: [
-                {
-                  label: 'สถานะสต็อก',
-                  icon: 'pi pi-fw pi-check-circle',
-                  color: 'text-sky-300',
-                  to: '/stock-status',
-                },
-                {
-                  label: 'บันทึกเคลื่อนไหว',
-                  icon: 'pi pi-fw pi-refresh',
-                  color: 'text-sky-300',
-                  to: '/movement-records',
-                },
-                {
-                  label: 'ปรับยอด',
-                  icon: 'pi pi-fw pi-pencil',
-                  color: 'text-sky-300',
-                  to: '/stock-adjustment',
-                },
-              ],
+              to: '/stock-status',
             },
             {
-              label: 'ข้อมูลพยาบาล',
-              icon: 'pi pi-fw pi-id-card',
+              label: 'บันทึกเคลื่อนไหว',
+              icon: 'pi pi-fw pi-refresh',
+              color: 'text-sky-300',
+              to: '/movement-records',
+            },
+            {
+              label: 'ปรับยอด',
+              icon: 'pi pi-fw pi-pencil',
+              color: 'text-sky-300',
+              to: '/stock-adjustment',
+            },
+          ],
+        },
+        {
+          label: 'ข้อมูลพยาบาล',
+          icon: 'pi pi-fw pi-id-card',
+          color: 'text-emerald-300',
+          items: [
+            {
+              label: 'รายชื่อพยาบาล',
+              icon: 'pi pi-fw pi-user-edit',
               color: 'text-emerald-300',
-              items: [
-                {
-                  label: 'รายชื่อพยาบาล',
-                  icon: 'pi pi-fw pi-user-edit',
-                  color: 'text-emerald-300',
-                  to: '/nurses-list',
-                },
-                {
-                  label: 'ทีมพยาบาล',
-                  icon: 'pi pi-fw pi-users',
-                  color: 'text-emerald-300',
-                  to: '/nurse-teams',
-                },
-                {
-                  label: 'สัญญาจ้างงานพยาบาล',
-                  icon: 'pi pi-fw pi-file',
-                  color: 'text-emerald-300',
-                  to: '/nurse-contracts',
-                },
-              ],
+              to: '/nurses-list',
             },
             {
-              label: 'ข้อมูลหลัก (Master Data)',
-              icon: 'pi pi-fw pi-cog',
+              label: 'ทีมพยาบาล',
+              icon: 'pi pi-fw pi-users',
+              color: 'text-emerald-300',
+              to: '/nurse-teams',
+            },
+            {
+              label: 'สัญญาจ้างงานพยาบาล',
+              icon: 'pi pi-fw pi-file',
+              color: 'text-emerald-300',
+              to: '/nurse-contracts',
+            },
+          ],
+        },
+        {
+          label: 'ข้อมูลหลัก (Master Data)',
+          icon: 'pi pi-fw pi-cog',
+          color: 'text-purple-300',
+          items: [
+            {
+              label: 'ผู้จัดจำหน่าย',
+              icon: 'pi pi-fw pi-truck',
               color: 'text-purple-300',
-              items: [
-                {
-                  label: 'ผู้จัดจำหน่าย',
-                  icon: 'pi pi-fw pi-truck',
-                  color: 'text-purple-300',
-                  to: '/suppliers',
-                },
-                {
-                  label: 'ประเภทการรักษา',
-                  icon: 'pi pi-fw pi-check',
-                  color: 'text-purple-300',
-                  to: '/treatment-types',
-                },
-                {
-                  label: 'ประเภทการ Refer',
-                  icon: 'pi pi-fw pi-share-alt',
-                  color: 'text-purple-300',
-                  to: '/refer-types',
-                },
-                {
-                  label: 'กลุ่มโรคและประเภทของโรค',
-                  icon: 'pi pi-fw pi-folder',
-                  color: 'text-purple-300',
-                  to: '/disease-master-data',
-                },
-                {
-                  label: 'สถานพยาบาล',
-                  icon: 'pi pi-fw pi-building',
-                  color: 'text-purple-300',
-                  to: '/medical-facilities',
-                },
-              ],
+              to: '/suppliers',
+            },
+            {
+              label: 'ประเภทการรักษา',
+              icon: 'pi pi-fw pi-check',
+              color: 'text-purple-300',
+              to: '/treatment-types',
+            },
+            {
+              label: 'ประเภทการ Refer',
+              icon: 'pi pi-fw pi-share-alt',
+              color: 'text-purple-300',
+              to: '/refer-types',
+            },
+            {
+              label: 'กลุ่มโรคและประเภทของโรค',
+              icon: 'pi pi-fw pi-folder',
+              color: 'text-purple-300',
+              to: '/disease-master-data',
+            },
+            {
+              label: 'สถานพยาบาล',
+              icon: 'pi pi-fw pi-building',
+              color: 'text-purple-300',
+              to: '/medical-facilities',
             },
           ],
         },
@@ -205,6 +216,7 @@
           icon: 'pi pi-fw pi-check-square',
           color: 'text-lime-400',
           to: '/approve-purchase',
+          badge: menuNotificationsStore.apv > 0 ? menuNotificationsStore.apv : undefined,
         },
         {
           label: 'เบิกยากรณีพิเศษ',
@@ -335,7 +347,10 @@
         },
       ],
     },
-  ]);
+  ];
+  
+  return items;
+  });
 </script>
 
 <template>

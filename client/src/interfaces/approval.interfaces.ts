@@ -44,6 +44,7 @@ export interface IPoLine {
   qty_received: number;
   unit_price: number;
   total_price: number;
+  line_type?: 'ORDER' | 'BORROW';
 }
 
 // ===== Approval History Row =====

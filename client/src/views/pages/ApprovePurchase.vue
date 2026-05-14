@@ -3,6 +3,8 @@
   import { FilterMatchMode } from '@primevue/core/api';
   import { ApprovalService } from '@/services/approval.service';
   import { BorrowService } from '@/services/borrow.service';
+  import { useMenuNotificationsStore } from '@/stores/menu-notifications.store';
+  import { formatSysdatetimeoffset } from '@/utils/format.utils';
   import type {
     IPendingApprovalItem,
     IPoLine,
@@ -17,6 +19,7 @@
   const viewMode = ref<'pending' | 'history'>('pending');
   const showDetailDialog = ref(false);
   const selectedItem = ref<IPendingApprovalItem | null>(null);
+  const userApprovalRoles = ref<string[]>([]);
 
   // Detail data
   const poLines = ref<IPoLine[]>([]);
@@ -24,21 +27,17 @@
   const approvalHistory = ref<IApprovalHistory[]>([]);
   const approvalLogs = ref<IBorrowApprovalLog[]>([]);
 
-  // ─── Simulate user for testing ───
-  const simulateUsers = [
-    { id: '0027', label: '0027 - GROUP_LEAD' },
-    { id: '1547', label: '1547 - MANAGER' },
-    { id: '3346', label: '3346 - DEPARTMENT' },
-    {
-      id: '',
-      label: '8300 (ผู้ใช้งาน)',
-    },
-  ];
-  const simulatedUserId = ref('');
-
-  const realUserId = computed(() => {
+  // ─── Use actual logged-in user ID ───
+  const currentUserId = computed(() => {
     try {
-      const token = localStorage.getItem('token');
+      // Try localStorage first
+      let token = localStorage.getItem('token');
+
+      // Fallback to VITE_DEV_TOKEN in development mode
+      if (!token && import.meta.env.MODE === 'development') {
+        token = import.meta.env.VITE_DEV_TOKEN;
+      }
+
       if (!token) return '';
       const payload = JSON.parse(atob(token.split('.')[1]));
       return String(payload.UserID || '');
@@ -46,10 +45,6 @@
       return '';
     }
   });
-
-  const currentUserId = computed(
-    () => simulatedUserId.value || realUserId.value
-  );
 
   const displayItems = computed(() => {
     return viewMode.value === 'pending'
@@ -149,13 +144,39 @@
   }
 
   function canApprove(item: IPendingApprovalItem): boolean {
-    return item.current_approver_id === currentUserId.value;
+    // Check if user has the required approval role
+    const requiredRole = String(item.current_approval_role || '').trim();
+    const hasRole = userApprovalRoles.value.includes(requiredRole);
+    return hasRole;
   }
 
   async function loadPendingApprovals() {
     try {
-      pendingItems.value = await ApprovalService.getPendingApprovals();
-    } catch {
+      console.log('[loadPendingApprovals] starting...');
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('API request timeout after 30s')), 30000)
+      );
+      
+      const data = await Promise.race([
+        ApprovalService.getPendingApprovals(),
+        timeoutPromise,
+      ]) as IPendingApprovalItem[];
+      
+      console.log('[loadPendingApprovals] success, data:', data);
+      pendingItems.value = data;
+    } catch (error) {
+      console.error('[loadPendingApprovals] error:', error);
+      // Re-throw so axios interceptor can handle it
+      throw error;
+    }
+  }
+
+  async function loadUserRoles() {
+    try {
+      const roles = await ApprovalService.getUserRoles();
+      userApprovalRoles.value = roles;
+    } catch (error) {
+      console.error('[loadUserRoles] error:', error);
       // handled by axios interceptor
     }
   }
@@ -179,16 +200,9 @@
 
     try {
       if (item.type === 'PO') {
-        const result = (await ApprovalService.getPoDetail(item.id)) as any;
-        if (Array.isArray(result)) {
-          // sp_PO_02_GetPO returns 3 recordsets
-          poLines.value = result[1] || [];
-          approvalHistory.value = result[2] || [];
-        } else if (result && typeof result === 'object') {
-          poLines.value = result.recordsets?.[1] || result.lines || [];
-          approvalHistory.value =
-            result.recordsets?.[2] || result.approvals || [];
-        }
+        const result = await ApprovalService.getPoDetail(item.id);
+        poLines.value = result.lines || [];
+        approvalHistory.value = result.approvals || [];
       } else {
         const [lines, history, logs] = await Promise.all([
           BorrowService.getBorrowLines(item.id),
@@ -256,30 +270,49 @@
     }
 
     try {
-      const simAs = simulatedUserId.value || undefined;
       if (item.type === 'PO') {
         await ApprovalService.approvePo(item.id, {
-          Action: action as 'APPROVE' | 'REJECT',
+          Action: action as 'APPROVE' | 'REJECT' | 'REWORK',
           Remark: remark,
-          SimulateAs: simAs,
         });
       } else {
         await ApprovalService.approveBorrow(item.id, {
           Action: action,
           Remark: remark,
-          SimulateAs: simAs,
         });
       }
       selectedItem.value = null;
       await Swal.fire('สำเร็จ', actionLabel[action] + 'เรียบร้อย', 'success');
-      await loadPendingApprovals();
-    } catch {
+      
+      try {
+        await loadPendingApprovals();
+      } catch (loadError) {
+        console.error('[handleApprove] Error reloading pending approvals:', loadError);
+        // Still continue to refresh badges
+      }
+      
+      // Refresh badges
+      const menuNotificationsStore = useMenuNotificationsStore();
+      try {
+        await Promise.all([
+          menuNotificationsStore.refreshApprovalPendingCount(),
+          menuNotificationsStore.refreshPoPendingCount(),
+          menuNotificationsStore.refreshBorrowPendingCount(),
+        ]);
+      } catch (badgeError) {
+        console.error('[handleApprove] Error refreshing badges:', badgeError);
+      }
+    } catch (error) {
+      console.error('[handleApprove] Error in approval action:', error);
       // handled by axios interceptor
     }
   }
 
   onMounted(async () => {
-    await loadPendingApprovals();
+    console.log(
+      '[ApprovePurchase] onMounted - loading pending approvals and user roles'
+    );
+    await Promise.all([loadUserRoles(), loadPendingApprovals()]);
   });
 </script>
 
@@ -287,22 +320,6 @@
   <div class="card">
     <div class="flex justify-between items-center mb-4">
       <div class="font-semibold text-xl">อนุมัติการสั่งซื้อ / ยืม</div>
-      <!-- Simulate user buttons (DEV) -->
-      <div class="flex items-center gap-2">
-        <span class="text-sm text-surface-500">จำลองสิทธิ์:</span>
-        <SelectButton
-          v-model="simulatedUserId"
-          :options="simulateUsers"
-          optionLabel="label"
-          optionValue="id"
-          :allowEmpty="false"
-          size="small"
-        />
-        <Tag
-          :value="'กำลังใช้งาน: ' + (currentUserId || realUserId)"
-          severity="info"
-        />
-      </div>
     </div>
 
     <DataTable
@@ -422,7 +439,7 @@
             </span>
             <Tag
               v-if="canApprove(data)"
-              value="To approve"
+              value="ต้องอนุมัติ"
               severity="danger"
               icon="pi pi-bell"
             />
@@ -500,6 +517,14 @@
       <div v-if="selectedItem.type === 'PO' && poLines.length > 0" class="mb-4">
         <div class="font-semibold mb-2">รายการสั่งซื้อ</div>
         <DataTable :value="poLines" size="small" stripedRows>
+          <Column :header="'ประเภท'" style="min-width: 80px">
+            <template #body="{ data }">
+              <Tag
+                :value="data.line_type === 'BORROW' ? 'ยืม' : 'ใบสั่งซื้อ'"
+                :severity="data.line_type === 'BORROW' ? 'warning' : 'info'"
+              />
+            </template>
+          </Column>
           <Column
             field="item_name_th"
             :header="'ชื่อรายการ'"
@@ -540,6 +565,20 @@
             style="min-width: 80px"
           />
         </DataTable>
+
+        <!-- PO Total Summary -->
+        <div class="mt-2 bg-surface-100 p-3 rounded border border-surface-200">
+          <div class="flex justify-end items-center gap-3 text-xl">
+            <span class="font-semibold">รวมทั้งหมด:</span>
+            <span class="font-bold text-primary">
+              ฿{{
+                Number(
+                  poLines.reduce((sum, line) => sum + (line.total_price || 0), 0)
+                ).toLocaleString('en-US', { minimumFractionDigits: 2 })
+              }}
+            </span>
+          </div>
+        </div>
       </div>
 
       <!-- Borrow Lines -->
@@ -549,6 +588,14 @@
       >
         <div class="font-semibold mb-2">รายการยืม</div>
         <DataTable :value="borrowLines" size="small" stripedRows>
+          <Column :header="'ประเภท'" style="min-width: 80px">
+            <template #body="{ data }">
+              <Tag
+                :value="data.line_type === 'ORDER' ? 'ใบสั่งซื้อ' : 'ยืม'"
+                :severity="data.line_type === 'ORDER' ? 'info' : 'warning'"
+              />
+            </template>
+          </Column>
           <Column
             field="item_name_th"
             :header="'ชื่อรายการ'"
@@ -589,6 +636,20 @@
             style="min-width: 80px"
           />
         </DataTable>
+
+        <!-- Borrow Total Summary -->
+        <div class="mt-2 bg-surface-100 p-3 rounded border border-surface-200">
+          <div class="flex justify-end items-center gap-3 text-xl">
+            <span class="font-semibold">รวมทั้งหมด:</span>
+            <span class="font-bold text-primary">
+              ฿{{
+                Number(
+                  borrowLines.reduce((sum, line) => sum + (line.total_price || 0), 0)
+                ).toLocaleString('en-US', { minimumFractionDigits: 2 })
+              }}
+            </span>
+          </div>
+        </div>
       </div>
 
       <!-- Approval History -->
@@ -624,11 +685,7 @@
             style="min-width: 150px"
           >
             <template #body="{ data }">
-              {{
-                data.actioned_at
-                  ? new Date(data.actioned_at).toLocaleString('th-TH')
-                  : '-'
-              }}
+              {{ formatSysdatetimeoffset(data.actioned_at) }}
             </template>
           </Column>
           <Column field="remark" :header="'หมายเหตุ'" style="min-width: 200px">
@@ -657,7 +714,6 @@
           @click="handleApprove(selectedItem!, 'REJECT')"
         />
         <Button
-          v-if="selectedItem.type === 'BORROW'"
           :label="'ส่งกลับแก้ไข'"
           icon="pi pi-replay"
           severity="warn"
@@ -708,7 +764,7 @@
                   {{ item.actioned_by_name || item.actioned_by }}
                 </span>
                 <span class="text-surface-400 ml-2">
-                  {{ new Date(item.actioned_at).toLocaleString('th-TH') }}
+                  {{ formatSysdatetimeoffset(item.actioned_at) }}
                 </span>
               </div>
               <div v-if="item.remark" class="text-sm text-surface-500 mt-1">
