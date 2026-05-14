@@ -121,6 +121,12 @@
 
   const filteredHeaders = computed(() => {
     if (!selectedStatusFilter.value) return numberedHeaders.value;
+    // Special handling for PENDING_APPROVAL to include APPROVED_L1 and APPROVED_L2
+    if (selectedStatusFilter.value === 'PENDING_APPROVAL') {
+      return numberedHeaders.value.filter(
+        item => ['PENDING_APPROVAL', 'APPROVED_L1', 'APPROVED_L2'].includes(item.po_status)
+      );
+    }
     return numberedHeaders.value.filter(
       item => item.po_status === selectedStatusFilter.value
     );
@@ -157,7 +163,7 @@
   const countPendingApproval = computed(
     () =>
       numberedHeaders.value.filter(
-        item => item.po_status === 'PENDING_APPROVAL'
+        item => ['PENDING_APPROVAL', 'APPROVED_L1', 'APPROVED_L2'].includes(item.po_status)
       ).length
   );
 
@@ -255,7 +261,8 @@
           * { margin: 0; padding: 0; }
           body { font-family: 'Trebuchet MS', Arial, sans-serif; padding: 30px; line-height: 1.4; }
           .container { max-width: 900px; margin: 0 auto; }
-          .header { text-align: center; margin-bottom: 25px; }
+          .header { text-align: center; margin-bottom: 25px; position: relative; }
+          .page-number { position: absolute; top: 0; right: 0; font-size: 12px; color: #666; }
           .header h1 { font-size: 22px; margin-bottom: 5px; font-weight: bold; }
           .header p { font-size: 13px; color: #666; }
           .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; font-size: 13px; }
@@ -270,7 +277,10 @@
           .signature-section { display: grid; grid-template-columns: 1fr 1fr; gap: 50px; margin-top: 50px; }
           .signature-box { text-align: center; font-size: 12px; }
           .signature-line { border-top: 1px solid #000; margin-top: 50px; padding-top: 10px; }
-          @media print { body { padding: 0; } }
+          @media print { 
+            body { padding: 0; }
+            .page-number { position: fixed; top: 20px; right: 30px; }
+          }
         </style>
       </head>
       <body>
@@ -332,7 +342,22 @@
 
     printWindow.document.write(html);
     printWindow.document.close();
-    printWindow.print();
+
+    // Use setTimeout to ensure content is loaded before printing
+    setTimeout(() => {
+      // Add page numbers to the header for every page except first
+      const headers = printWindow.document.querySelectorAll('.header');
+      let pageNum = 2;
+      for (let i = 1; i < headers.length; i++) {
+        const pageDiv = printWindow.document.createElement('div');
+        pageDiv.className = 'page-number';
+        pageDiv.style.cssText = 'position: absolute; top: 0; right: 0; font-size: 12px; color: #666;';
+        pageDiv.textContent = 'Page ' + pageNum;
+        headers[i].appendChild(pageDiv);
+        pageNum++;
+      }
+      printWindow.print();
+    }, 250);
   }
 
   function statusSeverity(status: string): string {
