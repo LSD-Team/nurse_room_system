@@ -2,6 +2,7 @@
   import { ref, onMounted, computed } from 'vue';
   import { FilterMatchMode } from '@primevue/core/api';
   import { StockService } from '@/services/stock.service';
+  import { formatSysdatetimeoffset } from '@/utils/format.utils';
   import type { IStockMovement } from '@/interfaces/stock.interfaces';
 
   const movements = ref<IStockMovement[]>([]);
@@ -147,16 +148,7 @@
         sortable
       >
         <template #body="{ data }">
-          {{
-            new Date(data.created_at).toLocaleString('en-GB', {
-              year: 'numeric',
-              month: '2-digit',
-              day: '2-digit',
-              hour: '2-digit',
-              minute: '2-digit',
-              timeZone: 'Asia/Bangkok',
-            })
-          }}
+          {{ formatSysdatetimeoffset(data.created_at) }}
         </template>
       </Column>
 

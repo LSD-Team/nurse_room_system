@@ -4,6 +4,7 @@
   import { ApprovalService } from '@/services/approval.service';
   import { BorrowService } from '@/services/borrow.service';
   import { useMenuNotificationsStore } from '@/stores/menu-notifications.store';
+  import { formatSysdatetimeoffset } from '@/utils/format.utils';
   import type {
     IPendingApprovalItem,
     IPoLine,
@@ -564,6 +565,20 @@
             style="min-width: 80px"
           />
         </DataTable>
+
+        <!-- PO Total Summary -->
+        <div class="mt-2 bg-surface-100 p-3 rounded border border-surface-200">
+          <div class="flex justify-end items-center gap-3 text-xl">
+            <span class="font-semibold">รวมทั้งหมด:</span>
+            <span class="font-bold text-primary">
+              ฿{{
+                Number(
+                  poLines.reduce((sum, line) => sum + (line.total_price || 0), 0)
+                ).toLocaleString('en-US', { minimumFractionDigits: 2 })
+              }}
+            </span>
+          </div>
+        </div>
       </div>
 
       <!-- Borrow Lines -->
@@ -621,6 +636,20 @@
             style="min-width: 80px"
           />
         </DataTable>
+
+        <!-- Borrow Total Summary -->
+        <div class="mt-2 bg-surface-100 p-3 rounded border border-surface-200">
+          <div class="flex justify-end items-center gap-3 text-xl">
+            <span class="font-semibold">รวมทั้งหมด:</span>
+            <span class="font-bold text-primary">
+              ฿{{
+                Number(
+                  borrowLines.reduce((sum, line) => sum + (line.total_price || 0), 0)
+                ).toLocaleString('en-US', { minimumFractionDigits: 2 })
+              }}
+            </span>
+          </div>
+        </div>
       </div>
 
       <!-- Approval History -->
@@ -656,11 +685,7 @@
             style="min-width: 150px"
           >
             <template #body="{ data }">
-              {{
-                data.actioned_at
-                  ? new Date(data.actioned_at).toLocaleString('en-GB', { timeZone: 'Asia/Bangkok' })
-                  : '-'
-              }}
+              {{ formatSysdatetimeoffset(data.actioned_at) }}
             </template>
           </Column>
           <Column field="remark" :header="'หมายเหตุ'" style="min-width: 200px">
@@ -739,7 +764,7 @@
                   {{ item.actioned_by_name || item.actioned_by }}
                 </span>
                 <span class="text-surface-400 ml-2">
-                  {{ new Date(item.actioned_at).toLocaleString('en-GB', { timeZone: 'Asia/Bangkok' }) }}
+                  {{ formatSysdatetimeoffset(item.actioned_at) }}
                 </span>
               </div>
               <div v-if="item.remark" class="text-sm text-surface-500 mt-1">

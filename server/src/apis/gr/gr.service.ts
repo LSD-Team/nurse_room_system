@@ -318,16 +318,6 @@ export class GrService {
         confirmedBy,
       });
 
-      // Get the GR's PO ID before confirming
-      const grQueryBeforeConfirm = `
-        SELECT po_id FROM [${this.DATABASE_NAME}].dbo.gr_headers WHERE gr_id = ${grId}
-      `;
-      const grDataBefore = await this.databaseService.query<{ po_id: number }>(
-        this.DATABASE_NAME,
-        grQueryBeforeConfirm,
-      );
-      const poIdFromGr = grDataBefore?.[0]?.po_id;
-
       const result = await this.databaseService.executeStoredProcedure(
         this.DATABASE_NAME,
         'sp_GR_03_ConfirmGR',
@@ -352,16 +342,7 @@ export class GrService {
       }
 
       console.log('[GrService] GR confirmed successfully:', response);
-      
-      // ─── After confirming GR, update PO status (as background task, don't block response) ───
-      const targetPoId = response.po_id || poIdFromGr;
-      
-      // Fire and forget to update PO status without blocking the response
-      if (targetPoId) {
-        this.updatePoStatusAfterGrConfirm(targetPoId).catch(err => {
-          console.error('[GrService] Error updating PO status in background:', err);
-        });
-      }
+      // PO status is already recalculated inside sp_GR_03_ConfirmGR (via sp_PO_RecalculateStatus)
 
       return {
         status: response.Status,

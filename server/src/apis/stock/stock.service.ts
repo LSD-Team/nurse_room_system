@@ -68,7 +68,7 @@ export class StockService {
         sm.ref_id,
         sm.created_by,
         ISNULL(e.eng_name, sm.created_by) AS created_by_name,
-        CONVERT(varchar(23), DATEADD(HOUR, 7, sm.created_at), 121) AS created_at,
+        sm.created_at,
         sm.reason
       FROM stock_movements sm
       LEFT JOIN view_items i ON sm.item_id = i.item_id

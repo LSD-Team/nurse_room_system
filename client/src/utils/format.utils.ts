@@ -5,6 +5,33 @@
 // ====================================================
 
 /**
+ * Format datetime from SYSDATETIMEOFFSET() format
+ * SQL Server stores Bangkok local time but labels offset as +00:00
+ * So we extract the date/time portion directly without any timezone conversion
+ * Input:  "2026-05-11 09:10:29.8000000 +00:00"
+ * Output: "11/05/2026, 09:10"
+ * @param dateString SYSDATETIMEOFFSET format string
+ * @returns Formatted datetime as stored in DB (DD/MM/YYYY, HH:MM)
+ */
+export function formatSysdatetimeoffset(dateString: string | null | undefined): string {
+  if (!dateString) return '-';
+  
+  try {
+    // Handle both formats from MSSQL driver:
+    // - SYSDATETIMEOFFSET raw: "2026-05-11 09:10:29.8000000 +00:00"
+    // - After driver serialization: "2026-05-11T09:10:29.800Z"
+    const match = dateString.trim().match(/^(\d{4})-(\d{2})-(\d{2})[T\s]+(\d{2}):(\d{2})/);
+    if (!match) return dateString;
+    
+    const [, year, month, day, hour, minute] = match;
+    return `${day}/${month}/${year} ${hour}:${minute}`;
+  } catch (error) {
+    console.error('Error formatting SYSDATETIMEOFFSET:', error);
+    return dateString;
+  }
+}
+
+/**
  * Format date string to Thai locale format (AD/Common Era, not Buddhist Era)
  * @param dateString ISO 8601 date string (e.g., "2024-04-09")
  * @returns Formatted date in Thai format (e.g., "09 เมษายน 2024")

@@ -332,3 +332,140 @@ function toggleAction() {
 - `client/src/services/approval.service.ts` - API calls
 - Backend API: `GET /api/approvals/pending` - Data source
 - Backend Query: `server/src/apis/approval/approval.service.ts::getPendingApprovals()`
+
+---
+
+## 3. Datetime Display — รูปแบบมาตรฐานและวิธีใช้ที่ถูกต้อง
+
+### Root Cause — ทำไมเวลาถึงเพี้ยน?
+
+SQL Server ใช้ `SYSDATETIMEOFFSET()` บันทึกเวลา **ตามเวลาจริงของ Server (Bangkok, +07:00)** แต่เนื่องจาก timezone ของ SQL Server ถูก set เป็น UTC ภายในระบบ offset จะถูก label เป็น `+00:00` แทนที่จะเป็น `+07:00`
+
+```
+DB ส่งมา:  2026-05-11 09:10:29.8000000 +00:00   ← เวลาจริงคือ 09:10 Bangkok
+MSSQL Driver แปลงเป็น:  2026-05-11T09:10:29.800Z
+ถ้าใช้ new Date() + timeZone Bangkok:  16:10  ← ผิด! บวก 7 ชั่วโมงซ้ำ
+```
+
+**สรุป:** ค่าเวลาในฐานข้อมูลเป็น Bangkok time อยู่แล้ว ห้ามแปลง timezone อีก
+
+---
+
+### มาตรฐานการแสดงผลวันที่ในระบบนี้
+
+| ประเภทข้อมูล | ฟิลด์ตัวอย่าง | Format ที่แสดง | ฟังก์ชันที่ใช้ |
+|---|---|---|---|
+| วันที่ + เวลา (`SYSDATETIMEOFFSET`) | `created_at`, `actioned_at` | `11/05/2026 09:10` | `formatSysdatetimeoffset()` |
+| วันที่อย่างเดียว (`date`) | `borrow_date`, `po_date`, `due_date`, `gr_date` | `11/05/2026` | `formatDate()` |
+
+---
+
+### วิธีใช้ที่ถูกต้อง
+
+#### ✅ สำหรับ datetime ที่มาจาก SYSDATETIMEOFFSET()
+
+```vue
+<script setup lang="ts">
+import { formatSysdatetimeoffset } from '@/utils/format.utils';
+</script>
+
+<template>
+  <!-- ✅ ถูก -->
+  <Column field="created_at" header="วันที่/เวลา" sortable>
+    <template #body="{ data }">
+      {{ formatSysdatetimeoffset(data.created_at) }}
+    </template>
+  </Column>
+</template>
+```
+
+#### ✅ สำหรับ date-only field
+
+```vue
+<script setup lang="ts">
+import { formatDate } from '@/utils/format.utils';
+</script>
+
+<template>
+  <!-- ✅ ถูก -->
+  <Column field="borrow_date" header="วันที่" sortable>
+    <template #body="{ data }">
+      {{ formatDate(data.borrow_date) }}
+    </template>
+  </Column>
+</template>
+```
+
+---
+
+### ❌ สิ่งที่ห้ามทำ
+
+```typescript
+// ❌ อย่าใช้ new Date() โดยตรงกับ datetimeoffset — เพี้ยน!
+new Date(data.created_at).toLocaleString('en-GB', { timeZone: 'Asia/Bangkok' })
+
+// ❌ อย่าแสดงค่า raw โดยไม่ format
+{{ data.created_at }}   // แสดงเป็น "2026-05-11T09:10:29.800Z"
+
+// ❌ อย่าสร้าง formatDate() ใหม่เองในแต่ละ component — ใช้จาก utils เท่านั้น
+function formatDate(val) { return new Date(val).toLocaleString(...) }
+```
+
+---
+
+### วิธีทำงานของ formatSysdatetimeoffset()
+
+ฟังก์ชันอยู่ที่ `client/src/utils/format.utils.ts` ใช้ **regex ดึงตัวเลขออกมาโดยตรง** โดยไม่แปลง timezone เลย:
+
+```typescript
+export function formatSysdatetimeoffset(dateString: string | null | undefined): string {
+  if (!dateString) return '-';
+  // รองรับทั้ง raw format จาก DB และ ISO format จาก MSSQL driver
+  const match = dateString.trim().match(/^(\d{4})-(\d{2})-(\d{2})[T\s]+(\d{2}):(\d{2})/);
+  if (!match) return dateString;
+  const [, year, month, day, hour, minute] = match;
+  return `${day}/${month}/${year} ${hour}:${minute}`;
+}
+```
+
+- รองรับ `"2026-05-11 09:10:29.8000000 +00:00"` (raw SQL)
+- รองรับ `"2026-05-11T09:10:29.800Z"` (MSSQL driver serialized)
+- ไม่แปลง timezone — แสดงเวลาตรงตามที่บันทึกใน DB เสมอ
+
+---
+
+### การ Sort ใน PrimeVue DataTable
+
+การใช้ `formatSysdatetimeoffset()` **ไม่กระทบการ Sort** เพราะ:
+- `field="created_at"` → PrimeVue sort บน **raw value** (`2026-05-11T09:10:29.800Z`)
+- ISO 8601 format เรียง lexicographically ได้ถูกต้องโดยธรรมชาติ
+- `formatSysdatetimeoffset()` ใช้แค่การแสดงผลใน `<template #body>` เท่านั้น
+
+```vue
+<!-- ✅ ถูก: field sort บน raw, body แสดงผล formatted -->
+<Column field="created_at" header="วันที่" sortable>
+  <template #body="{ data }">
+    {{ formatSysdatetimeoffset(data.created_at) }}
+  </template>
+</Column>
+```
+
+---
+
+### Checklist เมื่อสร้างหน้าใหม่ที่มีวันที่
+
+- [ ] ตรวจสอบว่าฟิลด์วันที่ใน DB เป็น `date` หรือ `datetimeoffset`
+- [ ] `datetimeoffset` → ใช้ `formatSysdatetimeoffset()`
+- [ ] `date` → ใช้ `formatDate()`
+- [ ] Import จาก `@/utils/format.utils` เสมอ ห้าม copy หรือสร้างฟังก์ชันใหม่
+- [ ] ตั้ง `field="..."` บน `<Column>` เพื่อให้ sort ทำงาน
+
+---
+
+### Files ที่เกี่ยวข้อง
+
+- `client/src/utils/format.utils.ts` — ฟังก์ชัน `formatSysdatetimeoffset()` และ `formatDate()` (แก้ที่นี่ที่เดียวถ้าต้องการเปลี่ยน format)
+- `client/src/views/pages/MovementRecords.vue` — ตัวอย่างการใช้ `formatSysdatetimeoffset(created_at)`
+- `client/src/views/pages/BorrowMedicines.vue` — ตัวอย่างการใช้ทั้ง `formatDate(borrow_date)` และ `formatSysdatetimeoffset(actioned_at)`
+- `client/src/views/pages/ApprovePurchase.vue` — ตัวอย่างการใช้ `formatSysdatetimeoffset(actioned_at)` สองจุด
+- `client/src/views/pages/PurchaseOrders.vue` — ตัวอย่างการใช้ `formatDate(po_date)`, `formatDate(due_date)`, `formatSysdatetimeoffset(actioned_at)`

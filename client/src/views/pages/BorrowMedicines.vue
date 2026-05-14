@@ -6,6 +6,7 @@
   import { ApprovalService } from '@/services/approval.service';
   import { StockService, type IStockOnHand } from '@/services/stock.service';
   import { useMenuNotificationsStore } from '@/stores/menu-notifications.store';
+  import { formatSysdatetimeoffset } from '@/utils/format.utils';
   import type {
     IBorrowHeader,
     IBorrowLine,
@@ -1307,7 +1308,7 @@
                     {{ item.actioned_by_name || item.actioned_by }}
                   </span>
                   <span class="text-surface-400 ml-2">
-                    {{ new Date(item.actioned_at).toLocaleString('en-GB', { timeZone: 'Asia/Bangkok' }) }}
+                    {{ formatSysdatetimeoffset(item.actioned_at) }}
                   </span>
                 </div>
                 <div v-if="item.remark" class="text-sm text-surface-500 mt-1">

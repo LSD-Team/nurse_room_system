@@ -5,6 +5,7 @@
   import { BorrowService } from '@/services/borrow.service';
   import { StockService, type IStockOnHand } from '@/services/stock.service';
   import { useMenuNotificationsStore } from '@/stores/menu-notifications.store';
+  import { formatSysdatetimeoffset } from '@/utils/format.utils';
   import type {
     IPoHeader,
     IPoLine,
@@ -550,7 +551,7 @@
         showFormDialog.value = false;
         await loadPoHeaders();
         await Swal.fire('สำเร็จ', 'สร้าง PO เรียบร้อย', 'success');
-        
+
         // Refresh badge
         const menuNotificationsStore = useMenuNotificationsStore();
         await menuNotificationsStore.refreshPoDraftCount();
@@ -996,151 +997,6 @@
           <Textarea v-model="formNote" rows="2" />
         </div>
 
-        <!-- All Items Table -->
-        <div v-if="selectedSupplierId" class="flex flex-col gap-2">
-          <div class="flex items-center justify-between">
-            <label class="font-semibold">รายการยา/เวชภัณฑ์ทั้งหมด</label>
-            <div class="flex items-center gap-3">
-              <span
-                v-if="orderItemsWithQty.length > 0"
-                class="text-sm font-semibold text-primary"
-              >
-                เลือก {{ orderItemsWithQty.length }} รายการ
-              </span>
-              <IconField>
-                <InputIcon class="pi pi-search" />
-                <InputText
-                  v-model="itemsFilterText"
-                  placeholder="ค้นหารายการยา..."
-                  class="w-64"
-                />
-              </IconField>
-            </div>
-          </div>
-          <div class="flex gap-2">
-            <Button
-              label="Auto input MIN"
-              icon="pi pi-arrow-down"
-              severity="info"
-              size="small"
-              @click="autoInputMin()"
-            />
-            <Button
-              label="Auto input MAX"
-              icon="pi pi-arrow-up"
-              severity="success"
-              size="small"
-              @click="autoInputMax()"
-            />
-          </div>
-          <DataTable
-            :value="filteredOrderItems"
-            dataKey="item_id"
-            class="p-datatable-sm"
-            scrollable
-            scrollHeight="400px"
-            paginator
-            :rows="50"
-            :rowsPerPageOptions="[20, 50, 100]"
-          >
-            <template #empty>ไม่พบรายการ</template>
-            <Column field="item_code" header="รหัส" style="min-width: 100px" />
-            <Column
-              field="item_name_th"
-              header="ชื่อยา"
-              style="min-width: 220px"
-            >
-              <template #body="{ data }">
-                <div>{{ data.item_name_th }}</div>
-                <div class="text-sm text-surface-400">
-                  {{ data.item_name_en }}
-                </div>
-              </template>
-            </Column>
-            <Column
-              header="คงเหลือ"
-              style="min-width: 90px"
-              bodyClass="text-right"
-            >
-              <template #body="{ data }">
-                <span :class="stockStatusClass(data)">
-                  {{
-                    data.qty_base != null ? formatNumber(data.qty_base) : '-'
-                  }}
-                </span>
-              </template>
-            </Column>
-            <Column
-              field="usage_unit_name_th"
-              header="หน่วยใช้"
-              style="min-width: 80px"
-            />
-            <Column header="Min" style="min-width: 70px" bodyClass="text-right">
-              <template #body="{ data }">
-                {{ data.item_min_po != null ? formatNumber(data.item_min_po) : '-' }}
-              </template>
-            </Column>
-            <Column header="Max" style="min-width: 70px" bodyClass="text-right">
-              <template #body="{ data }">
-                {{ data.item_max_po != null ? formatNumber(data.item_max_po) : '-' }}
-              </template>
-            </Column>
-            <Column header="คงเหลือโดยประมาณ" style="min-width: 120px" bodyClass="text-right">
-              <template #body="{ data }">
-                {{
-                  data.qty_base != null && data.conversion_factor
-                    ? formatNumber(data.qty_base / data.conversion_factor)
-                    : '-'
-                }}
-              </template>
-            </Column>
-            <Column
-              field="unit_name_th"
-              header="หน่วย"
-              style="min-width: 80px"
-            />
-            <Column
-              header="ราคา/หน่วย"
-              style="min-width: 100px"
-              bodyClass="text-right"
-            >
-              <template #body="{ data }">
-                ฿{{ formatNumber(data.unit_price) }}
-              </template>
-            </Column>
-            <Column header="จำนวนสั่งซื้อ" style="min-width: 150px">
-              <template #body="{ data }">
-                <InputNumber
-                  v-model="data.qty_order"
-                  :min="0"
-                  showButtons
-                  size="small"
-                  class="w-full"
-                />
-              </template>
-            </Column>
-            <Column
-              header="รวม"
-              style="min-width: 110px"
-              bodyClass="text-right"
-            >
-              <template #body="{ data }">
-                <span v-if="data.qty_order > 0" class="font-semibold">
-                  ฿{{ formatNumber(data.qty_order * data.unit_price) }}
-                </span>
-                <span v-else class="text-surface-400">-</span>
-              </template>
-            </Column>
-          </DataTable>
-        </div>
-
-        <div
-          v-if="orderItemsWithQty.length > 0"
-          class="flex justify-end text-lg font-bold"
-        >
-          รวมทั้งหมด: ฿{{ formatNumber(formTotalAmount) }}
-        </div>
-
         <!-- Borrow Settlement Section -->
         <div
           v-if="selectedSupplierId && pendingBorrows.length > 0"
@@ -1208,7 +1064,156 @@
             </Column>
           </DataTable>
         </div>
-      </div>
+
+        <!-- All Items Table -->
+        <div v-if="selectedSupplierId" class="flex flex-col gap-2">
+          <div class="flex items-center justify-between">
+            <label class="font-semibold">รายการยา/เวชภัณฑ์ทั้งหมด</label>
+            <div class="flex items-center gap-3">
+              <span
+                v-if="orderItemsWithQty.length > 0"
+                class="text-sm font-semibold text-primary"
+              >
+                เลือก {{ orderItemsWithQty.length }} รายการ
+              </span>
+              <IconField>
+                <InputIcon class="pi pi-search" />
+                <InputText
+                  v-model="itemsFilterText"
+                  placeholder="ค้นหารายการยา..."
+                  class="w-64"
+                />
+              </IconField>
+            </div>
+          </div>
+          <div class="flex gap-2">
+            <Button
+              label="Auto input MIN"
+              icon="pi pi-arrow-down"
+              severity="info"
+              size="small"
+              @click="autoInputMin()"
+            />
+            <Button
+              label="Auto input MAX"
+              icon="pi pi-arrow-up"
+              severity="success"
+              size="small"
+              @click="autoInputMax()"
+            />
+          </div>
+          <DataTable
+            :value="filteredOrderItems"
+            dataKey="item_id"
+            class="p-datatable-sm"
+            scrollable
+            scrollHeight="400px"
+            paginator
+            :rows="50"
+            :rowsPerPageOptions="[20, 50, 100]"
+          >
+            <template #empty>ไม่พบรายการ</template>
+            <Column field="item_code" header="รหัส" style="min-width: 100px" />
+            <Column
+              field="item_name_th"
+              header="ชื่อยา"
+              style="min-width: 220px"
+            >
+              <template #body="{ data }">
+                <div>{{ data.item_name_th }}</div>
+                <div class="text-sm text-surface-400">
+                  {{ data.item_name_en }}
+                </div>
+              </template>
+            </Column>
+            <Column
+              header="คงเหลือ"
+              headerClass="header-blue"
+              style="min-width: 90px"
+              bodyClass="text-right"
+            >
+              <template #body="{ data }">
+                <span :class="stockStatusClass(data)">
+                  {{
+                    data.qty_base != null ? formatNumber(data.qty_base) : '-'
+                  }}
+                </span>
+              </template>
+            </Column>
+            <Column
+              field="usage_unit_name_th"
+              header="หน่วยใช้"
+              headerClass="header-blue"
+              style="min-width: 80px"
+            />
+            <Column header="Min" style="min-width: 70px" bodyClass="text-right">
+              <template #body="{ data }">
+                {{ data.item_min_po != null ? formatNumber(data.item_min_po) : '-' }}
+              </template>
+            </Column>
+            <Column header="Max" style="min-width: 70px" bodyClass="text-right">
+              <template #body="{ data }">
+                {{ data.item_max_po != null ? formatNumber(data.item_max_po) : '-' }}
+              </template>
+            </Column>
+            <Column header="คงเหลือปรับตามหน่วยซื้อ" headerClass="header-green" style="min-width: 120px" bodyClass="text-right">
+              <template #body="{ data }">
+                {{
+                  data.qty_base != null && data.conversion_factor
+                    ? formatNumber(data.qty_base / data.conversion_factor)
+                    : '-'
+                }}
+              </template>
+            </Column>
+            <Column
+              field="unit_name_th"
+              header="หน่วยซื้อ"
+              headerClass="header-green"
+              style="min-width: 80px"
+            />
+            <Column
+              header="ราคา/หน่วย"
+              style="min-width: 100px"
+              bodyClass="text-right"
+            >
+              <template #body="{ data }">
+                ฿{{ formatNumber(data.unit_price) }}
+              </template>
+            </Column>
+            <Column header="จำนวนสั่งซื้อ" style="min-width: 150px">
+              <template #body="{ data }">
+                <InputNumber
+                  v-model="data.qty_order"
+                  :min="0"
+                  showButtons
+                  size="small"
+                  class="w-full"
+                />
+              </template>
+            </Column>
+            <Column
+              header="รวม"
+              style="min-width: 110px"
+              bodyClass="text-right"
+            >
+              <template #body="{ data }">
+                <span v-if="data.qty_order > 0" class="font-semibold">
+                  ฿{{ formatNumber(data.qty_order * data.unit_price) }}
+                </span>
+                <span v-else class="text-surface-400">-</span>
+              </template>
+            </Column>
+          </DataTable>
+        </div>
+
+        <div
+          v-if="orderItemsWithQty.length > 0"
+          class="flex justify-end text-lg font-bold"
+        >
+          รวมทั้งหมด: ฿{{ formatNumber(formTotalAmount) }}
+        </div>
+
+      </div><!-- end flex flex-col gap-4 -->
 
       <template #footer>
         <Button
@@ -1364,7 +1369,15 @@
           </Column>
         </DataTable>
 
-        <!-- Approval Timeline -->
+        <!-- Total Summary -->
+        <div class="mt-3 bg-surface-100 p-4 rounded border border-surface-200">
+          <div class="flex justify-end items-center gap-3 text-2xl">
+            <span class="font-semibold">รวมทั้งหมด:</span>
+            <span class="font-bold text-primary">
+              ฿{{ formatNumber(detailLines.reduce((sum, line) => sum + (line.total_price || 0), 0)) }}
+            </span>
+          </div>
+        </div>
         <div v-if="detailApprovals.length > 0" class="mt-4">
           <div class="font-semibold text-surface-500 mb-2">
             Timeline การอนุมัติ
@@ -1404,11 +1417,7 @@
                     {{ item.actioned_by_name || item.actioned_by }}
                   </span>
                   <span class="text-surface-400 ml-2">
-                    {{
-                      item.actioned_at
-                        ? new Date(item.actioned_at).toLocaleString('en-GB', { timeZone: 'Asia/Bangkok' })
-                        : ''
-                    }}
+                    {{ formatSysdatetimeoffset(item.actioned_at) }}
                   </span>
                 </div>
                 <div v-if="item.remark" class="text-sm text-surface-500 mt-1">
@@ -1484,3 +1493,22 @@
     </Dialog>
   </div>
 </template>
+
+<style scoped>
+::v-deep(.header-blue) {
+  background-color: #e6f7ff !important;
+  color: #0b5ed7 !important;
+}
+::v-deep(.header-blue) .p-column-title,
+::v-deep(.header-blue) .p-sortable-column-icon {
+  color: inherit !important;
+}
+::v-deep(.header-green) {
+  background-color: #e9f7ec !important;
+  color: #198754 !important;
+}
+::v-deep(.header-green) .p-column-title,
+::v-deep(.header-green) .p-sortable-column-icon {
+  color: inherit !important;
+}
+</style>
