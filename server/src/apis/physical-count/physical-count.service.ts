@@ -155,21 +155,19 @@ export class PhysicalCountService {
   async getComparison(countId: number): Promise<IPhysicalCountComparison> {
     this.logger.debug(`getComparison: countId=${countId}`);
 
-    const results = await this.databaseService.executeStoredProcedure<any>(
+    // SP03 returns 2 result sets: [0]=header row, [1]=lines[]
+    const recordsets = await this.databaseService.executeStoredProcedureMultiple<any>(
       this.DATABASE_NAME,
       'sp_PhysCount_03_GetComparison',
-      {
-        CountId: countId,
-      },
+      { CountId: countId },
     );
 
-    // SP returns 2 result sets: [header], [lines]
-    const header = results && results.length > 0 ? results[0] : null;
-    const lines = results && results.length > 1 ? results[1] : [];
+    const header = recordsets?.[0]?.[0] ?? null;
+    const lines: IPhysicalCountLine[] = recordsets?.[1] ?? [];
 
     return {
       header: header as IPhysicalCountHeader,
-      lines: lines as IPhysicalCountLine[],
+      lines,
     };
   }
 

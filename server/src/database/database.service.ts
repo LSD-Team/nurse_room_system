@@ -308,6 +308,43 @@ export class DatabaseService {
     }
   }
 
+  /** Like executeStoredProcedure but returns ALL result sets (T[][]) instead of only the first */
+  public async executeStoredProcedureMultiple<T>(
+    database: string,
+    procedureName: string,
+    params?: { [key: string]: any },
+  ): Promise<T[][]> {
+    let pool: sql.ConnectionPool;
+    try {
+      pool = await this.getConnection(database);
+      const request = pool.request();
+      if (params) {
+        Object.keys(params).forEach((key) => {
+          request.input(key, params[key]);
+        });
+      }
+      const result = await request.execute(procedureName);
+      pool.close();
+      return (result.recordsets as unknown as T[][]) ?? [];
+    } catch (error: any) {
+      this.logger.error(
+        `Stored Procedure (Multiple) Error for database ${database}:`,
+        error,
+      );
+      if (
+        error.code === 'ESOCKET' ||
+        error.code === 'ETIMEOUT' ||
+        error.code === 'ECONNRESET'
+      ) {
+        this.logger.warn(
+          `Connection issue detected, removing pool for ${database}`,
+        );
+        this.pools.delete(database);
+      }
+      throw new InternalServerErrorException('Procedure Execution Failed');
+    }
+  }
+
   public replaceParams<T>(query: string, values: T[]): string {
     return query.replace(/@param\d+/g, (match) => {
       const paramIndex = parseInt(match.replace('@param', ''), 10);
