@@ -19,6 +19,7 @@
 
   // ─── State Management ───
   const counts = ref<IPhysicalCountHeader[]>([]);
+  const periods = ref<any[]>([]);
   const loading = ref(false);
   const errorMsg = ref('');
 
@@ -55,7 +56,7 @@
 
   // ─── Load Initial Data ───
   onMounted(async () => {
-    await loadPhysicalCounts();
+    await Promise.all([loadPhysicalCounts(), loadAvailablePeriods()]);
   });
 
   // ─── API Calls ───
@@ -67,6 +68,14 @@
       errorMsg.value = error.message || 'ไม่สามารถโหลดข้อมูลได้';
     } finally {
       loading.value = false;
+    }
+  }
+
+  async function loadAvailablePeriods() {
+    try {
+      periods.value = await PhysicalCountService.getAvailablePeriods();
+    } catch (error: any) {
+      console.error('Failed to load periods:', error);
     }
   }
 
@@ -448,6 +457,99 @@
             <div class="text-center py-5">
               <i class="pi pi-inbox text-gray-400" style="font-size: 3rem"></i>
               <p class="mt-3 text-gray-500">ไม่พบข้อมูลการนับสต็อก</p>
+            </div>
+          </template>
+        </DataTable>
+      </div>
+    </div>
+
+    <!-- Stock Periods Table -->
+    <div class="col-12">
+      <div class="card">
+        <span class="text-2xl font-bold">รายการ Stock Periods</span>
+        
+        <DataTable
+          :value="periods"
+          :loading="loading"
+          filterDisplay="menu"
+          :rows="10"
+          paginator
+          responsiveLayout="scroll"
+          dataKey="period_code"
+          stripedRows
+          class="mt-4"
+        >
+          <template #header>
+            <div class="flex align-items-center justify-content-between">
+              <span class="text-sm text-gray-600">รายการ Period ที่สามารถนำไปใช้สร้างการนับสต็อก</span>
+            </div>
+          </template>
+
+          <Column
+            field="period_code"
+            header="Period Code"
+            :sortable="true"
+            style="min-width: 12rem"
+          />
+          <Column
+            field="period_start"
+            header="วันเริ่มต้น"
+            style="min-width: 12rem"
+          >
+            <template #body="{ data }">
+              {{ formatDate(data.period_start as string) }}
+            </template>
+          </Column>
+          <Column
+            field="period_end"
+            header="วันสิ้นสุด"
+            style="min-width: 12rem"
+          >
+            <template #body="{ data }">
+              {{ formatDate(data.period_end as string) }}
+            </template>
+          </Column>
+          <Column
+            field="period_status"
+            header="สถานะ"
+            style="min-width: 10rem"
+          >
+            <template #body="{ data }">
+              <Tag
+                :value="data.period_status"
+                :severity="
+                  data.period_status === 'OPEN'
+                    ? 'success'
+                    : data.period_status === 'COUNTING'
+                    ? 'warning'
+                    : data.period_status === 'PENDING_APPROVAL'
+                    ? 'info'
+                    : data.period_status === 'SNAPSHOT_DONE'
+                    ? 'success'
+                    : 'secondary'
+                "
+              />
+            </template>
+          </Column>
+          <Column
+            field="created_by"
+            header="สร้างโดย"
+            style="min-width: 12rem"
+          />
+          <Column
+            field="created_at"
+            header="สร้างเมื่อ"
+            style="min-width: 14rem"
+          >
+            <template #body="{ data }">
+              {{ formatSysdatetimeoffset(data.created_at) }}
+            </template>
+          </Column>
+
+          <template #empty>
+            <div class="text-center py-5">
+              <i class="pi pi-inbox text-gray-400" style="font-size: 3rem"></i>
+              <p class="mt-3 text-gray-500">ไม่พบข้อมูล Stock Period</p>
             </div>
           </template>
         </DataTable>

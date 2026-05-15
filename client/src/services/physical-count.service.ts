@@ -11,6 +11,11 @@ import type {
 } from '@/interfaces/physical-count.interfaces';
 
 export class PhysicalCountService {
+  // โ"€โ"€โ"€ ดึงรายการ periods ทั้งหมด โ"€โ"€โ"€
+  static async getAvailablePeriods(): Promise<any[]> {
+    return Api.get<any[]>('/physical-count/periods');
+  }
+
   // โ"€โ"€โ"€ สร้าง Period ใหม่ โ"€โ"€โ"€
   static async createPeriod(
     periodEnd: string

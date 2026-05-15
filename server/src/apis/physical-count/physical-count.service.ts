@@ -29,6 +29,24 @@ export class PhysicalCountService {
   }
 
   // ────────────────────────────────────────────────────────────────
+  // Get all available stock periods
+  // ────────────────────────────────────────────────────────────────
+  async getAvailablePeriods(): Promise<any[]> {
+    const query = `
+      SELECT 
+        period_code,
+        period_start,
+        period_end,
+        period_status,
+        created_by,
+        created_at
+      FROM stock_periods
+      ORDER BY period_code DESC
+    `;
+    return this.databaseService.query<any>(this.DATABASE_NAME, query);
+  }
+
+  // ────────────────────────────────────────────────────────────────
   // 0. sp_Snapshot_01_CreateStockPeriod — สร้าง period
   // ────────────────────────────────────────────────────────────────
   async createPeriod(

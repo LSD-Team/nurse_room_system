@@ -18,6 +18,21 @@ export class PhysicalCountController {
   }
 
   // ────────────────────────────────────────────────────────────────
+  // GET /physical-count/periods
+  // ────────────────────────────────────────────────────────────────
+  @Get('periods')
+  @ApiOperation({
+    summary: 'Get all available stock periods',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'List of all stock periods',
+  })
+  async getAvailablePeriods() {
+    return this.physicalCountService.getAvailablePeriods();
+  }
+
+  // ────────────────────────────────────────────────────────────────
   // POST /physical-count/periods
   // ────────────────────────────────────────────────────────────────
   @Post('periods')
