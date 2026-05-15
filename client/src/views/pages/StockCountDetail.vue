@@ -105,6 +105,12 @@
     }
   }
 
+  function handleAutoFill() {
+    editableLines.value.forEach((l) => {
+      l.editQtyCounted = l.qty_system;
+    });
+  }
+
   async function handleSave() {
     try {
       saving.value = true;
@@ -247,7 +253,16 @@
         <!-- Toolbar -->
         <div class="flex align-items-center justify-content-between flex-wrap gap-3 mb-4">
           <span class="text-lg font-bold">รายการยา / วัสดุ ({{ filteredLines.length }} รายการ)</span>
-          <div class="flex align-items-center gap-3">
+          <div class="flex align-items-center gap-3 flex-wrap">
+            <Button
+              v-if="isEditable"
+              icon="pi pi-copy"
+              label="ยอดนับจริงอัตโนมัติ"
+              class="p-button-outlined p-button-secondary"
+              size="small"
+              v-tooltip.top="'คัดลอกยอดในระบบมาใส่ยอดนับจริงทุกรายการ'"
+              @click="handleAutoFill"
+            />
             <div class="flex align-items-center gap-2">
               <Checkbox v-model="showOnlyDiff" :binary="true" inputId="showDiff" />
               <label for="showDiff" class="text-sm cursor-pointer">แสดงเฉพาะรายการที่มีผลต่าง</label>
