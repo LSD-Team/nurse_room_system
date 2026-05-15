@@ -36,12 +36,18 @@ export interface IPhysicalCountLine {
   item_id: number;
   item_code: string;
   item_name_th: string;
+  item_name_en: string | null;
   unit_name_th: string | null;
+  item_min: number | null;
+  item_max: number | null;
   qty_system: number;
   qty_counted: number;
   diff_qty: number;
   diff_status: 'เกิน' | 'ขาด' | 'ตรง';
   note: string | null;
+  snapshot_prev_qty: number;
+  received_qty: number;
+  issued_qty: number;
 }
 
 // ===== SP03 full response =====

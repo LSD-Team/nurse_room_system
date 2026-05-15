@@ -184,5 +184,7 @@
     }
   },
   "active": "3521531aa1e485e3",
-  "lastOpenFiles": []
+  "lastOpenFiles": [
+    "05_alter_sp03_comparison_extra_cols.sql"
+  ]
 }

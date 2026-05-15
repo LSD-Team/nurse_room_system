@@ -341,13 +341,16 @@ BEGIN
     INNER JOIN stock_periods sp ON pch.period_code = sp.period_code
     WHERE pch.count_id = @CountId;
 
-    -- Result set 2: รายการเปรียบเทียบ
+    -- Result set 2: รายการเปรียบเทียบ (พร้อมข้อมูลเพิ่มเติม)
     SELECT
         pcl.line_id,
         pcl.item_id,
         i.item_code,
         i.item_name_th,
+        i.item_name_en,
         u.unit_name_th,
+        i.item_min,
+        i.item_max,
         pcl.qty_system,
         pcl.qty_counted,
         pcl.diff_qty,
@@ -356,10 +359,41 @@ BEGIN
             WHEN pcl.diff_qty < 0 THEN N'ขาด'
             ELSE N'ตรง'
         END AS diff_status,
-        pcl.note
+        pcl.note,
+        -- Snapshot ปิดจากเดือนก่อนหน้า (actual_closing ของ period_code ล่าสุดที่ period_end < period_start)
+        ISNULL(sps_prev.actual_closing, 0) AS snapshot_prev_qty,
+        -- รับเข้าช่วง period (RECEIVE, RETURN)
+        ISNULL((
+            SELECT SUM(sm.qty_base)
+            FROM stock_movements sm
+            WHERE sm.item_id = pcl.item_id
+              AND sm.movement_type IN ('RECEIVE', 'RETURN')
+              AND CAST(sm.created_at AS DATE) >= sp.period_start
+              AND CAST(sm.created_at AS DATE) <= sp.period_end
+        ), 0) AS received_qty,
+        -- ใช้ออกช่วง period (USAGE, ISSUE, WITHDRAW)
+        ISNULL((
+            SELECT SUM(sm.qty_base)
+            FROM stock_movements sm
+            WHERE sm.item_id = pcl.item_id
+              AND sm.movement_type IN ('USAGE', 'ISSUE', 'WITHDRAW')
+              AND CAST(sm.created_at AS DATE) >= sp.period_start
+              AND CAST(sm.created_at AS DATE) <= sp.period_end
+        ), 0) AS issued_qty
     FROM physical_count_lines pcl
-    INNER JOIN items i ON pcl.item_id = i.item_id
-    LEFT JOIN units u ON i.usage_unit_id = u.unit_id
+    INNER JOIN items i              ON pcl.item_id = i.item_id
+    LEFT  JOIN units u              ON i.usage_unit_id = u.unit_id
+    INNER JOIN physical_count_headers pch ON pcl.count_id = pch.count_id
+    INNER JOIN stock_periods sp     ON pch.period_code = sp.period_code
+    OUTER APPLY (
+        SELECT TOP 1 sp_prev.period_code AS prev_period_code
+        FROM stock_periods sp_prev
+        WHERE sp_prev.period_end < sp.period_start
+        ORDER BY sp_prev.period_end DESC
+    ) prev_p
+    LEFT JOIN stock_period_snapshot sps_prev
+           ON sps_prev.period_code = prev_p.prev_period_code
+          AND sps_prev.item_id     = pcl.item_id
     WHERE pcl.count_id = @CountId
     ORDER BY i.item_code;
 END;

@@ -26,8 +26,14 @@
     item_id: number;
     item_code: string;
     item_name_th: string;
+    item_name_en: string | null;
     unit_name_th: string | null;
+    item_min: number | null;
+    item_max: number | null;
     qty_system: number;
+    snapshot_prev_qty: number;
+    received_qty: number;
+    issued_qty: number;
     editQtyCounted: number;
     editNote: string;
   }
@@ -93,8 +99,14 @@
         item_id: l.item_id,
         item_code: l.item_code,
         item_name_th: l.item_name_th,
+        item_name_en: l.item_name_en,
         unit_name_th: l.unit_name_th,
+        item_min: l.item_min,
+        item_max: l.item_max,
         qty_system: l.qty_system,
+        snapshot_prev_qty: l.snapshot_prev_qty,
+        received_qty: l.received_qty,
+        issued_qty: l.issued_qty,
         editQtyCounted: l.qty_counted,
         editNote: l.note ?? '',
       }));
@@ -293,9 +305,38 @@
           </template>
 
           <Column field="item_code" header="รหัส" :sortable="true" frozen style="min-width: 8rem; background: white" />
-          <Column field="item_name_th" header="ชื่อรายการ" :sortable="true" frozen style="min-width: 20rem; background: white" />
+          <Column field="item_name_th" header="ชื่อรายการ" :sortable="true" frozen style="min-width: 20rem; background: white">
+            <template #body="{ data }">
+              <div>
+                <div>{{ data.item_name_th }}</div>
+                <div v-if="data.item_name_en" class="text-xs text-gray-400 mt-1">{{ data.item_name_en }}</div>
+              </div>
+            </template>
+          </Column>
           <Column field="unit_name_th" header="หน่วย" style="min-width: 6rem">
             <template #body="{ data }">{{ data.unit_name_th || '-' }}</template>
+          </Column>
+          <Column header="Min / Max" style="min-width: 8rem; text-align: center">
+            <template #body="{ data }">
+              <span class="font-mono text-xs">
+                {{ data.item_min ?? '-' }} / {{ data.item_max ?? '-' }}
+              </span>
+            </template>
+          </Column>
+          <Column field="snapshot_prev_qty" header="Snapshot ก่อนหน้า" :sortable="true" style="min-width: 10rem; text-align: right">
+            <template #body="{ data }">
+              <span class="font-mono">{{ data.snapshot_prev_qty.toFixed(0) }}</span>
+            </template>
+          </Column>
+          <Column field="received_qty" header="รับเข้า (period)" :sortable="true" style="min-width: 9rem; text-align: right">
+            <template #body="{ data }">
+              <span class="font-mono text-green-600">+{{ data.received_qty.toFixed(0) }}</span>
+            </template>
+          </Column>
+          <Column field="issued_qty" header="ใช้ออก (period)" :sortable="true" style="min-width: 9rem; text-align: right">
+            <template #body="{ data }">
+              <span class="font-mono text-red-500">-{{ data.issued_qty.toFixed(0) }}</span>
+            </template>
           </Column>
           <Column field="qty_system" header="ยอดระบบ" :sortable="true" style="min-width: 9rem; text-align: right">
             <template #body="{ data }">
