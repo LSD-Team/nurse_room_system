@@ -140,6 +140,11 @@ const routes: RouteRecordRaw[] = [
         component: () => import('@/views/pages/MovementRecords.vue'),
       },
       {
+        path: 'physical-count',
+        name: 'physicalCount',
+        component: () => import('@/views/pages/PhysicalCount.vue'),
+      },
+      {
         path: 'stock-adjustment',
         name: 'stockAdjustment',
         component: () => import('@/views/pages/Empty.vue'),

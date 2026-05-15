@@ -18,6 +18,26 @@ export class PhysicalCountController {
   }
 
   // ────────────────────────────────────────────────────────────────
+  // POST /physical-count/periods
+  // ────────────────────────────────────────────────────────────────
+  @Post('periods')
+  @ApiOperation({
+    summary: 'Create stock period (sp_Snapshot_01_CreateStockPeriod)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Period created successfully',
+  })
+  async createPeriod(
+    @Body() body: { periodEnd: string },
+  ) {
+    return this.physicalCountService.createPeriod(
+      new Date(body.periodEnd),
+      this.currentUser,
+    );
+  }
+
+  // ────────────────────────────────────────────────────────────────
   // POST /physical-count/create
   // ────────────────────────────────────────────────────────────────
   @Post('create')

@@ -114,7 +114,20 @@
               label: 'ปรับยอด',
               icon: 'pi pi-fw pi-pencil',
               color: 'text-sky-300',
-              to: '/stock-adjustment',
+              items: [
+                {
+                  label: 'นับสต็อก',
+                  icon: 'pi pi-fw pi-list',
+                  color: 'text-sky-300',
+                  to: '/physical-count',
+                },
+                {
+                  label: 'ปรับยอดสต็อก',
+                  icon: 'pi pi-fw pi-pencil',
+                  color: 'text-sky-300',
+                  to: '/stock-adjustment',
+                },
+              ],
             },
           ],
         },

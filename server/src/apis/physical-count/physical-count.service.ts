@@ -29,6 +29,29 @@ export class PhysicalCountService {
   }
 
   // ────────────────────────────────────────────────────────────────
+  // 0. sp_Snapshot_01_CreateStockPeriod — สร้าง period
+  // ────────────────────────────────────────────────────────────────
+  async createPeriod(
+    periodEnd: Date,
+    createdBy: string,
+  ): Promise<any> {
+    this.logger.debug(
+      `createPeriod: periodEnd=${periodEnd.toISOString()}, createdBy=${createdBy}`,
+    );
+
+    const results = await this.databaseService.executeStoredProcedure<any>(
+      this.DATABASE_NAME,
+      'sp_Snapshot_01_CreateStockPeriod',
+      {
+        PeriodEnd: periodEnd,
+        CreatedBy: createdBy,
+      },
+    );
+
+    return results && results[0] ? results[0] : { Status: 0, Message: 'No response from SP' };
+  }
+
+  // ────────────────────────────────────────────────────────────────
   // 1. sp_PhysCount_01_Create — เริ่มนับ stock
   // ────────────────────────────────────────────────────────────────
   async createPhysicalCount(

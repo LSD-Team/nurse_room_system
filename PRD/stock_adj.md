@@ -903,16 +903,16 @@ BEGIN
   - [x] APPROVAL_PHYSICAL_COUNT
   - [x] PHYSICAL_COUNT_APPROVED
   - [x] PHYSICAL_COUNT_REJECTED
-- [ ] สร้าง email templates (3 ไฟล์)
+- [x] สร้าง email templates (3 ไฟล์)
 - [x] ทดสอบ pnpm build (server)
 
 ### Phase 3: Frontend (Vue 3)
-- [ ] สร้าง physical-count.service.ts (client)
-- [ ] สร้าง physical-count.interfaces.ts
-- [ ] สร้าง PhysicalCount.vue page
-- [ ] เพิ่ม route ใน router/index.ts
-- [ ] เพิ่ม menu item ใน "ปรับยอด" section
-- [ ] ทดสอบ pnpm build (client)
+- [x] สร้าง physical-count.service.ts (client)
+- [x] สร้าง physical-count.interfaces.ts
+- [x] สร้าง PhysicalCount.vue page
+- [x] เพิ่ม route ใน router/index.ts
+- [x] เพิ่ม menu item ใน "ปรับยอด" section
+- [x] ทดสอบ pnpm build (client)
 
 ### Phase 4: Integration Testing
 - [ ] ทดสอบ 6-step flow จากเริ่มต้นจนจบ
