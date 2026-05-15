@@ -85,6 +85,14 @@
     REJECTED: 'danger',
   };
 
+  const printDate = computed(() =>
+    new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' }),
+  );
+
+  function handlePrint() {
+    window.print();
+  }
+
   // ─── Lifecycle ───
   onMounted(() => loadData());
 
@@ -267,6 +275,14 @@
           <span class="text-lg font-bold">รายการยา / วัสดุ ({{ filteredLines.length }} รายการ)</span>
           <div class="flex align-items-center gap-3 flex-wrap">
             <Button
+              icon="pi pi-print"
+              label="พิมพ์ใบนับ"
+              class="p-button-outlined p-button-info"
+              size="small"
+              v-tooltip.top="'พิมพ์ใบนับ stock สำหรับนำไปนับหน้างาน'"
+              @click="handlePrint"
+            />
+            <Button
               v-if="isEditable"
               icon="pi pi-copy"
               label="ยอดนับจริงอัตโนมัติ"
@@ -402,6 +418,76 @@
       </div>
     </div>
   </div>
+
+  <!-- ════════════ PRINT SECTION ════════════ -->
+  <div class="print-section" v-if="header">
+    <!-- Print Header -->
+    <div class="ps-header">
+      <div class="ps-title">ใบนับสต็อกประจำเดือน (Physical Count Sheet)</div>
+      <table class="ps-info">
+        <tr>
+          <td><strong>Period:</strong></td><td>{{ header.period_code }}</td>
+          <td><strong>ช่วงเวลา:</strong></td><td>{{ formatDate(header.period_start) }} – {{ formatDate(header.period_end) }}</td>
+          <td><strong>สถานะ:</strong></td><td>{{ countStatusLabel[header.count_status] || header.count_status }}</td>
+        </tr>
+        <tr>
+          <td><strong>สร้างโดย:</strong></td><td>{{ header.created_by_name || header.created_by }}</td>
+          <td><strong>วันที่พิมพ์:</strong></td><td>{{ printDate }}</td>
+          <td><strong>จำนวนรายการ:</strong></td><td>{{ editableLines.length }} รายการ</td>
+        </tr>
+      </table>
+    </div>
+
+    <!-- Print Table -->
+    <table class="ps-table">
+      <thead>
+        <tr>
+          <th style="width:4%">ที่</th>
+          <th style="width:9%">รหัส</th>
+          <th style="width:27%">ชื่อรายการ</th>
+          <th style="width:6%">หน่วย</th>
+          <th style="width:7%">Min/Max</th>
+          <th style="width:8%">ยอดระบบ</th>
+          <th style="width:16%">ยอดนับจริง</th>
+          <th style="width:23%">หมายเหตุ</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="(line, index) in editableLines" :key="line.line_id">
+          <td class="ps-center">{{ index + 1 }}</td>
+          <td class="ps-mono">{{ line.item_code }}</td>
+          <td>
+            {{ line.item_name_th }}
+            <div v-if="line.item_name_en" class="ps-en">{{ line.item_name_en }}</div>
+          </td>
+          <td class="ps-center">{{ line.unit_name_th || '-' }}</td>
+          <td class="ps-center ps-mono">{{ line.item_min ?? '-' }} / {{ line.item_max ?? '-' }}</td>
+          <td class="ps-right ps-mono">{{ line.qty_system.toFixed(2) }}</td>
+          <td class="ps-counted"></td>
+          <td class="ps-note">{{ line.editNote || '' }}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Signature Section -->
+    <div class="ps-footer">
+      <div class="ps-sig-block">
+        <div>ผู้นับ ...............................................</div>
+        <div class="ps-sig-sub">( ......................................... )</div>
+        <div>วันที่นับ .............. / .............. / ..............</div>
+      </div>
+      <div class="ps-sig-block">
+        <div>ผู้ตรวจสอบ ..........................................</div>
+        <div class="ps-sig-sub">( ......................................... )</div>
+        <div>วันที่ตรวจ .............. / .............. / ..............</div>
+      </div>
+      <div class="ps-sig-block">
+        <div>ผู้อนุมัติ ............................................</div>
+        <div class="ps-sig-sub">( ......................................... )</div>
+        <div>วันที่อนุมัติ ........... / .............. / ..............</div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <style scoped>
@@ -412,4 +498,80 @@
   :deep(.p-inputnumber-input) {
     width: 100%;
   }
+</style>
+
+<style>
+/* ── Hidden in normal view ───────────────────────── */
+.print-section { display: none; }
+
+/* ── Print layout ────────────────────────────────── */
+@media print {
+  @page { size: A4 portrait; margin: 12mm 10mm; }
+
+  /* Hide everything except print-section */
+  body * { visibility: hidden; }
+  .print-section,
+  .print-section * { visibility: visible; }
+  .print-section {
+    display: block !important;
+    position: absolute;
+    inset: 0;
+    padding: 0;
+    font-family: 'TH Sarabun New', 'Sarabun', 'Noto Sans Thai', sans-serif;
+    font-size: 10pt;
+    color: #000;
+  }
+
+  /* Print Header */
+  .ps-header { margin-bottom: 6pt; }
+  .ps-title {
+    font-size: 14pt;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 6pt;
+    border-bottom: 2px solid #000;
+    padding-bottom: 4pt;
+  }
+  .ps-info { width: 100%; border-collapse: collapse; font-size: 9.5pt; }
+  .ps-info td { padding: 2pt 6pt; }
+
+  /* Print Table */
+  .ps-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 9pt;
+    margin-top: 6pt;
+  }
+  .ps-table thead tr { background-color: #e5e7eb !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .ps-table th,
+  .ps-table td {
+    border: 1px solid #555;
+    padding: 3pt 4pt;
+    vertical-align: middle;
+  }
+  .ps-table th { font-weight: 700; text-align: center; }
+  .ps-table tbody tr:nth-child(even) { background-color: #f9fafb !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .ps-table tbody tr { page-break-inside: avoid; }
+
+  /* Counted cell — blank box for writing */
+  .ps-counted { background-color: #fffbeb !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+  .ps-mono { font-family: 'Courier New', monospace; font-size: 8.5pt; }
+  .ps-center { text-align: center; }
+  .ps-right { text-align: right; }
+  .ps-en { font-size: 7.5pt; color: #555; margin-top: 1pt; }
+  .ps-note { font-size: 8.5pt; color: #444; }
+
+  /* Signature Section */
+  .ps-footer {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 20pt;
+    padding-top: 10pt;
+    border-top: 1px solid #888;
+    page-break-inside: avoid;
+  }
+  .ps-sig-block { text-align: center; font-size: 9.5pt; line-height: 1.8; }
+  .ps-sig-sub { color: #555; }
+}
 </style>
