@@ -299,7 +299,7 @@
                 <Button
                   v-if="data.active_count_id"
                   icon="pi pi-pencil-square"
-                  label="ต่อการนับ"
+                  label="กำลังนับ"
                   size="small"
                   class="p-button-warning"
                   @click="navigateToCount(data.active_count_id)"

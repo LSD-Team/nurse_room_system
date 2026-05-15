@@ -162,6 +162,8 @@ export class PhysicalCountService {
       { CountId: countId },
     );
 
+    this.logger.debug(`getComparison recordsets.length=${recordsets?.length}, set0.length=${recordsets?.[0]?.length}, set1.length=${recordsets?.[1]?.length}`);
+
     const header: IPhysicalCountHeader = recordsets?.[0]?.[0] ?? null;
     const lines: IPhysicalCountLine[] = recordsets?.[1] ?? [];
 
