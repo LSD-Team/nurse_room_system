@@ -162,11 +162,11 @@
 
   const statusOptions = [
     { label: 'ทั้งหมด', value: null },
-    { label: 'OPEN — เปิด', value: 'OPEN' },
-    { label: 'COUNTING — กำลังนับ', value: 'COUNTING' },
-    { label: 'PENDING_APPROVAL — รออนุมัติ', value: 'PENDING_APPROVAL' },
-    { label: 'SNAPSHOT_DONE — บันทึกแล้ว', value: 'SNAPSHOT_DONE' },
-    { label: 'CLOSED — ปิดแล้ว', value: 'CLOSED' },
+    { label: 'OPEN', value: 'OPEN' },
+    { label: 'COUNTING', value: 'COUNTING' },
+    { label: 'PENDING_APPROVAL', value: 'PENDING_APPROVAL' },
+    { label: 'SNAPSHOT_DONE', value: 'SNAPSHOT_DONE' },
+    { label: 'CLOSED', value: 'CLOSED' },
   ];
 
   const filteredPeriods = computed(() =>
@@ -186,16 +186,7 @@
     return map[status] || 'secondary';
   };
 
-  const statusLabel = (status: string) => {
-    const map: Record<string, string> = {
-      OPEN: 'OPEN — เปิด',
-      COUNTING: 'COUNTING — กำลังนับ',
-      PENDING_APPROVAL: 'PENDING_APPROVAL — รออนุมัติ',
-      SNAPSHOT_DONE: 'SNAPSHOT_DONE — บันทึกแล้ว',
-      CLOSED: 'CLOSED — ปิดแล้ว',
-    };
-    return map[status] || status;
-  };
+  const statusLabel = (status: string) => status;
 </script>
 
 <template>
