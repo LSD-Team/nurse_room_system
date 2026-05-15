@@ -132,6 +132,12 @@
           ],
         },
         {
+          label: 'บันทึก Stock ประจำเดือน',
+          icon: 'pi pi-fw pi-calendar',
+          color: 'text-amber-400',
+          to: '/stock-monthly-record',
+        },
+        {
           label: 'ข้อมูลพยาบาล',
           icon: 'pi pi-fw pi-id-card',
           color: 'text-emerald-300',

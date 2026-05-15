@@ -150,6 +150,12 @@ const routes: RouteRecordRaw[] = [
         component: () => import('@/views/pages/Empty.vue'),
       },
 
+      {
+        path: 'stock-monthly-record',
+        name: 'stockMonthlyRecord',
+        component: () => import('@/views/pages/StockMonthlyRecord.vue'),
+      },
+
       // ===== ข้อมูลหลัก (Master Data) =====
       {
         path: 'suppliers',
