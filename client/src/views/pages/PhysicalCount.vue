@@ -23,12 +23,16 @@
   const errorMsg = ref('');
 
   // Dialog states
+  const showCreatePeriodDialog = ref(false);
   const showCreateDialog = ref(false);
   const showCountingDialog = ref(false);
   const showComparisonDialog = ref(false);
   const showSubmitDialog = ref(false);
   const showApprovalDialog = ref(false);
   const showRejectDialog = ref(false);
+
+  // Form data - Period Creation
+  const periodEnd = ref<Date | null>(null);
 
   // Form data
   const selectedPeriodCode = ref<string>('');
@@ -69,6 +73,42 @@
   async function openCreateDialog() {
     selectedPeriodCode.value = '';
     showCreateDialog.value = true;
+  }
+
+  async function openCreatePeriodDialog() {
+    periodEnd.value = null;
+    showCreatePeriodDialog.value = true;
+  }
+
+  async function handleCreatePeriod() {
+    if (!periodEnd.value) {
+      Swal.fire('ข้อผิดพลาด', 'กรุณาเลือกวันที่สิ้นสุด Period', 'warning');
+      return;
+    }
+
+    try {
+      loading.value = true;
+      const formatDate = (date: Date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      };
+      
+      const result = await PhysicalCountService.createPeriod(formatDate(periodEnd.value));
+      await Swal.fire(
+        'สำเร็จ',
+        `สร้าง Period ${result.period_code} เสร็จแล้ว`,
+        'success'
+      );
+      showCreatePeriodDialog.value = false;
+      // หลังสร้าง Period สำเร็จ อาจต้องเรียก refresh periods list
+      // แต่สำหรับตอนนี้ไม่มี periods dropdown ให้ update
+    } catch (error: any) {
+      Swal.fire('ข้อผิดพลาด', error.message, 'error');
+    } finally {
+      loading.value = false;
+    }
   }
 
   async function handleCreate() {
@@ -271,12 +311,20 @@
       <div class="card">
         <div class="flex align-items-center justify-content-between w-full mb-4">
           <span class="text-2xl font-bold">นับสต็อกยา/เวชภัณฑ์</span>
-          <Button
-            icon="pi pi-plus"
-            label="สร้างการนับใหม่"
-            @click="openCreateDialog"
-            class="p-button-success"
-          />
+          <div class="flex gap-2">
+            <Button
+              icon="pi pi-calendar"
+              label="สร้าง Period"
+              @click="openCreatePeriodDialog"
+              class="p-button-info"
+            />
+            <Button
+              icon="pi pi-plus"
+              label="สร้างการนับใหม่"
+              @click="openCreateDialog"
+              class="p-button-success"
+            />
+          </div>
         </div>
 
         <!-- Main Table -->
@@ -405,6 +453,44 @@
         </DataTable>
       </div>
     </div>
+
+    <!-- ═════════════════════════════════════════ Dialog: Create Period ═════════════════════════════════════════ -->
+    <Dialog
+      v-model:visible="showCreatePeriodDialog"
+      header="สร้าง Stock Period ใหม่"
+      :modal="true"
+      :style="{ width: '50vw' }"
+    >
+      <div class="grid">
+        <div class="col-12">
+          <label class="block text-sm font-semibold mb-2">
+            วันที่สิ้นสุด Period *
+          </label>
+          <Calendar
+            v-model="periodEnd"
+            dateFormat="dd/mm/yy"
+            :showIcon="true"
+            placeholder="เลือกวันที่"
+            class="w-full"
+          />
+        </div>
+      </div>
+      <template #footer>
+        <Button
+          label="ยกเลิก"
+          icon="pi pi-times"
+          @click="showCreatePeriodDialog = false"
+          class="p-button-text"
+        />
+        <Button
+          label="สร้าง Period"
+          icon="pi pi-check"
+          @click="handleCreatePeriod"
+          :loading="loading"
+          class="p-button-success"
+        />
+      </template>
+    </Dialog>
 
     <!-- ═════════════════════════════════════════ Dialog: Create ═════════════════════════════════════════ -->
     <Dialog
