@@ -12,6 +12,10 @@ import type {
   IPhysicalCountSubmitResponse,
   IPhysicalCountApproveResponse,
   IPhysicalCountRejectResponse,
+  IEditPeriodEndResult,
+  IEditPeriodEndResponse,
+  IStockPeriod,
+  IDeletePeriodResponse,
 } from './physical-count.interface';
 
 @Injectable()
@@ -248,6 +252,54 @@ export class PhysicalCountService {
     }
 
     return response;
+  }
+
+  // ────────────────────────────────────────────────────────────────
+  // 7. sp_Snapshot_04_editPeriodEnd — แก้ไขวันสิ้นสุด period (OPEN เท่านั้น)
+  // ────────────────────────────────────────────────────────────────
+  async editPeriodEnd(
+    periodCode: string,
+    newPeriodEnd: Date,
+  ): Promise<IEditPeriodEndResult> {
+    this.logger.debug(
+      `editPeriodEnd: periodCode=${periodCode}, newPeriodEnd=${newPeriodEnd.toISOString()}`,
+    );
+
+    const results = await this.databaseService.executeStoredProcedure<any>(
+      this.DATABASE_NAME,
+      'sp_Snapshot_04_editPeriodEnd',
+      {
+        PeriodCode: periodCode,
+        NewPeriodEnd: newPeriodEnd,
+      },
+    );
+
+    // SP returns 2 result sets: [0] status/message, [1] updated period record
+    const result: IEditPeriodEndResponse =
+      results && results.length > 0 ? results[0] : { Status: 'Error', Message: 'No response from SP' };
+    const period: IStockPeriod | undefined =
+      results && results.length > 1 ? results[1] : undefined;
+
+    return { result, period };
+  }
+
+  // ────────────────────────────────────────────────────────────────
+  // 8. sp_Snapshot_05_deletePeriod — ลบ period (OPEN เท่านั้น)
+  // ────────────────────────────────────────────────────────────────
+  async deletePeriod(periodCode: string): Promise<IDeletePeriodResponse> {
+    this.logger.debug(`deletePeriod: periodCode=${periodCode}`);
+
+    const results = await this.databaseService.executeStoredProcedure<IDeletePeriodResponse>(
+      this.DATABASE_NAME,
+      'sp_Snapshot_05_deletePeriod',
+      {
+        PeriodCode: periodCode,
+      },
+    );
+
+    return results && results[0]
+      ? results[0]
+      : { Status: 'Error', Message: 'No response from SP' };
   }
 
   // ────────────────────────────────────────────────────────────────

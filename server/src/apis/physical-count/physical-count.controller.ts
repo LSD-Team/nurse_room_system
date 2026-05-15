@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
 import {
   ApiOperation,
   ApiParam,
@@ -50,6 +50,44 @@ export class PhysicalCountController {
       new Date(body.periodEnd),
       this.currentUser,
     );
+  }
+
+  // ────────────────────────────────────────────────────────────────
+  // PUT /physical-count/periods/:periodCode
+  // ────────────────────────────────────────────────────────────────
+  @Put('periods/:periodCode')
+  @ApiOperation({
+    summary: 'Edit period end date (sp_Snapshot_04_editPeriodEnd) — OPEN only',
+  })
+  @ApiParam({ name: 'periodCode', type: String })
+  @ApiResponse({
+    status: 200,
+    description: 'Period end date updated successfully',
+  })
+  async editPeriodEnd(
+    @Param('periodCode') periodCode: string,
+    @Body() body: { newPeriodEnd: string },
+  ) {
+    return this.physicalCountService.editPeriodEnd(
+      periodCode,
+      new Date(body.newPeriodEnd),
+    );
+  }
+
+  // ────────────────────────────────────────────────────────────────
+  // DELETE /physical-count/periods/:periodCode
+  // ────────────────────────────────────────────────────────────────
+  @Delete('periods/:periodCode')
+  @ApiOperation({
+    summary: 'Delete period (sp_Snapshot_05_deletePeriod) — OPEN only',
+  })
+  @ApiParam({ name: 'periodCode', type: String })
+  @ApiResponse({
+    status: 200,
+    description: 'Period deleted successfully',
+  })
+  async deletePeriod(@Param('periodCode') periodCode: string) {
+    return this.physicalCountService.deletePeriod(periodCode);
   }
 
   // ────────────────────────────────────────────────────────────────

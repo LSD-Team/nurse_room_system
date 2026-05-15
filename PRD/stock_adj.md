@@ -600,7 +600,220 @@ BEGIN
 END;
 GO
 ```
+### SP เพิ่มเติม sp_Snapshot_04_editPeriodEnd สำหรับแก้ไข
+```sql
+CREATE OR ALTER PROCEDURE dbo.sp_Snapshot_04_editPeriodEnd
+    @PeriodCode   VARCHAR(20),
+    @NewPeriodEnd DATE
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SET XACT_ABORT ON;
 
+    DECLARE
+        @PeriodStart  DATE,
+        @OldPeriodEnd DATE,
+        @PeriodStatus VARCHAR(20);
+
+    BEGIN TRY
+        BEGIN TRAN;
+
+        SELECT
+            @PeriodStart  = period_start,
+            @OldPeriodEnd = period_end,
+            @PeriodStatus = period_status
+        FROM dbo.stock_periods WITH (UPDLOCK, HOLDLOCK)
+        WHERE period_code = @PeriodCode;
+
+        IF @PeriodStart IS NULL
+        BEGIN
+            SELECT
+                'Error' AS Status,
+                'ไม่พบ period_code: ' + ISNULL(@PeriodCode, '') AS Message;
+
+            ROLLBACK TRAN;
+            RETURN;
+        END;
+
+        IF ISNULL(@PeriodStatus, '') <> 'OPEN'
+        BEGIN
+            SELECT
+                'Error' AS Status,
+                'แก้ไขไม่ได้ เนื่องจาก period_status ไม่ใช่ OPEN' AS Message,
+                @PeriodCode AS period_code,
+                @PeriodStatus AS current_period_status;
+
+            ROLLBACK TRAN;
+            RETURN;
+        END;
+
+        IF @NewPeriodEnd IS NULL
+        BEGIN
+            SELECT
+                'Error' AS Status,
+                'NewPeriodEnd ห้ามเป็นค่าว่าง' AS Message;
+
+            ROLLBACK TRAN;
+            RETURN;
+        END;
+
+        IF @NewPeriodEnd < @PeriodStart
+        BEGIN
+            SELECT
+                'Error' AS Status,
+                'period_end ใหม่ ('
+                + CONVERT(VARCHAR(10), @NewPeriodEnd, 120)
+                + ') ต้องไม่น้อยกว่า period_start ('
+                + CONVERT(VARCHAR(10), @PeriodStart, 120)
+                + ')' AS Message;
+
+            ROLLBACK TRAN;
+            RETURN;
+        END;
+
+        IF EXISTS (
+            SELECT 1
+            FROM dbo.stock_periods WITH (HOLDLOCK)
+            WHERE period_code <> @PeriodCode
+              AND period_start <= @NewPeriodEnd
+              AND @PeriodStart <= period_end
+        )
+        BEGIN
+            SELECT
+                'Error' AS Status,
+                'แก้ไขไม่ได้: ช่วงวันที่ใหม่ซ้อนทับกับ period อื่น' AS Message;
+
+            ROLLBACK TRAN;
+            RETURN;
+        END;
+
+        UPDATE dbo.stock_periods
+        SET period_end = @NewPeriodEnd
+        WHERE period_code = @PeriodCode
+          AND period_status = 'OPEN';
+
+        IF @@ROWCOUNT = 0
+        BEGIN
+            SELECT
+                'Error' AS Status,
+                'แก้ไขไม่สำเร็จ อาจมีการเปลี่ยนสถานะระหว่างทำรายการ' AS Message;
+
+            ROLLBACK TRAN;
+            RETURN;
+        END;
+
+        COMMIT TRAN;
+
+        SELECT
+            'Success' AS Status,
+            'แก้ไข period_end สำเร็จ' AS Message,
+            @PeriodCode AS period_code,
+            @OldPeriodEnd AS old_period_end,
+            @NewPeriodEnd AS new_period_end;
+
+        SELECT
+            period_code,
+            period_start,
+            period_end,
+            created_at,
+            created_by,
+            period_status
+        FROM dbo.stock_periods
+        WHERE period_code = @PeriodCode;
+
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0
+            ROLLBACK TRAN;
+
+        SELECT
+            'Error' AS Status,
+            ERROR_MESSAGE() AS Message;
+    END CATCH;
+END;
+GO
+```
+### SP เพิ่มเติม sp_Snapshot_05_deletePeriod
+```sql
+CREATE OR ALTER PROCEDURE dbo.sp_Snapshot_05_deletePeriod
+    @PeriodCode VARCHAR(20)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SET XACT_ABORT ON;
+
+    DECLARE
+        @PeriodStart  DATE,
+        @PeriodEnd    DATE,
+        @PeriodStatus VARCHAR(20);
+
+    BEGIN TRY
+        BEGIN TRAN;
+
+        SELECT
+            @PeriodStart  = period_start,
+            @PeriodEnd    = period_end,
+            @PeriodStatus = period_status
+        FROM dbo.stock_periods WITH (UPDLOCK, HOLDLOCK)
+        WHERE period_code = @PeriodCode;
+
+        IF @PeriodStart IS NULL
+        BEGIN
+            SELECT
+                'Error' AS Status,
+                'ไม่พบ period_code: ' + ISNULL(@PeriodCode, '') AS Message;
+
+            ROLLBACK TRAN;
+            RETURN;
+        END;
+
+        IF ISNULL(@PeriodStatus, '') <> 'OPEN'
+        BEGIN
+            SELECT
+                'Error' AS Status,
+                'ลบไม่ได้ เนื่องจาก period_status ไม่ใช่ OPEN' AS Message,
+                @PeriodCode AS period_code,
+                @PeriodStatus AS current_period_status;
+
+            ROLLBACK TRAN;
+            RETURN;
+        END;
+
+        DELETE FROM dbo.stock_periods
+        WHERE period_code = @PeriodCode
+          AND period_status = 'OPEN';
+
+        IF @@ROWCOUNT = 0
+        BEGIN
+            SELECT
+                'Error' AS Status,
+                'ลบไม่สำเร็จ อาจมีการเปลี่ยนสถานะระหว่างทำรายการ' AS Message;
+
+            ROLLBACK TRAN;
+            RETURN;
+        END;
+
+        COMMIT TRAN;
+
+        SELECT
+            'Success' AS Status,
+            'ลบ period สำเร็จ' AS Message,
+            @PeriodCode AS period_code,
+            @PeriodStart AS deleted_period_start,
+            @PeriodEnd AS deleted_period_end;
+
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0
+            ROLLBACK TRAN;
+
+        SELECT
+            'Error' AS Status,
+            ERROR_MESSAGE() AS Message;
+    END CATCH;
+END;
+GO
+```
 ---
 
 ## 7. SQL: แก้ไข SP ที่มีอยู่แล้ว

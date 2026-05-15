@@ -11,16 +11,31 @@ import type {
 } from '@/interfaces/physical-count.interfaces';
 
 export class PhysicalCountService {
-  // โ"€โ"€โ"€ ดึงรายการ periods ทั้งหมด โ"€โ"€โ"€
+  // ─── ดึงรายการ periods ทั้งหมด ───
   static async getAvailablePeriods(): Promise<any[]> {
     return Api.get<any[]>('/physical-count/periods');
   }
 
-  // โ"€โ"€โ"€ สร้าง Period ใหม่ โ"€โ"€โ"€
+  // ─── สร้าง Period ใหม่ ───
   static async createPeriod(
     periodEnd: string
   ): Promise<{ period_code: string; period_start: string; period_end: string; period_status: string }> {
     return Api.post('/physical-count/periods', { periodEnd });
+  }
+
+  // ─── แก้ไขวันสิ้นสุด Period (OPEN เท่านั้น) ───
+  static async editPeriodEnd(
+    periodCode: string,
+    newPeriodEnd: string,
+  ): Promise<{ result: { Status: string; Message: string; period_code?: string; old_period_end?: string; new_period_end?: string }; period?: any }> {
+    return Api.put(`/physical-count/periods/${periodCode}`, { newPeriodEnd });
+  }
+
+  // ─── ลบ Period (OPEN เท่านั้น) ───
+  static async deletePeriod(
+    periodCode: string,
+  ): Promise<{ Status: string; Message: string; period_code?: string; deleted_period_start?: string; deleted_period_end?: string }> {
+    return Api.delete(`/physical-count/periods/${periodCode}`);
   }
 
   // โ"€โ"€โ"€ ดึงข้อมูลการนับสต็อก โ"€โ"€โ"€

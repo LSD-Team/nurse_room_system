@@ -108,3 +108,39 @@ export interface ISpResponse {
   Status: number;
   Message: string;
 }
+
+// Result from sp_Snapshot_04_editPeriodEnd (result set 1)
+export interface IEditPeriodEndResponse {
+  Status: string; // 'Success' | 'Error'
+  Message: string;
+  period_code?: string;
+  old_period_end?: string;
+  new_period_end?: string;
+  current_period_status?: string;
+}
+
+// Result from sp_Snapshot_04_editPeriodEnd (result set 2 - updated period record)
+export interface IStockPeriod {
+  period_code: string;
+  period_start: string;
+  period_end: string;
+  created_at: string;
+  created_by: string;
+  period_status: string;
+}
+
+// Combined response from sp_Snapshot_04_editPeriodEnd
+export interface IEditPeriodEndResult {
+  result: IEditPeriodEndResponse;
+  period?: IStockPeriod;
+}
+
+// Result from sp_Snapshot_05_deletePeriod
+export interface IDeletePeriodResponse {
+  Status: string; // 'Success' | 'Error'
+  Message: string;
+  period_code?: string;
+  deleted_period_start?: string;
+  deleted_period_end?: string;
+  current_period_status?: string;
+}
