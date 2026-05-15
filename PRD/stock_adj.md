@@ -1121,57 +1121,6 @@ BEGIN
                 adjustments, net_movement, expected_closing,
                 actual_closing, diff_qty, GETDATE(), @CreatedBy
             FROM #SnapshotPreview;
-```
-
----
-
-## 12. Implementation Checklist
-
-### Phase 1: Database Setup
-- [x] สร้างตาราง physical_count_headers
-- [x] สร้างตาราง physical_count_lines
-- [x] แก้ไข sp_SyncPhysicalStock (เพิ่ม @ReturnResult param)
-- [x] แก้ไข sp_Snapshot_02_CreatePeriodStockSnapshot (เพิ่ม @ReturnResult param, รับ PENDING_APPROVAL)
-- [x] สร้าง sp_PhysCount_01_Create
-- [x] สร้าง sp_PhysCount_02_SaveLines
-- [x] สร้าง sp_PhysCount_03_GetComparison
-- [x] สร้าง sp_PhysCount_04_Submit
-- [x] สร้าง sp_PhysCount_05_Approve
-- [x] สร้าง sp_PhysCount_06_Reject
-- [x] ทดสอบ SQL queries ทั้งหมด
-
-### Phase 2: Backend API (NestJS)
-- [x] สร้าง physical-count.interface.ts (DTOs)
-- [x] สร้าง physical-count.service.ts (6 methods)
-- [x] สร้าง physical-count.controller.ts (6 endpoints)
-- [x] สร้าง physical-count.module.ts
-- [x] ลงทะเบียน PhysicalCountModule ใน app.module.ts
-- [x] เพิ่ม Email Notifications (3 types):
-  - [x] APPROVAL_PHYSICAL_COUNT
-  - [x] PHYSICAL_COUNT_APPROVED
-  - [x] PHYSICAL_COUNT_REJECTED
-- [x] สร้าง email templates (3 ไฟล์)
-- [x] ทดสอบ pnpm build (server)
-
-### Phase 3: Frontend (Vue 3)
-- [x] สร้าง physical-count.service.ts (client)
-- [x] สร้าง physical-count.interfaces.ts
-- [x] สร้าง PhysicalCount.vue page
-- [x] เพิ่ม route ใน router/index.ts
-- [x] เพิ่ม menu item ใน "ปรับยอด" section
-- [x] ทดสอบ pnpm build (client)
-
-### Phase 4: Integration Testing
-- [ ] ทดสอบ 6-step flow จากเริ่มต้นจนจบ
-- [ ] ทดสอบ reject → recount flow
-- [ ] ทดสอบ stock movement ระหว่างรอการอนุมัติ
-- [ ] ทดสอบ email notifications
-- [ ] ทดสอบ snapshot data เหมาะสม
-
-### Phase 5: Documentation & Deployment
-- [ ] เตรียม migration scripts
-- [ ] ทดสอบ end-to-end ใน production-like environment
-- [ ] เขียน user guide
 
             UPDATE stock_periods
             SET period_status = 'SNAPSHOT_DONE'
@@ -1204,30 +1153,48 @@ GO
 > **รันตามลำดับนี้เท่านั้น** เพราะมี FK dependency
 
 ```
-1. CREATE TABLE physical_count_headers     (หัวข้อ 5)
-2. CREATE TABLE physical_count_lines       (หัวข้อ 5)
-3. ALTER sp_SyncPhysicalStock              (หัวข้อ 7.1 — เพิ่ม @ReturnResult เพื่อ future use)
-4. ALTER sp_Snapshot_02_CreatePeriodStockSnapshot  (หัวข้อ 7.2 — เพิ่ม @ReturnResult + รับ PENDING_APPROVAL)
-5. CREATE sp_PhysCount_01_Create           (หัวข้อ 6)
-6. CREATE sp_PhysCount_02_SaveLines        (หัวข้อ 6)
-7. CREATE sp_PhysCount_03_GetComparison    (หัวข้อ 6)
-8. CREATE sp_PhysCount_04_Submit           (หัวข้อ 6)
-9. CREATE sp_PhysCount_05_Approve          (หัวข้อ 6 — ใช้ diff_qty โดยตรง ไม่ผ่าน sp_SyncPhysicalStock)
-10. CREATE sp_PhysCount_06_Reject          (หัวข้อ 6)
+1.  CREATE TABLE physical_count_headers                    (หัวข้อ 5)
+2.  CREATE TABLE physical_count_lines                      (หัวข้อ 5)
+3.  ALTER sp_SyncPhysicalStock                             (หัวข้อ 7.1 — เพิ่ม @ReturnResult)
+4.  ALTER sp_Snapshot_02_CreatePeriodStockSnapshot         (หัวข้อ 7.2 — เพิ่ม @ReturnResult + รับ PENDING_APPROVAL)
+5.  CREATE OR ALTER sp_Snapshot_04_editPeriodEnd           (หัวข้อ 6.1 — แก้ไข period_end)
+6.  CREATE OR ALTER sp_Snapshot_05_deletePeriod            (หัวข้อ 6.1 — ลบ period)
+7.  CREATE sp_PhysCount_01_Create                          (หัวข้อ 6)
+8.  CREATE sp_PhysCount_02_SaveLines                       (หัวข้อ 6)
+9.  CREATE OR ALTER sp_PhysCount_03_GetComparison          (หัวข้อ 6 + PRD/05_alter_sp03_comparison_extra_cols.sql)
+10. CREATE sp_PhysCount_04_Submit                          (หัวข้อ 6)
+11. CREATE sp_PhysCount_05_Approve                         (หัวข้อ 6 — ใช้ diff_qty โดยตรง)
+12. CREATE sp_PhysCount_06_Reject                          (หัวข้อ 6)
 ```
+
+> **หมายเหตุ**: ถ้า sp_PhysCount_03_GetComparison ถูกสร้างไปแล้ว ให้รัน `PRD/05_alter_sp03_comparison_extra_cols.sql`
+> เพื่อเพิ่มคอลัมน์ใหม่ 6 คอลัมน์ (item_name_en, item_min, item_max, snapshot_prev_qty, received_qty, issued_qty)
 
 ---
 
-## 9. API Plan (NestJS)
+## 9. API Endpoints (NestJS — Implemented)
 
+### Period Management
+| Method | Endpoint | SP / Query | Role |
+|--------|----------|-----------|------|
+| GET | `/physical-count/periods` | SELECT stock_periods | All |
+| GET | `/physical-count/by-period/:periodCode` | SELECT physical_count_headers | All |
+| POST | `/physical-count/periods` | sp_Snapshot_01_CreateStockPeriod | Staff |
+| PUT | `/physical-count/periods/:periodCode` | sp_Snapshot_04_editPeriodEnd | Staff |
+| DELETE | `/physical-count/periods/:periodCode` | sp_Snapshot_05_deletePeriod | Staff |
+
+### Physical Count Workflow
 | Method | Endpoint | SP ที่เรียก | Role |
 |--------|----------|------------|------|
 | POST | `/physical-count/create` | sp_PhysCount_01_Create | Staff |
-| PUT | `/physical-count/:id/lines` | sp_PhysCount_02_SaveLines | Staff |
-| GET | `/physical-count/:id/comparison` | sp_PhysCount_03_GetComparison | Staff, GROUP_LEAD |
-| PUT | `/physical-count/:id/submit` | sp_PhysCount_04_Submit | Staff |
-| PUT | `/physical-count/:id/approve` | sp_PhysCount_05_Approve | GROUP_LEAD |
-| PUT | `/physical-count/:id/reject` | sp_PhysCount_06_Reject | GROUP_LEAD |
+| POST | `/physical-count/:countId/save-lines` | sp_PhysCount_02_SaveLines | Staff |
+| GET | `/physical-count/:countId/comparison` | sp_PhysCount_03_GetComparison | Staff, GROUP_LEAD |
+| POST | `/physical-count/:countId/submit` | sp_PhysCount_04_Submit | Staff |
+| POST | `/physical-count/:countId/approve` | sp_PhysCount_05_Approve | GROUP_LEAD |
+| POST | `/physical-count/:countId/reject` | sp_PhysCount_06_Reject | GROUP_LEAD |
+
+> **หมายเหตุ SP Response**: PhysCount SPs (01-06) ส่ง `Status: number (0|1)` — ตรวจด้วย `result.Status === 1`
+> Snapshot SPs (01, 04, 05) ส่ง `Status: string ('Success'|'Error')` — ตรวจด้วย `result.Status === 'Success'`
 
 ---
 
@@ -1321,3 +1288,91 @@ server/src/email/
     physical-count-approved.template.html
     physical-count-rejected.template.html
 ```
+
+---
+
+## 12. Implementation Checklist
+
+### Phase 1: Database Setup ✅
+- [x] สร้างตาราง physical_count_headers
+- [x] สร้างตาราง physical_count_lines
+- [x] ALTER sp_SyncPhysicalStock (เพิ่ม @ReturnResult param)
+- [x] ALTER sp_Snapshot_02_CreatePeriodStockSnapshot (เพิ่ม @ReturnResult + รับ PENDING_APPROVAL)
+- [x] CREATE OR ALTER sp_Snapshot_04_editPeriodEnd
+- [x] CREATE OR ALTER sp_Snapshot_05_deletePeriod
+- [x] CREATE sp_PhysCount_01_Create
+- [x] CREATE sp_PhysCount_02_SaveLines
+- [x] CREATE sp_PhysCount_03_GetComparison (initial version)
+- [x] CREATE sp_PhysCount_04_Submit
+- [x] CREATE sp_PhysCount_05_Approve
+- [x] CREATE sp_PhysCount_06_Reject
+- [x] ทดสอบ SQL workflow ทั้งหมด (PRD/03_test_physical_count_sps.sql)
+- [ ] รัน PRD/05_alter_sp03_comparison_extra_cols.sql ใน SSMS ⚠️ (ยังค้างอยู่)
+
+### Phase 2: Backend API (NestJS) ✅
+- [x] สร้าง physical-count.interface.ts (IPhysicalCountHeader, IPhysicalCountLine + ฟิลด์ใหม่)
+- [x] สร้าง physical-count.service.ts (10 methods รวม employee name enrichment)
+- [x] สร้าง physical-count.controller.ts (10 endpoints)
+- [x] สร้าง physical-count.module.ts
+- [x] ลงทะเบียน PhysicalCountModule ใน app.module.ts
+- [x] เพิ่ม executeStoredProcedureMultiple() ใน DatabaseService (สำหรับ SP03 2 result sets)
+- [x] เพิ่ม debug logging ใน getComparison()
+- [x] เพิ่ม Email Notifications (APPROVAL_PHYSICAL_COUNT, PHYSICAL_COUNT_APPROVED, PHYSICAL_COUNT_REJECTED)
+- [x] อัพเดท email.service.ts (sendPhysicalCountEmail + template mapping)
+- [x] สร้าง email templates (3 ไฟล์)
+- [x] pnpm build (server) ✅
+
+### Phase 3: Frontend (Vue 3) — ส่วนใหญ่เสร็จแล้ว
+- [x] เพิ่ม menu "บันทึก Stock ประจำเดือน" ใน AppMenu.vue
+- [x] สร้าง StockMonthlyRecord.vue (Step 1 — Period Management)
+  - [x] แสดง stock_periods ทั้งหมด พร้อม filter ตาม period_status
+  - [x] สร้าง/แก้ไข/ลบ period (Dialog)
+  - [x] ปุ่ม "เริ่มนับ Stock" → เรียก sp_PhysCount_01_Create → navigate ไป StockCountDetail
+  - [x] status แสดงเป็น English passthrough (ไม่แปลไทย)
+- [x] สร้าง StockCountDetail.vue (Steps 2-4)
+  - [x] DataTable items ทั้งหมด พร้อมช่องกรอก qty_counted
+  - [x] แสดง item_name_en, Min, Max, snapshot ก่อนหน้า, รับเข้า, ใช้ไป
+  - [x] ปุ่ม "ยอดนับจริงอัตโนมัติ" (copy qty_system → qty_counted)
+  - [x] แสดงชื่อผู้สร้าง (eng_name จาก view_employee_all)
+  - [x] ปุ่ม "พิมพ์ใบนับ" + A4 print sheet (visibility trick CSS)
+  - [x] ปุ่ม "บันทึก" (save-lines) + ปุ่ม "ส่งขออนุมัติ" (submit)
+- [x] สร้าง client/src/services/physical-count.service.ts
+- [x] สร้าง client/src/interfaces/physical-count.interfaces.ts
+- [x] เพิ่ม routes ใน router/index.ts (stockMonthlyRecord, stockCountDetail/:countId)
+- [x] pnpm build (client) ✅
+- [ ] สร้างหน้า Approval สำหรับ GROUP_LEAD (Steps 5-6) ⚠️ ยังไม่ได้ทำ
+
+### Phase 4: Integration Testing
+- [ ] ทดสอบ full workflow: OPEN → COUNTING → PENDING_APPROVAL → APPROVED
+- [ ] ทดสอบ reject → recount flow (REJECTED → COUNTING → PENDING_APPROVAL)
+- [ ] ทดสอบ stock diff: stock เปลี่ยนระหว่างนับกับอนุมัติ (stock_on_hand + diff_qty = ถูกต้อง)
+- [ ] ทดสอบ email notifications ทั้ง 3 กรณี
+
+---
+
+## 13. Active Issues / สิ่งที่ค้างอยู่
+
+### ⚠️ ต้องรันใน SSMS ก่อนใช้งาน StockCountDetail
+```sql
+-- รัน PRD/05_alter_sp03_comparison_extra_cols.sql
+-- เพิ่ม 6 คอลัมน์ใหม่ใน SP03 Result Set 2:
+-- item_name_en, item_min, item_max, snapshot_prev_qty, received_qty, issued_qty
+```
+
+### ⚠️ Debug: getComparison คืนค่าว่าง
+ถ้า StockCountDetail แสดงตารางว่าง ให้ดู server log หาบรรทัด:
+```
+[PhysicalCountService] getComparison recordsets.length=X, set0.length=Y, set1.length=Z
+```
+- `recordsets.length=0` → SP error (ดู MSSQL error log)
+- `set0.length=0` → ไม่มี count_id นี้ใน physical_count_headers
+- `set1.length=0` → count มีอยู่แต่ physical_count_lines ว่าง (SP01 มีปัญหา)
+
+### ⚠️ Phase 3 Steps 5-6 ยังไม่ได้ทำ (GROUP_LEAD Approval)
+สิ่งที่ต้องสร้างต่อ:
+1. หน้าแสดงรายการ count ที่มี `count_status = SUBMITTED` สำหรับ GROUP_LEAD
+2. กดดูรายละเอียด → แสดง comparison (read-only view เหมือน StockCountDetail)
+3. ปุ่ม "อนุมัติ" → POST `/physical-count/:countId/approve`
+4. ปุ่ม "ปฏิเสธ" → Dialog กรอกเหตุผล → POST `/physical-count/:countId/reject`
+5. หลัง approve → `count_status = APPROVED`, `period_status = SNAPSHOT_DONE`, email แจ้ง submitted_by
+6. หลัง reject → `count_status = REJECTED`, `period_status = COUNTING`, email แจ้ง submitted_by + เหตุผล
