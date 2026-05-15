@@ -1,79 +1,74 @@
-// ===== Physical Count Header (master record) =====
+// ===== Stock Period (with active count info from getAvailablePeriods) =====
+export interface IStockPeriod {
+  period_code: string;
+  period_start: string;
+  period_end: string;
+  period_status: string;
+  created_by: string;
+  created_at: string;
+  active_count_id: number | null;
+  active_count_status: 'DRAFT' | 'SUBMITTED' | null;
+}
+
+// ===== Physical Count Header (from SP03 result set 1) =====
 export interface IPhysicalCountHeader {
   count_id: number;
-  count_no: string;
   period_code: string;
-  period_name: string;
-  count_status: 'DRAFT' | 'PENDING_APPROVAL' | 'APPROVED' | 'REJECTED';
-  submitted_at: string | null;
+  period_start: string;
+  period_end: string;
+  count_status: 'DRAFT' | 'SUBMITTED' | 'APPROVED' | 'REJECTED';
+  note: string | null;
+  created_by: string;
+  created_at: string;
   submitted_by: string | null;
-  approved_at: string | null;
+  submitted_at: string | null;
   approved_by: string | null;
-  rejected_at: string | null;
-  rejected_by: string | null;
-  rejection_reason: string | null;
-  created_at: string;
-  created_by: string;
-  updated_at: string | null;
-  updated_by: string | null;
+  approved_at: string | null;
+  rejected_reason: string | null;
 }
 
-// ===== Physical Count Line (item detail) =====
+// ===== Physical Count Line (from SP03 result set 2) =====
 export interface IPhysicalCountLine {
-  count_line_id: number;
-  count_id: number;
+  line_id: number;
   item_id: number;
   item_code: string;
   item_name_th: string;
-  item_name_en: string;
-  qty_system: number; // ยอดระบบ (frozen at create time)
-  qty_counted: number; // ยอดนับ
-  unit_code: string;
-  unit_name_th: string;
-  remark: string | null;
-  created_at: string;
-  created_by: string;
-  updated_at: string | null;
-  updated_by: string | null;
-}
-
-// ===== Physical Count Comparison (for reporting) =====
-export interface IPhysicalCountComparison {
-  item_id: number;
-  item_code: string;
-  item_name_th: string;
+  unit_name_th: string | null;
   qty_system: number;
   qty_counted: number;
   diff_qty: number;
-  unit_code: string;
-  unit_name_th: string;
-  remark: string | null;
+  diff_status: 'เกิน' | 'ขาด' | 'ตรง';
+  note: string | null;
+}
+
+// ===== SP03 full response =====
+export interface IPhysicalCountComparison {
+  header: IPhysicalCountHeader;
+  lines: IPhysicalCountLine[];
 }
 
 // ===== DTOs for API Requests =====
 
 export interface IPhysicalCountCreateDto {
-  period_code: string;
+  PeriodCode: string;
+  Note?: string;
 }
 
-export interface IPhysicalCountLineDetail {
+// Line item for save (sent to SP02 as JSON array)
+export interface IPhysicalCountLineEdit {
   item_id: number;
   qty_counted: number;
-  remark?: string;
-}
-
-export interface IPhysicalCountSaveLinesDto {
-  lines: IPhysicalCountLineDetail[];
+  note: string;
 }
 
 export interface IPhysicalCountSubmitDto {
-  note?: string;
+  // No body — user identity comes from JWT
 }
 
 export interface IPhysicalCountApproveDto {
-  note?: string;
+  // No body — user identity comes from JWT
 }
 
 export interface IPhysicalCountRejectDto {
-  rejection_reason: string;
+  RejectedReason: string;
 }

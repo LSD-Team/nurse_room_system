@@ -1,19 +1,16 @@
 import { Api } from '@/services/api.service';
 import type {
+  IStockPeriod,
   IPhysicalCountHeader,
-  IPhysicalCountLine,
   IPhysicalCountComparison,
+  IPhysicalCountLineEdit,
   IPhysicalCountCreateDto,
-  IPhysicalCountSaveLinesDto,
-  IPhysicalCountSubmitDto,
-  IPhysicalCountApproveDto,
-  IPhysicalCountRejectDto,
 } from '@/interfaces/physical-count.interfaces';
 
 export class PhysicalCountService {
-  // ─── ดึงรายการ periods ทั้งหมด ───
-  static async getAvailablePeriods(): Promise<any[]> {
-    return Api.get<any[]>('/physical-count/periods');
+  // ─── ดึงรายการ periods ทั้งหมด (พร้อม active_count_id) ───
+  static async getAvailablePeriods(): Promise<IStockPeriod[]> {
+    return Api.get<IStockPeriod[]>('/physical-count/periods');
   }
 
   // ─── สร้าง Period ใหม่ ───
@@ -38,70 +35,54 @@ export class PhysicalCountService {
     return Api.delete(`/physical-count/periods/${periodCode}`);
   }
 
-  // โ"€โ"€โ"€ ดึงข้อมูลการนับสต็อก โ"€โ"€โ"€
-  static async getPhysicalCounts(): Promise<IPhysicalCountHeader[]> {
-    return Api.get<IPhysicalCountHeader[]>('/physical-count');
+  // ─── ดึง active count (DRAFT/SUBMITTED) ของ period ───
+  static async getCountByPeriod(
+    periodCode: string,
+  ): Promise<IPhysicalCountHeader | null> {
+    return Api.get<IPhysicalCountHeader | null>(`/physical-count/by-period/${periodCode}`);
   }
 
-  // โ"€โ"€โ"€ ดึงรายละเอียดการนับสต็อก โ"€โ"€โ"€
-  static async getPhysicalCountDetail(
-    countId: number
-  ): Promise<IPhysicalCountHeader> {
-    return Api.get<IPhysicalCountHeader>(`/physical-count/${countId}`);
-  }
-
-  // โ"€โ"€โ"€ ดึงรายการสินค้า (lines) ของการนับ โ"€โ"€โ"€
-  static async getPhysicalCountLines(
-    countId: number
-  ): Promise<IPhysicalCountLine[]> {
-    return Api.get<IPhysicalCountLine[]>(`/physical-count/${countId}/lines`);
-  }
-
-  // โ"€โ"€โ"€ สร้างการนับสต็อกใหม่ โ"€โ"€โ"€
+  // ─── สร้างการนับสต็อกใหม่ (sp_PhysCount_01_Create) ───
   static async createPhysicalCount(
-    data: IPhysicalCountCreateDto
-  ): Promise<{ count_id: number; message: string }> {
-    return Api.post('/physical-count', data);
+    data: IPhysicalCountCreateDto,
+  ): Promise<{ Status: number; Message: string; CountId?: number; PeriodCode?: string }> {
+    return Api.post('/physical-count/create', data);
   }
 
-  // โ"€โ"€โ"€ บันทึก/แก้ไขยอดนับสินค้า โ"€โ"€โ"€
+  // ─── ดึงข้อมูล header + lines เปรียบเทียบ (sp_PhysCount_03_GetComparison) ───
+  static async getComparison(countId: number): Promise<IPhysicalCountComparison> {
+    return Api.get<IPhysicalCountComparison>(`/physical-count/${countId}/comparison`);
+  }
+
+  // ─── บันทึก/แก้ไขยอดนับ (sp_PhysCount_02_SaveLines) ───
   static async saveCountLines(
     countId: number,
-    data: IPhysicalCountSaveLinesDto
-  ): Promise<{ message: string }> {
-    return Api.post(`/physical-count/${countId}/save-lines`, data);
+    lines: IPhysicalCountLineEdit[],
+  ): Promise<{ Status: number; Message: string; UpdatedRows?: number }> {
+    return Api.post(`/physical-count/${countId}/save-lines`, {
+      JsonData: JSON.stringify(lines),
+    });
   }
 
-  // โ"€โ"€โ"€ ดูรายงานเปรียบเทียบ (ระบบ vs นับ) โ"€โ"€โ"€
-  static async getComparison(
-    countId: number
-  ): Promise<IPhysicalCountComparison[]> {
-    return Api.get<IPhysicalCountComparison[]>(
-      `/physical-count/${countId}/comparison`
-    );
-  }
-
-  // โ"€โ"€โ"€ ส่งขออนุมัติ GROUP_LEAD โ"€โ"€โ"€
+  // ─── ส่งขออนุมัติ GROUP_LEAD (sp_PhysCount_04_Submit) ───
   static async submitCount(
     countId: number,
-    data: IPhysicalCountSubmitDto
-  ): Promise<{ message: string }> {
-    return Api.post(`/physical-count/${countId}/submit`, data);
+  ): Promise<{ Status: number; Message: string; CountId?: number; PeriodCode?: string }> {
+    return Api.post(`/physical-count/${countId}/submit`, {});
   }
 
-  // โ"€โ"€โ"€ GROUP_LEAD อนุมัติ + ทำ snapshot โ"€โ"€โ"€
+  // ─── GROUP_LEAD อนุมัติ (sp_PhysCount_05_Approve) ───
   static async approveCount(
     countId: number,
-    data: IPhysicalCountApproveDto
-  ): Promise<{ message: string }> {
-    return Api.post(`/physical-count/${countId}/approve`, data);
+  ): Promise<{ Status: number; Message: string; CountId?: number; PeriodCode?: string }> {
+    return Api.post(`/physical-count/${countId}/approve`, {});
   }
 
-  // โ"€โ"€โ"€ GROUP_LEAD ปฏิเสธ โ"€โ"€โ"€
+  // ─── GROUP_LEAD ปฏิเสธ (sp_PhysCount_06_Reject) ───
   static async rejectCount(
     countId: number,
-    data: IPhysicalCountRejectDto
-  ): Promise<{ message: string }> {
-    return Api.post(`/physical-count/${countId}/reject`, data);
+    rejectedReason: string,
+  ): Promise<{ Status: number; Message: string; CountId?: number; PeriodCode?: string }> {
+    return Api.post(`/physical-count/${countId}/reject`, { RejectedReason: rejectedReason });
   }
 }

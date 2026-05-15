@@ -1,12 +1,17 @@
 <script lang="ts" setup>
   import { ref, onMounted, computed } from 'vue';
+  import { useRouter } from 'vue-router';
   import { PhysicalCountService } from '@/services/physical-count.service';
+  import type { IStockPeriod } from '@/interfaces/physical-count.interfaces';
   import { formatDate, formatSysdatetimeoffset } from '@/utils/format.utils';
   import Swal from 'sweetalert2';
 
+  const router = useRouter();
+
   // ─── State ───
-  const periods = ref<any[]>([]);
+  const periods = ref<IStockPeriod[]>([]);
   const loading = ref(false);
+  const actionLoadingCode = ref<string | null>(null);
   const statusFilter = ref<string | null>(null);
 
   // Dialog states
@@ -49,6 +54,41 @@
     } finally {
       loading.value = false;
     }
+  }
+
+  // ─── Count Actions ───
+  async function handleStartCount(period: IStockPeriod) {
+    const confirm = await Swal.fire({
+      title: 'เริ่มนับ Stock',
+      html: `เริ่มการนับ stock สำหรับ Period <strong>${period.period_code}</strong> ใช่หรือไม่?<br>
+             <small class="text-gray-500">ระบบจะแช่แข็งยอด stock ปัจจุบันเป็น baseline</small>`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#3b82f6',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'เริ่มนับ',
+      cancelButtonText: 'ยกเลิก',
+    });
+    if (!confirm.isConfirmed) return;
+
+    try {
+      actionLoadingCode.value = period.period_code;
+      const result = await PhysicalCountService.createPhysicalCount({ PeriodCode: period.period_code });
+      if (result.Status === 1 && result.CountId) {
+        router.push({ name: 'stockCountDetail', params: { countId: result.CountId } });
+      } else {
+        Swal.fire('ข้อผิดพลาด', result.Message, 'error');
+        await loadPeriods();
+      }
+    } catch (error: any) {
+      Swal.fire('ข้อผิดพลาด', error.message || 'เริ่มนับไม่สำเร็จ', 'error');
+    } finally {
+      actionLoadingCode.value = null;
+    }
+  }
+
+  function navigateToCount(countId: number) {
+    router.push({ name: 'stockCountDetail', params: { countId } });
   }
 
   function openEditDialog(period: any) {
@@ -235,24 +275,65 @@
               {{ formatSysdatetimeoffset(data.created_at as string) }}
             </template>
           </Column>
-          <Column header="การกระทำ" style="min-width: 12rem; text-align: center">
+          <Column header="การกระทำ" style="min-width: 18rem">
             <template #body="{ data }">
+              <!-- Period management: Edit / Delete (OPEN only) -->
               <template v-if="data.period_status === 'OPEN'">
                 <Button
                   icon="pi pi-pencil"
                   label="แก้ไข"
                   size="small"
-                  class="p-button-info mr-2"
+                  class="p-button-info mr-1"
                   @click="openEditDialog(data)"
                 />
                 <Button
                   icon="pi pi-trash"
                   label="ลบ"
                   size="small"
-                  class="p-button-danger"
+                  class="p-button-danger mr-1"
                   @click="handleDeletePeriod(data)"
                 />
+                <Button
+                  icon="pi pi-list-check"
+                  label="เริ่มนับ"
+                  size="small"
+                  class="p-button-primary"
+                  :loading="actionLoadingCode === data.period_code"
+                  @click="handleStartCount(data)"
+                />
               </template>
+
+              <!-- COUNTING: continue existing count OR start new count (after rejection) -->
+              <template v-else-if="data.period_status === 'COUNTING'">
+                <Button
+                  v-if="data.active_count_id"
+                  icon="pi pi-pencil-square"
+                  label="ต่อการนับ"
+                  size="small"
+                  class="p-button-warning"
+                  @click="navigateToCount(data.active_count_id)"
+                />
+                <Button
+                  v-else
+                  icon="pi pi-list-check"
+                  label="เริ่มนับใหม่"
+                  size="small"
+                  class="p-button-primary"
+                  :loading="actionLoadingCode === data.period_code"
+                  @click="handleStartCount(data)"
+                />
+              </template>
+
+              <!-- PENDING_APPROVAL: view/navigate to submitted count -->
+              <Button
+                v-else-if="data.period_status === 'PENDING_APPROVAL' && data.active_count_id"
+                icon="pi pi-eye"
+                label="ดูรายการ"
+                size="small"
+                class="p-button-secondary"
+                @click="navigateToCount(data.active_count_id)"
+              />
+
               <span v-else class="text-gray-400 text-sm">—</span>
             </template>
           </Column>

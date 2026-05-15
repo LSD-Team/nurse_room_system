@@ -22,14 +22,30 @@ export class PhysicalCountController {
   // ────────────────────────────────────────────────────────────────
   @Get('periods')
   @ApiOperation({
-    summary: 'Get all available stock periods',
+    summary: 'Get all available stock periods (with active count info)',
   })
   @ApiResponse({
     status: 200,
-    description: 'List of all stock periods',
+    description: 'List of all stock periods with active_count_id',
   })
   async getAvailablePeriods() {
     return this.physicalCountService.getAvailablePeriods();
+  }
+
+  // ────────────────────────────────────────────────────────────────
+  // GET /physical-count/by-period/:periodCode
+  // ────────────────────────────────────────────────────────────────
+  @Get('by-period/:periodCode')
+  @ApiOperation({
+    summary: 'Get active count (DRAFT/SUBMITTED) for a period',
+  })
+  @ApiParam({ name: 'periodCode', type: String })
+  @ApiResponse({
+    status: 200,
+    description: 'Active count header or null',
+  })
+  async getCountByPeriod(@Param('periodCode') periodCode: string) {
+    return this.physicalCountService.getCountByPeriod(periodCode);
   }
 
   // ────────────────────────────────────────────────────────────────

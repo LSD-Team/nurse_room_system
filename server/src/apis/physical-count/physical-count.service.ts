@@ -33,21 +33,51 @@ export class PhysicalCountService {
   }
 
   // ────────────────────────────────────────────────────────────────
-  // Get all available stock periods
+  // Get all available stock periods (with active count info)
   // ────────────────────────────────────────────────────────────────
   async getAvailablePeriods(): Promise<any[]> {
     const query = `
       SELECT 
-        period_code,
-        period_start,
-        period_end,
-        period_status,
-        created_by,
-        created_at
-      FROM stock_periods
-      ORDER BY period_code DESC
+        sp.period_code,
+        sp.period_start,
+        sp.period_end,
+        sp.period_status,
+        sp.created_by,
+        sp.created_at,
+        pch.count_id   AS active_count_id,
+        pch.count_status AS active_count_status
+      FROM stock_periods sp
+      OUTER APPLY (
+        SELECT TOP 1 count_id, count_status
+        FROM physical_count_headers
+        WHERE period_code = sp.period_code
+          AND count_status IN ('DRAFT', 'SUBMITTED')
+        ORDER BY count_id DESC
+      ) pch
+      ORDER BY sp.period_code DESC
     `;
     return this.databaseService.query<any>(this.DATABASE_NAME, query);
+  }
+
+  // ────────────────────────────────────────────────────────────────
+  // Get active count (DRAFT/SUBMITTED) for a given period
+  // ────────────────────────────────────────────────────────────────
+  async getCountByPeriod(periodCode: string): Promise<any> {
+    const query = `
+      SELECT TOP 1
+        count_id, period_code, count_status,
+        note, created_by, created_at, submitted_by, submitted_at
+      FROM physical_count_headers
+      WHERE period_code = @param0
+        AND count_status IN ('DRAFT', 'SUBMITTED')
+      ORDER BY count_id DESC
+    `;
+    const results = await this.databaseService.query<any>(
+      this.DATABASE_NAME,
+      query,
+      [periodCode],
+    );
+    return results && results.length > 0 ? results[0] : null;
   }
 
   // ────────────────────────────────────────────────────────────────

@@ -13,7 +13,6 @@
   import type {
     IPhysicalCountHeader,
     IPhysicalCountLine,
-    IPhysicalCountComparison,
   } from '@/interfaces/physical-count.interfaces';
   import Swal from 'sweetalert2';
 
@@ -40,7 +39,7 @@
   const selectedCountId = ref<number | null>(null);
   const selectedCountDetail = ref<IPhysicalCountHeader | null>(null);
   const countLines = ref<IPhysicalCountLine[]>([]);
-  const comparisonData = ref<IPhysicalCountComparison[]>([]);
+  const comparisonData = ref<IPhysicalCountLine[]>([]);
 
   // Approval form
   const approvalNote = ref('');
@@ -61,14 +60,8 @@
 
   // ─── API Calls ───
   async function loadPhysicalCounts() {
-    try {
-      loading.value = true;
-      counts.value = await PhysicalCountService.getPhysicalCounts();
-    } catch (error: any) {
-      errorMsg.value = error.message || 'ไม่สามารถโหลดข้อมูลได้';
-    } finally {
-      loading.value = false;
-    }
+    // GET /physical-count list not available; counts list is managed via StockMonthlyRecord
+    counts.value = [];
   }
 
   async function loadAvailablePeriods() {
@@ -129,9 +122,9 @@
     try {
       loading.value = true;
       const result = await PhysicalCountService.createPhysicalCount({
-        period_code: selectedPeriodCode.value,
+        PeriodCode: selectedPeriodCode.value,
       });
-      await Swal.fire('สำเร็จ', result.message, 'success');
+      await Swal.fire('สำเร็จ', result.Message, 'success');
       showCreateDialog.value = false;
       await loadPhysicalCounts();
     } catch (error: any) {
@@ -145,11 +138,9 @@
     try {
       loading.value = true;
       selectedCountId.value = countId;
-      selectedCountDetail.value =
-        await PhysicalCountService.getPhysicalCountDetail(countId);
-      countLines.value = await PhysicalCountService.getPhysicalCountLines(
-        countId
-      );
+      const data = await PhysicalCountService.getComparison(countId);
+      selectedCountDetail.value = data.header;
+      countLines.value = data.lines;
       showCountingDialog.value = true;
     } catch (error: any) {
       Swal.fire('ข้อผิดพลาด', error.message, 'error');
@@ -166,15 +157,15 @@
       const linesToSave = countLines.value.map((line) => ({
         item_id: line.item_id,
         qty_counted: line.qty_counted,
-        remark: line.remark,
+        note: line.note ?? '',
       }));
 
       const result = await PhysicalCountService.saveCountLines(
         selectedCountId.value,
-        { lines: linesToSave }
+        linesToSave,
       );
 
-      await Swal.fire('สำเร็จ', result.message, 'success');
+      await Swal.fire('สำเร็จ', result.Message, 'success');
       showCountingDialog.value = false;
       await loadPhysicalCounts();
     } catch (error: any) {
@@ -188,10 +179,9 @@
     try {
       loading.value = true;
       selectedCountId.value = countId;
-      selectedCountDetail.value =
-        await PhysicalCountService.getPhysicalCountDetail(countId);
-      comparisonData.value =
-        await PhysicalCountService.getComparison(countId);
+      const data = await PhysicalCountService.getComparison(countId);
+      selectedCountDetail.value = data.header;
+      comparisonData.value = data.lines;
       showComparisonDialog.value = true;
     } catch (error: any) {
       Swal.fire('ข้อผิดพลาด', error.message, 'error');
@@ -213,10 +203,9 @@
       loading.value = true;
       const result = await PhysicalCountService.submitCount(
         selectedCountId.value,
-        { note: approvalNote.value }
       );
 
-      await Swal.fire('สำเร็จ', result.message, 'success');
+      await Swal.fire('สำเร็จ', result.Message, 'success');
       showSubmitDialog.value = false;
       await loadPhysicalCounts();
     } catch (error: any) {
@@ -239,10 +228,9 @@
       loading.value = true;
       const result = await PhysicalCountService.approveCount(
         selectedCountId.value,
-        { note: approvalNote.value }
       );
 
-      await Swal.fire('สำเร็จ', result.message, 'success');
+      await Swal.fire('สำเร็จ', result.Message, 'success');
       showApprovalDialog.value = false;
       await loadPhysicalCounts();
     } catch (error: any) {
@@ -270,10 +258,10 @@
       loading.value = true;
       const result = await PhysicalCountService.rejectCount(
         selectedCountId.value,
-        { rejection_reason: rejectionReason.value }
+        rejectionReason.value,
       );
 
-      await Swal.fire('สำเร็จ', result.message, 'success');
+      await Swal.fire('สำเร็จ', result.Message, 'success');
       showRejectDialog.value = false;
       await loadPhysicalCounts();
     } catch (error: any) {
@@ -639,7 +627,7 @@
     >
       <div class="grid mb-4">
         <div class="col-6">
-          <p><strong>เลขที่นับ:</strong> {{ selectedCountDetail?.count_no }}</p>
+          <p><strong>เลขที่นับ:</strong> #{{ selectedCountDetail?.count_id }}</p>
         </div>
         <div class="col-6">
           <p><strong>Period:</strong> {{ selectedCountDetail?.period_code }}</p>

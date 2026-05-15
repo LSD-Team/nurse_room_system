@@ -155,6 +155,11 @@ const routes: RouteRecordRaw[] = [
         name: 'stockMonthlyRecord',
         component: () => import('@/views/pages/StockMonthlyRecord.vue'),
       },
+      {
+        path: 'stock-count-detail/:countId',
+        name: 'stockCountDetail',
+        component: () => import('@/views/pages/StockCountDetail.vue'),
+      },
 
       // ===== ข้อมูลหลัก (Master Data) =====
       {
