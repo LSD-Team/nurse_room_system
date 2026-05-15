@@ -162,13 +162,38 @@ export class PhysicalCountService {
       { CountId: countId },
     );
 
-    const header = recordsets?.[0]?.[0] ?? null;
+    const header: IPhysicalCountHeader = recordsets?.[0]?.[0] ?? null;
     const lines: IPhysicalCountLine[] = recordsets?.[1] ?? [];
 
-    return {
-      header: header as IPhysicalCountHeader,
-      lines,
-    };
+    // Enrich header with employee names from view_employee_all
+    if (header) {
+      const ids = [header.created_by, header.submitted_by, header.approved_by]
+        .filter((id): id is string => !!id);
+
+      if (ids.length > 0) {
+        const placeholders = ids.map((_, i) => `@p${i}`).join(', ');
+        const nameQuery = `SELECT ID, eng_name FROM view_employee_all WHERE ID IN (${placeholders})`;
+        const nameParams: Record<string, string> = {};
+        ids.forEach((id, i) => { nameParams[`p${i}`] = id; });
+
+        const nameRows = await this.databaseService.query<{ ID: string; eng_name: string }>(
+          this.DATABASE_NAME,
+          nameQuery,
+          nameParams,
+        );
+
+        const nameMap = new Map(nameRows.map((r) => [String(r.ID), r.eng_name]));
+        header.created_by_name  = nameMap.get(String(header.created_by))  ?? null;
+        header.submitted_by_name = header.submitted_by ? (nameMap.get(String(header.submitted_by)) ?? null) : null;
+        header.approved_by_name  = header.approved_by  ? (nameMap.get(String(header.approved_by))  ?? null) : null;
+      } else {
+        header.created_by_name   = null;
+        header.submitted_by_name = null;
+        header.approved_by_name  = null;
+      }
+    }
+
+    return { header, lines };
   }
 
   // ────────────────────────────────────────────────────────────────

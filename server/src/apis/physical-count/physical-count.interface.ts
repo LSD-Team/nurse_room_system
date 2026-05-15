@@ -42,7 +42,7 @@ export interface IPhysicalCountSaveLinesResponse {
   UpdatedRows?: number;
 }
 
-// Header result from sp_PhysCount_03_GetComparison (result set 1)
+// Header result from sp_PhysCount_03_GetComparison (result set 1) + enriched employee names
 export interface IPhysicalCountHeader {
   count_id: number;
   period_code: string;
@@ -51,10 +51,13 @@ export interface IPhysicalCountHeader {
   count_status: string;
   note: string | null;
   created_by: string;
+  created_by_name: string | null;
   created_at: string;
   submitted_by: string | null;
+  submitted_by_name: string | null;
   submitted_at: string | null;
   approved_by: string | null;
+  approved_by_name: string | null;
   approved_at: string | null;
   rejected_reason: string | null;
 }

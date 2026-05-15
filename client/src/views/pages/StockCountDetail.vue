@@ -207,9 +207,10 @@
             <div class="flex flex-wrap gap-4 text-sm text-gray-600">
               <span><strong>Period:</strong> {{ header.period_code }}</span>
               <span><strong>ช่วงเวลา:</strong> {{ formatDate(header.period_start) }} – {{ formatDate(header.period_end) }}</span>
-              <span><strong>สร้างโดย:</strong> {{ header.created_by }}</span>
+              <span><strong>สร้างโดย:</strong> {{ header.created_by_name || header.created_by }}</span>
               <span><strong>สร้างเมื่อ:</strong> {{ formatSysdatetimeoffset(header.created_at) }}</span>
-              <span v-if="header.submitted_by"><strong>ส่งโดย:</strong> {{ header.submitted_by }} เมื่อ {{ formatSysdatetimeoffset(header.submitted_at!) }}</span>
+              <span v-if="header.submitted_by"><strong>ส่งโดย:</strong> {{ header.submitted_by_name || header.submitted_by }} เมื่อ {{ formatSysdatetimeoffset(header.submitted_at!) }}</span>
+              <span v-if="header.approved_by"><strong>อนุมัติโดย:</strong> {{ header.approved_by_name || header.approved_by }} เมื่อ {{ formatSysdatetimeoffset(header.approved_at!) }}</span>
             </div>
             <!-- Rejection reason -->
             <div v-if="header.count_status === 'REJECTED' && header.rejected_reason"
