@@ -203,7 +203,7 @@
           <Button
             icon="pi pi-plus"
             label="สร้าง Period ใหม่"
-            class="p-button-success"
+            class="p-button-success mx-2"
             @click="showCreateDialog = true; newPeriodEnd = null"
           />
         </div>
