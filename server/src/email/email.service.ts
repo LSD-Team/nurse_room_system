@@ -224,6 +224,15 @@ export class EmailService {
       case ENotifyType.BORROW_COMPLETED:
         suffix = 'Approved - Borrow';
         break;
+      case ENotifyType.APPROVAL_PHYSICAL_COUNT:
+        suffix = 'Waiting for Approval - Physical Count';
+        break;
+      case ENotifyType.PHYSICAL_COUNT_APPROVED:
+        suffix = 'Approved - Physical Count';
+        break;
+      case ENotifyType.PHYSICAL_COUNT_REJECTED:
+        suffix = 'Rejected - Physical Count';
+        break;
       default:
         suffix = 'Notification';
     }
