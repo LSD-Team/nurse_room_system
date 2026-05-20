@@ -110,25 +110,6 @@
               color: 'text-sky-300',
               to: '/movement-records',
             },
-            {
-              label: 'บันทึกสต็อกประจำเดือน',
-              icon: 'pi pi-fw pi-pencil',
-              color: 'text-sky-300',
-              items: [
-                {
-                  label: 'นับสต็อก',
-                  icon: 'pi pi-fw pi-list',
-                  color: 'text-sky-300',
-                  to: '/physical-count',
-                },
-                {
-                  label: 'ปรับยอดสต็อก',
-                  icon: 'pi pi-fw pi-pencil',
-                  color: 'text-sky-300',
-                  to: '/stock-adjustment',
-                },
-              ],
-            },
           ],
         },
         {
