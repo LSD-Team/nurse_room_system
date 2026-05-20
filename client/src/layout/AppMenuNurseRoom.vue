@@ -111,7 +111,7 @@
               to: '/movement-records',
             },
             {
-              label: 'ปรับยอด',
+              label: 'บันทึกสต็อกประจำเดือน',
               icon: 'pi pi-fw pi-pencil',
               color: 'text-sky-300',
               items: [
@@ -136,6 +136,12 @@
           icon: 'pi pi-fw pi-calendar',
           color: 'text-amber-400',
           to: '/stock-monthly-record',
+        },
+        {
+          label: 'อนุมัติการนับ Stock',
+          icon: 'pi pi-fw pi-check-circle',
+          color: 'text-teal-400',
+          to: '/stock-count-approval',
         },
         {
           label: 'ข้อมูลพยาบาล',
@@ -367,7 +373,7 @@
       ],
     },
   ];
-  
+
   return items;
   });
 </script>

@@ -160,6 +160,11 @@ const routes: RouteRecordRaw[] = [
         name: 'stockCountDetail',
         component: () => import('@/views/pages/StockCountDetail.vue'),
       },
+      {
+        path: 'stock-count-approval',
+        name: 'stockCountApproval',
+        component: () => import('@/views/pages/StockCountApproval.vue'),
+      },
 
       // ===== ข้อมูลหลัก (Master Data) =====
       {

@@ -17,8 +17,19 @@
   const loading = ref(false);
   const saving = ref(false);
   const submitting = ref(false);
+  const approving = ref(false);
+  const rejecting = ref(false);
+  const showRejectDialog = ref(false);
+  const rejectReason = ref('');
   const searchQuery = ref('');
   const showOnlyDiff = ref(false);
+
+  // ─── Back navigation: 'approval' → stockCountApproval, else → stockMonthlyRecord ───
+  const backRoute = computed(() =>
+    route.query.from === 'approval'
+      ? { name: 'stockCountApproval' }
+      : { name: 'stockMonthlyRecord' },
+  );
 
   // ─── Types ───
   interface EditableLine {
@@ -40,6 +51,7 @@
 
   // ─── Computed ───
   const isEditable = computed(() => header.value?.count_status === 'DRAFT');
+  const isSubmitted = computed(() => header.value?.count_status === 'SUBMITTED');
 
   const filteredLines = computed(() => {
     let result = editableLines.value;
@@ -189,7 +201,7 @@
           timer: 2000,
           showConfirmButton: false,
         });
-        router.push({ name: 'stockMonthlyRecord' });
+        router.push(backRoute.value);
       } else {
         Swal.fire('ข้อผิดพลาด', result.Message, 'error');
       }
@@ -197,6 +209,82 @@
       Swal.fire('ข้อผิดพลาด', error.message || 'ส่งอนุมัติไม่สำเร็จ', 'error');
     } finally {
       submitting.value = false;
+    }
+  }  async function handleApprove() {
+    const confirm = await Swal.fire({
+      title: 'ยืนยันการอนุมัติ',
+      html: `อนุมัติการนับ stock Period <strong>${header.value?.period_code}</strong> ใช่หรือไม่?<br>
+             <small class="text-gray-500">ระบบจะปรับยอด stock และสร้าง Snapshot ทันที</small>`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#16a34a',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'อนุมัติ',
+      cancelButtonText: 'ยกเลิก',
+    });
+    if (!confirm.isConfirmed) return;
+
+    try {
+      approving.value = true;
+      const result = await PhysicalCountService.approveCount(countId.value);
+      if (result.Status === 1) {
+        await Swal.fire({
+          title: 'อนุมัติสำเร็จ',
+          text: 'ปรับยอด stock และสร้าง Snapshot เรียบร้อยแล้ว ระบบส่ง Email แจ้งผู้ส่งแล้ว',
+          icon: 'success',
+          timer: 2500,
+          showConfirmButton: false,
+        });
+        router.push({ name: 'stockCountApproval' });
+      } else {
+        // Refresh to get latest status (concurrent approval edge case)
+        await loadData();
+        Swal.fire('ข้อผิดพลาด', result.Message, 'error');
+      }
+    } catch (error: any) {
+      await loadData();
+      Swal.fire('ข้อผิดพลาด', error.message || 'อนุมัติไม่สำเร็จ', 'error');
+    } finally {
+      approving.value = false;
+    }
+  }
+
+  function openRejectDialog() {
+    rejectReason.value = '';
+    showRejectDialog.value = true;
+  }
+
+  async function handleReject() {
+    if (!rejectReason.value.trim()) {
+      Swal.fire('แจ้งเตือน', 'กรุณาระบุเหตุผลที่ปฏิเสธ', 'warning');
+      return;
+    }
+
+    try {
+      rejecting.value = true;
+      const result = await PhysicalCountService.rejectCount(countId.value, rejectReason.value.trim());
+      if (result.Status === 1) {
+        showRejectDialog.value = false;
+        await Swal.fire({
+          title: 'ปฏิเสธสำเร็จ',
+          text: 'ระบบส่ง Email แจ้งผู้ส่งพร้อมเหตุผลแล้ว',
+          icon: 'info',
+          timer: 2000,
+          showConfirmButton: false,
+        });
+        router.push({ name: 'stockCountApproval' });
+      } else {
+        // Refresh to get latest status
+        await loadData();
+        showRejectDialog.value = false;
+        Swal.fire('ข้อผิดพลาด', result.Message, 'error');
+      }
+    } catch (error: any) {
+      await loadData();
+      showRejectDialog.value = false;
+      Swal.fire('ข้อผิดพลาด', error.message || 'ปฏิเสธไม่สำเร็จ', 'error');
+    } finally {
+      rejecting.value = false;
     }
   }
 </script>
@@ -213,7 +301,7 @@
         icon="pi pi-arrow-left"
         label="กลับ"
         class="p-button-text p-button-plain mb-3"
-        @click="router.push({ name: 'stockMonthlyRecord' })"
+        @click="router.push(backRoute)"
       />
     </div>
 
@@ -261,6 +349,26 @@
               class="p-button-primary"
               :loading="submitting"
               @click="handleSubmit"
+            />
+          </div>
+
+          <!-- Approve / Reject buttons for GROUP_LEAD -->
+          <div v-if="isSubmitted" class="flex gap-2">
+            <Button
+              icon="pi pi-check"
+              label="อนุมัติ"
+              class="p-button-success"
+              :loading="approving"
+              :disabled="rejecting"
+              @click="handleApprove"
+            />
+            <Button
+              icon="pi pi-times"
+              label="ปฏิเสธ"
+              class="p-button-danger p-button-outlined"
+              :loading="rejecting"
+              :disabled="approving"
+              @click="openRejectDialog"
             />
           </div>
         </div>
@@ -418,6 +526,48 @@
       </div>
     </div>
   </div>
+
+  <!-- ════════════ REJECT DIALOG ════════════ -->
+  <Dialog
+    v-model:visible="showRejectDialog"
+    header="ระบุเหตุผลที่ปฏิเสธ"
+    :modal="true"
+    :draggable="false"
+    style="width: 480px"
+  >
+    <div class="flex flex-column gap-3 pt-2">
+      <p class="text-gray-600 text-sm m-0">
+        กรุณาระบุเหตุผลที่ปฏิเสธการนับ stock Period
+        <strong>{{ header?.period_code }}</strong>
+        เพื่อแจ้งให้พนักงานทราบ
+      </p>
+      <Textarea
+        v-model="rejectReason"
+        rows="4"
+        placeholder="เหตุผลที่ปฏิเสธ..."
+        class="w-full"
+        :disabled="rejecting"
+        autofocus
+      />
+    </div>
+    <template #footer>
+      <Button
+        label="ยกเลิก"
+        icon="pi pi-times"
+        class="p-button-text"
+        :disabled="rejecting"
+        @click="showRejectDialog = false"
+      />
+      <Button
+        label="ยืนยันปฏิเสธ"
+        icon="pi pi-check"
+        class="p-button-danger"
+        :loading="rejecting"
+        :disabled="!rejectReason.trim()"
+        @click="handleReject"
+      />
+    </template>
+  </Dialog>
 
   <!-- ════════════ PRINT SECTION ════════════ -->
   <div class="print-section" v-if="header">

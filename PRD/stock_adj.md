@@ -1322,8 +1322,8 @@ server/src/email/
 - [x] สร้าง email templates (3 ไฟล์)
 - [x] pnpm build (server) ✅
 
-### Phase 3: Frontend (Vue 3) — ส่วนใหญ่เสร็จแล้ว
-- [x] เพิ่ม menu "บันทึก Stock ประจำเดือน" ใน AppMenu.vue
+### Phase 3: Frontend (Vue 3) ✅ สมบูรณ์แล้ว
+- [x] เพิ่ม menu "บันทึก Stock ประจำเดือน" ใน AppMenuNurseRoom.vue
 - [x] สร้าง StockMonthlyRecord.vue (Step 1 — Period Management)
   - [x] แสดง stock_periods ทั้งหมด พร้อม filter ตาม period_status
   - [x] สร้าง/แก้ไข/ลบ period (Dialog)
@@ -1336,11 +1336,18 @@ server/src/email/
   - [x] แสดงชื่อผู้สร้าง (eng_name จาก view_employee_all)
   - [x] ปุ่ม "พิมพ์ใบนับ" + A4 print sheet (visibility trick CSS)
   - [x] ปุ่ม "บันทึก" (save-lines) + ปุ่ม "ส่งขออนุมัติ" (submit)
+  - [x] ปุ่ม "อนุมัติ" + "ปฏิเสธ" สำหรับ GROUP_LEAD (เมื่อ count_status = SUBMITTED)
+  - [x] Reject Dialog พร้อม textarea เหตุผล + validation
+  - [x] back navigation รองรับ query.from=approval|monthly
+- [x] สร้าง StockCountApproval.vue (Steps 5-6 — GROUP_LEAD Approval)
+  - [x] แสดง periods ที่ period_status = PENDING_APPROVAL + active_count_status = SUBMITTED
+  - [x] ปุ่ม "ตรวจสอบและอนุมัติ" → navigate ไป StockCountDetail/:countId?from=approval
+  - [x] Empty state เมื่อไม่มีรายการรออนุมัติ
 - [x] สร้าง client/src/services/physical-count.service.ts
 - [x] สร้าง client/src/interfaces/physical-count.interfaces.ts
-- [x] เพิ่ม routes ใน router/index.ts (stockMonthlyRecord, stockCountDetail/:countId)
+- [x] เพิ่ม routes ใน router/index.ts (stockMonthlyRecord, stockCountDetail/:countId, stockCountApproval)
+- [x] เพิ่มเมนู "อนุมัติการนับ Stock" ใน AppMenuNurseRoom.vue
 - [x] pnpm build (client) ✅
-- [ ] สร้างหน้า Approval สำหรับ GROUP_LEAD (Steps 5-6) ⚠️ ยังไม่ได้ทำ
 
 ### Phase 4: Integration Testing
 - [ ] ทดสอบ full workflow: OPEN → COUNTING → PENDING_APPROVAL → APPROVED
@@ -1368,11 +1375,11 @@ server/src/email/
 - `set0.length=0` → ไม่มี count_id นี้ใน physical_count_headers
 - `set1.length=0` → count มีอยู่แต่ physical_count_lines ว่าง (SP01 มีปัญหา)
 
-### ⚠️ Phase 3 Steps 5-6 ยังไม่ได้ทำ (GROUP_LEAD Approval)
-สิ่งที่ต้องสร้างต่อ:
-1. หน้าแสดงรายการ count ที่มี `count_status = SUBMITTED` สำหรับ GROUP_LEAD
-2. กดดูรายละเอียด → แสดง comparison (read-only view เหมือน StockCountDetail)
-3. ปุ่ม "อนุมัติ" → POST `/physical-count/:countId/approve`
-4. ปุ่ม "ปฏิเสธ" → Dialog กรอกเหตุผล → POST `/physical-count/:countId/reject`
-5. หลัง approve → `count_status = APPROVED`, `period_status = SNAPSHOT_DONE`, email แจ้ง submitted_by
-6. หลัง reject → `count_status = REJECTED`, `period_status = COUNTING`, email แจ้ง submitted_by + เหตุผล
+### ⚠️ Phase 3 Steps 5-6 ยังไม่ได้ทำ (GROUP_LEAD Approval) — ✅ เสร็จแล้ว
+สิ่งที่สร้าง:
+1. `client/src/views/pages/StockCountApproval.vue` — หน้า list PENDING_APPROVAL periods
+2. `StockCountDetail.vue` — เพิ่มปุ่ม Approve/Reject (เมื่อ count_status = SUBMITTED)
+3. Route `stock-count-approval` + เมนู "อนุมัติการนับ Stock"
+
+### ⚠️ Phase 4 Integration Testing ยังไม่ได้ทำ
+ทดสอบ full workflow ตาม Checklist ใน Section 10
