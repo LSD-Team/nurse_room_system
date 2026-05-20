@@ -325,6 +325,16 @@
                 @click="navigateToCount(data.active_count_id)"
               />
 
+              <!-- SNAPSHOT_DONE / CLOSED: view approved count detail -->
+              <Button
+                v-else-if="(data.period_status === 'SNAPSHOT_DONE' || data.period_status === 'CLOSED') && data.active_count_id"
+                icon="pi pi-eye"
+                label="ดูรายละเอียด"
+                size="small"
+                class="p-button-secondary"
+                @click="navigateToCount(data.active_count_id)"
+              />
+
               <span v-else class="text-gray-400 text-sm">—</span>
             </template>
           </Column>

@@ -51,7 +51,7 @@ export class PhysicalCountService {
         SELECT TOP 1 count_id, count_status
         FROM physical_count_headers
         WHERE period_code = sp.period_code
-          AND count_status IN ('DRAFT', 'SUBMITTED')
+          AND count_status IN ('DRAFT', 'SUBMITTED', 'APPROVED', 'REJECTED')
         ORDER BY count_id DESC
       ) pch
       ORDER BY sp.period_code DESC

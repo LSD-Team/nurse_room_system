@@ -7,7 +7,7 @@ export interface IStockPeriod {
   created_by: string;
   created_at: string;
   active_count_id: number | null;
-  active_count_status: 'DRAFT' | 'SUBMITTED' | null;
+  active_count_status: 'DRAFT' | 'SUBMITTED' | 'APPROVED' | 'REJECTED' | null;
 }
 
 // ===== Physical Count Header (from SP03 result set 1) =====
