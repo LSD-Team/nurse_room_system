@@ -110,13 +110,19 @@
               color: 'text-sky-300',
               to: '/movement-records',
             },
-            {
-              label: 'ปรับยอด',
-              icon: 'pi pi-fw pi-pencil',
-              color: 'text-sky-300',
-              to: '/stock-adjustment',
-            },
           ],
+        },
+        {
+          label: 'บันทึก Stock ประจำเดือน',
+          icon: 'pi pi-fw pi-calendar',
+          color: 'text-amber-400',
+          to: '/stock-monthly-record',
+        },
+        {
+          label: 'อนุมัติการนับ Stock',
+          icon: 'pi pi-fw pi-check-circle',
+          color: 'text-teal-400',
+          to: '/stock-count-approval',
         },
         {
           label: 'ข้อมูลพยาบาล',
@@ -348,7 +354,7 @@
       ],
     },
   ];
-  
+
   return items;
   });
 </script>

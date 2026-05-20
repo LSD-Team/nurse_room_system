@@ -224,6 +224,15 @@ export class EmailService {
       case ENotifyType.BORROW_COMPLETED:
         suffix = 'Approved - Borrow';
         break;
+      case ENotifyType.APPROVAL_PHYSICAL_COUNT:
+        suffix = 'Waiting for Approval - Physical Count';
+        break;
+      case ENotifyType.PHYSICAL_COUNT_APPROVED:
+        suffix = 'Approved - Physical Count';
+        break;
+      case ENotifyType.PHYSICAL_COUNT_REJECTED:
+        suffix = 'Rejected - Physical Count';
+        break;
       default:
         suffix = 'Notification';
     }
@@ -242,6 +251,9 @@ export class EmailService {
       [ENotifyType.BORROW_REWORK]: 'rework-borrow.template.html',
       [ENotifyType.PO_COMPLETED]: 'completed-po.template.html',
       [ENotifyType.BORROW_COMPLETED]: 'completed-borrow.template.html',
+      [ENotifyType.APPROVAL_PHYSICAL_COUNT]: 'approval-physical-count.template.html',
+      [ENotifyType.PHYSICAL_COUNT_APPROVED]: 'approved-physical-count.template.html',
+      [ENotifyType.PHYSICAL_COUNT_REJECTED]: 'rejected-physical-count.template.html',
     };
 
     const templateFile = templateMap[notifyType];

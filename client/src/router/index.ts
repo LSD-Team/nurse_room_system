@@ -140,9 +140,30 @@ const routes: RouteRecordRaw[] = [
         component: () => import('@/views/pages/MovementRecords.vue'),
       },
       {
+        path: 'physical-count',
+        name: 'physicalCount',
+        component: () => import('@/views/pages/PhysicalCount.vue'),
+      },
+      {
         path: 'stock-adjustment',
         name: 'stockAdjustment',
         component: () => import('@/views/pages/Empty.vue'),
+      },
+
+      {
+        path: 'stock-monthly-record',
+        name: 'stockMonthlyRecord',
+        component: () => import('@/views/pages/StockMonthlyRecord.vue'),
+      },
+      {
+        path: 'stock-count-detail/:countId',
+        name: 'stockCountDetail',
+        component: () => import('@/views/pages/StockCountDetail.vue'),
+      },
+      {
+        path: 'stock-count-approval',
+        name: 'stockCountApproval',
+        component: () => import('@/views/pages/StockCountApproval.vue'),
       },
 
       // ===== ข้อมูลหลัก (Master Data) =====

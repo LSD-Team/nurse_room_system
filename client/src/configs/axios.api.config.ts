@@ -64,7 +64,15 @@ API.interceptors.response.use(
         await mainStore.setLoading(false);
       }, 800);
 
-      const errorData = { ...error }.response.data;
+      const response = { ...error }.response;
+
+      // Network error or server down — no response at all
+      if (!response) {
+        await Swal.fire('ข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อกับ server ได้', 'error');
+        return Promise.reject(error);
+      }
+
+      const errorData = response.data;
       //  show error alert
       let message = '';
       if (typeof errorData.message === 'object') {
