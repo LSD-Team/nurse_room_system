@@ -143,7 +143,30 @@
     });
   }
 
+  // ─── Validation: diff lines must have notes ───
+  function validateNotesForDiffLines(): boolean {
+    const missing = editableLines.value.filter(
+      (l) => l.editQtyCounted - l.qty_system !== 0 && !l.editNote.trim(),
+    );
+    if (missing.length > 0) {
+      const itemList = missing
+        .slice(0, 5)
+        .map((l) => `• ${l.item_code} ${l.item_name_th}`)
+        .join('<br>');
+      const more = missing.length > 5 ? `<br>และอีก ${missing.length - 5} รายการ` : '';
+      Swal.fire({
+        title: 'กรุณาใส่หมายเหตุ',
+        html: `มี <strong>${missing.length} รายการ</strong> ที่มีผลต่างแต่ยังไม่ได้ใส่หมายเหตุ<br><br>${itemList}${more}`,
+        icon: 'warning',
+        confirmButtonText: 'รับทราบ',
+      });
+      return false;
+    }
+    return true;
+  }
+
   async function handleSave() {
+    if (!validateNotesForDiffLines()) return;
     try {
       saving.value = true;
       const lines: IPhysicalCountLineEdit[] = editableLines.value.map((l) => ({
@@ -176,6 +199,8 @@
       Swal.fire('แจ้งเตือน', 'ยังไม่มีการบันทึกยอดนับ กรุณาบันทึกยอดก่อนส่งอนุมัติ', 'warning');
       return;
     }
+
+    if (!validateNotesForDiffLines()) return;
 
     const confirm = await Swal.fire({
       title: 'ยืนยันส่งขออนุมัติ',
@@ -416,8 +441,6 @@
 
         <DataTable
           :value="filteredLines"
-          :rows="20"
-          paginator
           responsiveLayout="scroll"
           dataKey="line_id"
           stripedRows
@@ -500,6 +523,7 @@
                 placeholder="หมายเหตุ..."
                 size="small"
                 class="w-full"
+                :class="{ 'p-invalid': getDiffQty(data) !== 0 && !data.editNote.trim() }"
               />
               <span v-else class="text-gray-600">{{ data.editNote || '-' }}</span>
             </template>
