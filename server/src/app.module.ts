@@ -12,6 +12,7 @@ import { GrModule } from '@/src/apis/gr/gr.module';
 import { PoModule } from '@/src/apis/po/po.module';
 import { StockModule } from '@/src/apis/stock/stock.module';
 import { PhysicalCountModule } from '@/src/apis/physical-count/physical-count.module';
+import { TreatmentModule } from '@/src/apis/treatment/treatment.module';
 import { AuthModule } from '@/src/auth/auth.module';
 import { DatabaseModule } from '@/src/database/database.module';
 import { EmailModule } from '@/src/email/email.module';
@@ -41,6 +42,7 @@ import { AppController } from '@/src/app.controller';
     PoModule,
     StockModule,
     PhysicalCountModule,
+    TreatmentModule,
   ],
   controllers: [AppController],
   providers: [

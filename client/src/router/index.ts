@@ -20,12 +20,12 @@ const routes: RouteRecordRaw[] = [
       {
         path: 'treatment-record',
         name: 'treatmentRecord',
-        component: () => import('@/views/pages/Empty.vue'),
+        component: () => import('@/views/pages/TreatmentRecord.vue'),
       },
       {
         path: 'treatment-history',
         name: 'treatmentHistory',
-        component: () => import('@/views/pages/Empty.vue'),
+        component: () => import('@/views/pages/TreatmentHistory.vue'),
       },
       {
         path: 'general-treatment-history',

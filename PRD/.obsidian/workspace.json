@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "stock_adj.md",
+                "file": "treatment_record.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "stock_adj"
+              "title": "treatment_record"
             }
           }
         ]
@@ -185,6 +185,9 @@
   },
   "active": "3521531aa1e485e3",
   "lastOpenFiles": [
+    "toTreatment_record.md",
+    "treatment_record.md",
+    "stock_adj.md",
     "05_alter_sp03_comparison_extra_cols.sql"
   ]
 }
