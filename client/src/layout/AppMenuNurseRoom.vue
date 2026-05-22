@@ -32,16 +32,16 @@
         label: 'Nurse Room System',
         items: [
           {
-            label: 'Dashboard',
-            icon: 'pi pi-fw pi-home',
-            color: 'text-blue-400',
-            to: '/',
-          },
-          {
             label: 'บันทึกการรักษาพยาบาล',
             icon: 'pi pi-fw pi-pencil',
             color: 'text-red-300',
             to: '/treatment-record',
+          },
+          {
+            label: 'Dashboard',
+            icon: 'pi pi-fw pi-home',
+            color: 'text-blue-400',
+            to: '/',
           },
           {
             label: 'จัดซื้อ & ยืม ยา/เวชภัณฑ์',
@@ -73,26 +73,8 @@
                 to: '/borrow-medicines',
                 badge: menuNotificationsStore.borrow > 0 ? menuNotificationsStore.borrow : undefined,
               },
-            {
-              label: 'รายการยา/เวชภัณฑ์',
-              icon: 'pi pi-fw pi-list',
-              color: 'text-teal-300',
-              to: '/medicine-items',
-            },
-            {
-              label: 'หน่วยนับ',
-              icon: 'pi pi-fw pi-sort-numeric-up',
-              color: 'text-teal-300',
-              to: '/units',
-            },
-            {
-              label: 'ราคายา/เวชภัณฑ์',
-              icon: 'pi pi-fw pi-dollar',
-              color: 'text-teal-300',
-              to: '/medicine-prices',
-            },
-          ],
-        },
+            ],
+          },
         {
           label: 'คลัง/สต็อก ยา/เวชภัณฑ์',
           icon: 'pi pi-fw pi-database',
@@ -117,12 +99,6 @@
           icon: 'pi pi-fw pi-calendar',
           color: 'text-amber-400',
           to: '/stock-monthly-record',
-        },
-        {
-          label: 'อนุมัติการนับ Stock',
-          icon: 'pi pi-fw pi-check-circle',
-          color: 'text-teal-400',
-          to: '/stock-count-approval',
         },
         {
           label: 'ข้อมูลพยาบาล',
@@ -184,6 +160,24 @@
               color: 'text-purple-300',
               to: '/medical-facilities',
             },
+            {
+              label: 'รายการยา/เวชภัณฑ์',
+              icon: 'pi pi-fw pi-list',
+              color: 'text-purple-300',
+              to: '/medicine-items',
+            },
+            {
+              label: 'หน่วยนับ',
+              icon: 'pi pi-fw pi-sort-numeric-up',
+              color: 'text-purple-300',
+              to: '/units',
+            },
+            {
+              label: 'ราคายา/เวชภัณฑ์',
+              icon: 'pi pi-fw pi-dollar',
+              color: 'text-purple-300',
+              to: '/medicine-prices',
+            },
           ],
         },
         {
@@ -223,6 +217,13 @@
           color: 'text-lime-400',
           to: '/approve-purchase',
           badge: menuNotificationsStore.apv > 0 ? menuNotificationsStore.apv : undefined,
+        },
+        {
+          label: 'อนุมัติการนับ Stock',
+          icon: 'pi pi-fw pi-check-circle',
+          color: 'text-teal-400',
+          to: '/stock-count-approval',
+          badge: menuNotificationsStore.stockCountApv > 0 ? menuNotificationsStore.stockCountApv : undefined,
         },
         {
           label: 'เบิกยากรณีพิเศษ',

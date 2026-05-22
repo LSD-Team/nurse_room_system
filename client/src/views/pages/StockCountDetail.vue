@@ -235,7 +235,8 @@
     } finally {
       submitting.value = false;
     }
-  }  async function handleApprove() {
+  }
+  async function handleApprove() {
     const confirm = await Swal.fire({
       title: 'ยืนยันการอนุมัติ',
       html: `อนุมัติการนับ stock Period <strong>${header.value?.period_code}</strong> ใช่หรือไม่?<br>
@@ -359,7 +360,7 @@
             </div>
           </div>
 
-          <!-- Action buttons -->
+          <!-- Action buttons (DRAFT) -->
           <div v-if="isEditable" class="flex gap-2">
             <Button
               icon="pi pi-save"
@@ -374,6 +375,16 @@
               class="p-button-primary"
               :loading="submitting"
               @click="handleSubmit"
+            />
+          </div>
+
+          <!-- Action button (REJECTED) -->
+          <div v-if="header.count_status === 'REJECTED'" class="flex gap-2">
+            <Button
+              icon="pi pi-list-check"
+              label="สร้างการนับใหม่"
+              class="p-button-primary"
+              @click="router.push({ name: 'stockMonthlyRecord' })"
             />
           </div>
 
@@ -470,7 +481,7 @@
               </span>
             </template>
           </Column>
-          <Column field="snapshot_prev_qty" header="Snapshot ก่อนหน้า" :sortable="true" style="min-width: 10rem; text-align: right">
+          <Column field="snapshot_prev_qty" header="บันทึกสต๊อกก่อนหน้า" :sortable="true" style="min-width: 10rem; text-align: right">
             <template #body="{ data }">
               <span class="font-mono">{{ data.snapshot_prev_qty.toFixed(0) }}</span>
             </template>

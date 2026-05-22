@@ -9,6 +9,7 @@ export interface IStockOnHand {
   qty_base: number | null;
   item_min: number | null;
   item_max: number | null;
+  usage_unit_name_th?: string;
 }
 
 export class StockService {

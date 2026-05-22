@@ -31,6 +31,7 @@ const default_state: IMainStoreState = {
     position_level: '',
     JobPositionCode: '',
     WorkStatus: 'Active',
+    bloodeng: '',
     ExeOfficeCode: '',
     ExeOfficeDesc: '',
     SECCD: '',

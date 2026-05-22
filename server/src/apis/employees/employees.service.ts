@@ -38,6 +38,7 @@ export class EmployeesService {
       position_level: '',
       JobPositionCode: '',
       WorkStatus: 'Active',
+      bloodeng: '',
       ExeOfficeCode: '',
       ExeOfficeDesc: '',
       SECCD: '',

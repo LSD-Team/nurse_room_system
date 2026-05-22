@@ -1,6 +1,7 @@
 <script lang="ts" setup>
   import { ref, onMounted, computed } from 'vue';
   import { FilterMatchMode } from '@primevue/core/api';
+  import * as XLSX from 'xlsx';
   import { StockService } from '@/services/stock.service';
   import { formatSysdatetimeoffset } from '@/utils/format.utils';
   import type { IStockMovement } from '@/interfaces/stock.interfaces';
@@ -8,32 +9,39 @@
   const movements = ref<IStockMovement[]>([]);
   const selectedMovementType = ref<string>('');
   const movementTypes = ref<string[]>([]);
+  const filterDateFrom = ref<Date | null>(null);
+  const filterDateTo = ref<Date | null>(null);
 
   const filters = ref({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
   });
 
   const filteredMovements = computed(() => {
-    if (!selectedMovementType.value || selectedMovementType.value === 'All') {
-      return movements.value;
+    let result = movements.value;
+    if (selectedMovementType.value && selectedMovementType.value !== 'All') {
+      result = result.filter(m => m.movement_type === selectedMovementType.value);
     }
-    return movements.value.filter(
-      m => m.movement_type === selectedMovementType.value
-    );
+    if (filterDateFrom.value) {
+      const from = new Date(filterDateFrom.value);
+      from.setHours(0, 0, 0, 0);
+      result = result.filter(m => new Date(m.created_at) >= from);
+    }
+    if (filterDateTo.value) {
+      const to = new Date(filterDateTo.value);
+      to.setHours(23, 59, 59, 999);
+      result = result.filter(m => new Date(m.created_at) <= to);
+    }
+    return result;
   });
 
-  // Get distinct movement types for dropdown
   const movementTypeOptions = computed(() => {
-    const types = [
-      ...new Set(movements.value.map(m => m.movement_type)),
-    ].sort();
+    const types = [...new Set(movements.value.map(m => m.movement_type))].sort();
     return [
       { label: 'All', value: '' },
       ...types.map(t => ({ label: t, value: t })),
     ];
   });
 
-  // Color mapping for movement types
   function getRowClass(movement: IStockMovement): string {
     const type = movement.movement_type.toUpperCase();
     const colorMap: Record<string, string> = {
@@ -49,7 +57,6 @@
     return colorMap[type] || 'bg-surface-50';
   }
 
-  // Severity badge for movement types
   function getMovementSeverity(type: string): string {
     const upperType = type.toUpperCase();
     const severityMap: Record<string, string> = {
@@ -65,12 +72,31 @@
     return severityMap[upperType] || 'secondary';
   }
 
+  function exportExcel() {
+    const data = filteredMovements.value.map((m, i) => ({
+      '#': i + 1,
+      'วันที่': formatSysdatetimeoffset(m.created_at),
+      'ผู้สร้าง': m.created_by_name || m.created_by,
+      'ประเภทเคลื่อนไหว': m.movement_type,
+      'รายการยา/เวชภัณฑ์ (TH)': m.item_name_th,
+      'รายการยา/เวชภัณฑ์ (EN)': m.item_name_en,
+      'จำนวน': m.qty_base,
+      'หน่วย': m.unit_name_th || '',
+      'เหตุผล': m.reason || '',
+    }));
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Movement Records');
+    const dateTag = filterDateFrom.value || filterDateTo.value
+      ? `_${filterDateFrom.value?.toLocaleDateString('th-TH') || ''}-${filterDateTo.value?.toLocaleDateString('th-TH') || ''}`
+      : '';
+    XLSX.writeFile(wb, `movement-records${dateTag}.xlsx`);
+  }
+
   async function loadMovements() {
     try {
       const data = await StockService.getMovementRecords();
       movements.value = data;
-
-      // Extract unique movement types
       const types = [...new Set(data.map(m => m.movement_type))].sort();
       movementTypes.value = types;
     } catch (error) {
@@ -109,9 +135,9 @@
       :rowClass="(data: IStockMovement) => getRowClass(data)"
     >
       <template #header>
-        <div class="flex justify-between items-center gap-3">
-          <div class="flex gap-2 items-center">
-            <label for="movementType" class="text-sm">ประเภทเคลื่อนไหว:</label>
+        <div class="flex flex-wrap justify-between items-center gap-3">
+          <div class="flex flex-wrap gap-2 items-center">
+            <label class="text-sm font-medium">ประเภทเคลื่อนไหว:</label>
             <Select
               v-model="selectedMovementType"
               :options="movementTypeOptions"
@@ -123,15 +149,34 @@
                 {{ slotProps.value ? slotProps.value : 'All' }}
               </template>
             </Select>
+            <label class="text-sm font-medium ml-2">ตั้งแต่:</label>
+            <DatePicker v-model="filterDateFrom" dateFormat="dd/mm/yy" placeholder="วันที่เริ่มต้น" class="w-36" showClear />
+            <label class="text-sm font-medium">ถึง:</label>
+            <DatePicker v-model="filterDateTo" dateFormat="dd/mm/yy" placeholder="วันที่สิ้นสุด" class="w-36" showClear />
+            <Button
+              v-if="filterDateFrom || filterDateTo"
+              icon="pi pi-times"
+              label="เคลียร์วันที่"
+              severity="secondary"
+              outlined
+              size="small"
+              @click="filterDateFrom = null; filterDateTo = null"
+            />
           </div>
-          <div class="flex gap-2">
-            <Button icon="pi pi-refresh" rounded text @click="loadMovements" />
+          <div class="flex gap-2 items-center">
+            <Button
+              icon="pi pi-file-excel"
+              label="Export Excel"
+              severity="success"
+              outlined
+              size="small"
+              @click="exportExcel"
+              :disabled="filteredMovements.length === 0"
+            />
+            <Button icon="pi pi-refresh" rounded text @click="loadMovements" v-tooltip="'โหลดใหม่'" />
             <IconField>
               <InputIcon class="pi pi-search" />
-              <InputText
-                v-model="filters['global'].value"
-                placeholder="ค้นหา..."
-              />
+              <InputText v-model="filters['global'].value" placeholder="ค้นหา..." />
             </IconField>
           </div>
         </div>
@@ -200,6 +245,16 @@
       >
         <template #body="{ data }">
           {{ Number(data.qty_base).toLocaleString('en-US') }}
+        </template>
+      </Column>
+
+      <Column
+        field="unit_name_th"
+        :header="'หน่วย'"
+        style="min-width: 80px"
+      >
+        <template #body="{ data }">
+          <span class="text-color-secondary">{{ data.unit_name_th || '-' }}</span>
         </template>
       </Column>
 

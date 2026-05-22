@@ -45,5 +45,5 @@
 }
 
 .swal2-container {
-  z-index: 999 !important; /* Make sure this value is higher than any other z-index in your app */
+  z-index: 99999 !important; /* Must be higher than PrimeVue Dialog (~1100) */
 }

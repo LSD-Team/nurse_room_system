@@ -9,6 +9,7 @@ export const useMenuNotificationsStore = defineStore('menuNotifications', () => 
   const borrow = ref(0); // ยืม
   const apv = ref(0); // อนุมัติการสั่งซื้อยา
   const all = ref(0); // จัดซื้อ & ยืม ยา/เวชภัณฑ์
+  const stockCountApv = ref(0); // อนุมัติการนับ Stock
 
   // ─── State - Backward compatibility ───
   const poDraftCount = ref(0);
@@ -26,6 +27,7 @@ export const useMenuNotificationsStore = defineStore('menuNotifications', () => 
       borrow.value = counts.borrow;
       apv.value = counts.apv;
       all.value = counts.all;
+      stockCountApv.value = counts.stock_count_apv;
 
       // Map to old state for backward compatibility
       poDraftCount.value = counts.po;
@@ -76,6 +78,7 @@ export const useMenuNotificationsStore = defineStore('menuNotifications', () => 
     borrow,
     apv,
     all,
+    stockCountApv,
 
     // State - Backward compatibility
     poDraftCount,

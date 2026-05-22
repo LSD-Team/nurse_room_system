@@ -26,6 +26,7 @@ export class DatabaseService {
   private readonly databaseName = databaseName();
   private readonly logger = new Logger(DatabaseService.name);
   private pools: Map<string, sql.ConnectionPool> = new Map();
+  private pendingConnections: Map<string, Promise<sql.ConnectionPool>> = new Map();
 
   public getDatabaseName() {
     return this.databaseName; // เรียกฟังก์ชันเพื่อดึงค่าจาก .env
@@ -95,41 +96,40 @@ export class DatabaseService {
   }
 
   private async getConnection(database: string): Promise<sql.ConnectionPool> {
-    try {
-      let pool = this.pools.get(database);
+    // คืน pool ที่เชื่อมต่ออยู่แล้ว
+    const existing = this.pools.get(database);
+    if (existing?.connected) return existing;
 
-      // ตรวจสอบว่า pool มีอยู่และยังเชื่อมต่ออยู่
-      if (pool && pool.connected) {
-        return pool;
-      }
+    // ถ้ากำลัง connect อยู่ให้รอ promise เดิม (ป้องกัน race condition)
+    const pending = this.pendingConnections.get(database);
+    if (pending) return pending;
 
-      // ถ้ามี pool เก่าที่ไม่ได้เชื่อมต่อ ให้ลบออกและปิดการเชื่อมต่อก่อน
-      if (pool) {
-        try {
-          await pool.close();
-        } catch (closeError: any) {
-          this.logger.warn(
-            `Error closing stale connection: ${closeError.message}`,
-          );
-        }
-        this.pools.delete(database);
-      }
-      // สร้าง connection pool ใหม่
-      const config: sql.config = this.databaseConfiguration(database);
+    // ปิด pool เก่าที่ไม่ได้เชื่อมต่อ (ถ้ามี)
+    if (existing) {
+      try { await existing.close(); } catch { /* ignore */ }
+      this.pools.delete(database);
+    }
 
-      pool = await new sql.ConnectionPool(config).connect();
+    // สร้าง connection ใหม่และเก็บ promise ไว้ป้องกัน concurrent calls
+    const connectionPromise = (async () => {
+      const config = this.databaseConfiguration(database);
+      const pool = await new sql.ConnectionPool(config).connect();
       pool.on('error', (err) => {
         this.logger.error(`Pool error for database ${database}:`, err);
-        this.pools.delete(database); // ลบ pool ที่มีปัญหาออกจาก Map
+        this.pools.delete(database);
       });
-
       this.pools.set(database, pool);
-      // this.logActivePools();
-
       return pool;
+    })();
+
+    this.pendingConnections.set(database, connectionPromise);
+    try {
+      return await connectionPromise;
     } catch (error) {
       this.logger.error(`Database connection error for ${database}:`, error);
       throw new InternalServerErrorException('Failed to connect to database');
+    } finally {
+      this.pendingConnections.delete(database);
     }
   }
 
@@ -178,8 +178,6 @@ export class DatabaseService {
       this.logger.verbose(`Execute: ${replacedQuery}`);
       const result = await request.query(sqlquery);
       await this.TxLog(replacedQuery);
-      pool.close(); // ปิดการเชื่อมต่อหลังใช้งาน
-      // this.closeConnections(); // ปิดการเชื่อมต่อทั้งหมดหลังการ Execute
       return result;
     } catch (error: any) {
       this.logger.error(`SQL Execute Error for database ${database}:`, error);
@@ -215,8 +213,6 @@ export class DatabaseService {
       request.input('param0', sqlquery.trim());
       request.input('param1', UserID || 'Unknown');
       await request.query(sqlLog);
-      pool.close(); // ปิดการเชื่อมต่อหลังใช้งาน
-      // this.closeConnections(); // ปิดการเชื่อมต่อทั้งหมดหลังการ Execute
     } catch (error) {
       this.logger.error('Failed to log query', error);
       throw new InternalServerErrorException('Logging Error');
@@ -246,8 +242,6 @@ export class DatabaseService {
       
       // this.logger.debug(`Query: ${this.replaceParams(sql, values || [])}`);
       const result = await request.query(sql);
-      pool.close(); // ปิดการเชื่อมต่อหลังใช้งาน
-      // this.closeConnections(); // ปิดการเชื่อมต่อทั้งหมดหลังการ Execute
       return result.recordset as T[];
     } catch (error: any) {
       this.logger.error(`Query Error for database ${database}:`, error);
@@ -256,7 +250,8 @@ export class DatabaseService {
       if (
         error.code === 'ESOCKET' ||
         error.code === 'ETIMEOUT' ||
-        error.code === 'ECONNRESET'
+        error.code === 'ECONNRESET' ||
+        error.code === 'ENOTOPEN'
       ) {
         this.logger.warn(
           `Connection issue detected, removing pool for ${database}`,
@@ -283,8 +278,6 @@ export class DatabaseService {
         });
       }
       const result = await request.execute(procedureName);
-      pool.close(); // ปิดการเชื่อมต่อหลังใช้งาน
-      // this.closeConnections(); // ปิดการเชื่อมต่อทั้งหมดหลังการ Execute
       return result.recordset as T[];
     } catch (error: any) {
       this.logger.error(
@@ -296,7 +289,8 @@ export class DatabaseService {
       if (
         error.code === 'ESOCKET' ||
         error.code === 'ETIMEOUT' ||
-        error.code === 'ECONNRESET'
+        error.code === 'ECONNRESET' ||
+        error.code === 'ENOTOPEN'
       ) {
         this.logger.warn(
           `Connection issue detected, removing pool for ${database}`,
@@ -324,7 +318,6 @@ export class DatabaseService {
         });
       }
       const result = await request.execute(procedureName);
-      pool.close();
       return (result.recordsets as unknown as T[][]) ?? [];
     } catch (error: any) {
       this.logger.error(
@@ -334,7 +327,8 @@ export class DatabaseService {
       if (
         error.code === 'ESOCKET' ||
         error.code === 'ETIMEOUT' ||
-        error.code === 'ECONNRESET'
+        error.code === 'ECONNRESET' ||
+        error.code === 'ENOTOPEN'
       ) {
         this.logger.warn(
           `Connection issue detected, removing pool for ${database}`,

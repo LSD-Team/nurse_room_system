@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "treatment_record.md",
+                "file": "nurse_room_test_phase1.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "treatment_record"
+              "title": "nurse_room_test_phase1"
             }
           }
         ]
@@ -78,7 +78,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 300
+    "width": 200
   },
   "right": {
     "id": "aa26b7353ced378e",
@@ -185,8 +185,13 @@
   },
   "active": "3521531aa1e485e3",
   "lastOpenFiles": [
-    "toTreatment_record.md",
+    "treatment_record_edit.md",
+    "nurse_room_test_phase1.md",
     "treatment_record.md",
+    "toTreatment_record.md",
+    "Tables.md",
+    "sp_PP_03_UpsertUnderlyingDisease.sql",
+    "Tables_summary.md",
     "stock_adj.md",
     "05_alter_sp03_comparison_extra_cols.sql"
   ]

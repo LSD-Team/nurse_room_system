@@ -30,6 +30,65 @@ export interface ITreatmentLookups {
   hospitals: IHospital[];
 }
 
+// ─── Patient Profile ─────────────────────────────────────────────────
+export interface IPatientAllergy {
+  allergy_id: number;
+  drug_name: string;
+  item_id: number | null;
+  reaction: string;
+  severity: 'MILD' | 'MODERATE' | 'SEVERE' | 'LIFE_THREATENING';
+  allergy_type: 'DRUG' | 'FOOD' | 'SUBSTANCE' | 'OTHER';
+  source: string;
+  noted_at: string;
+}
+
+export interface IPatientUnderlyingDisease {
+  condition_id: number;
+  disease_name: string;
+  sub_group_id: number | null;
+  diagnosed_year: number | null;
+  control_status: string;
+}
+
+export interface IPatientPhysicalInfo {
+  weight_kg: number;
+  height_cm: number;
+  bmi: number | null;
+  measured_at: string;
+}
+
+export interface IPatientProfile {
+  patient_id: number;
+  patient_type: 'EMP' | 'EXT';
+  no_known_allergy: boolean;
+  total_visits?: number;
+  allergies: IPatientAllergy[];
+  underlying_diseases: IPatientUnderlyingDisease[];
+  latest_physical: IPatientPhysicalInfo | null;
+}
+
+export interface IUpsertAllergyBody {
+  allergy_id?: number;
+  patient_id: number;
+  allergy_type: 'DRUG' | 'FOOD' | 'SUBSTANCE' | 'OTHER';
+  allergy_name: string;
+  item_id?: number;
+  reaction?: string;
+  severity: 'MILD' | 'MODERATE' | 'SEVERE' | 'LIFE_THREATENING';
+  source?: string;
+  noted_at?: string;
+}
+
+export interface IUpsertDiseaseBody {
+  condition_id?: number;
+  patient_id: number;
+  disease_name: string;
+  sub_group_id?: number;
+  diagnosed_year?: number;
+  control_status?: string;
+  note?: string;
+}
+
 // ─── External Person ─────────────────────────────────────────────────
 export interface IExternalPerson {
   external_person_id: number;
@@ -74,6 +133,7 @@ export interface IVisitListItem {
   created_at: string;
   usage_count: number;
   total_rows: number;
+  nursing_advice?: string;
 }
 
 // ─── Visit Detail ─────────────────────────────────────────────────────
@@ -109,17 +169,18 @@ export interface IVisitDetail {
   hospital_name_th: string;
   created_by: string;
   created_at: string;
+  updated_by: string | null;
+  updated_at: string | null;
 }
 
 export interface IVitals {
   bp_systolic?: number;
   bp_diastolic?: number;
   pulse?: number;
-  temp?: number;
-  weight?: number;
-  height?: number;
-  bmi?: number;
-  o2_sat?: number;
+  temp_c?: number;
+  weight_kg?: number;
+  height_cm?: number;
+  spo2?: number;
   rr?: number;
 }
 
@@ -129,6 +190,7 @@ export interface IVisitUsage {
   visit_id: number;
   item_id: number;
   item_name_en: string;
+  item_name_th?: string;
   item_code: string;
   unit_name: string;
   qty_base: number;
@@ -140,6 +202,7 @@ export interface IVisitUsageForm {
   item_id: number;
   item_code: string;
   item_name_en: string;
+  item_name_th?: string;
   unit_name: string;
   stock_qty: number;
   qty_base: number;
@@ -165,4 +228,28 @@ export interface ICreateVisitBody {
   refer_type_id?: number;
   hospital_id?: number;
   usages?: { item_id: number; qty_base: number }[];
+}
+
+// ─── Update Visit ────────────────────────────────────────────────────────
+export interface IUpdateUsageItem {
+  action: 'ADD' | 'EDIT' | 'DELETE';
+  visit_usage_id?: number;
+  item_id?: number;
+  qty_base?: number;
+}
+
+export interface IUpdateVisitBody {
+  symptoms?: string | null;
+  vitals_json?: string | null;
+  nursing_advice?: string | null;
+  group_id?: number | null;
+  disease_id?: number | null;
+  treatment_type_id?: number | null;
+  accident_in_work_flag?: boolean;
+  work_related_flag?: boolean;
+  refer_flag?: boolean;
+  refer_type_id?: number | null;
+  severity_id?: number | null;
+  reason: string;
+  usages?: IUpdateUsageItem[];
 }

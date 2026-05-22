@@ -7,6 +7,7 @@ export interface IStockMovement {
   item_name_th: string;
   item_name_en: string;
   qty_base: number;
+  unit_name_th: string | null;
   ref_type: string;
   ref_id: string | null;
   created_by: string;

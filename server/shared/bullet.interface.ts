@@ -5,4 +5,5 @@ export interface IBulletCounts {
   borrow: number; // ยืม
   apv: number; // อนุมัติการสั่งซื้อยา
   all: number; // จัดซื้อ & ยืม ยา/เวชภัณฑ์
+  stock_count_apv: number; // อนุมัติการนับ Stock
 }

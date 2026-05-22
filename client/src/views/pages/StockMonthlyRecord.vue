@@ -294,14 +294,28 @@
                 />
               </template>
 
-              <!-- COUNTING: continue existing count OR start new count (after rejection) -->
+              <!-- COUNTING: edit/delete period + continue DRAFT count OR start new (after rejection) -->
               <template v-else-if="data.period_status === 'COUNTING'">
                 <Button
-                  v-if="data.active_count_id"
+                  icon="pi pi-pencil"
+                  label="แก้ไข"
+                  size="small"
+                  class="p-button-info mr-1"
+                  @click="openEditDialog(data)"
+                />
+                <Button
+                  icon="pi pi-trash"
+                  label="ลบ"
+                  size="small"
+                  class="p-button-danger mr-1"
+                  @click="handleDeletePeriod(data)"
+                />
+                <Button
+                  v-if="data.active_count_id && data.active_count_status === 'DRAFT'"
                   icon="pi pi-pencil-square"
                   label="กำลังนับ"
                   size="small"
-                  class="p-button-warning"
+                  class="p-button-warning mr-1"
                   @click="navigateToCount(data.active_count_id)"
                 />
                 <Button
@@ -309,9 +323,18 @@
                   icon="pi pi-list-check"
                   label="เริ่มนับใหม่"
                   size="small"
-                  class="p-button-primary"
+                  class="p-button-primary mr-1"
                   :loading="actionLoadingCode === data.period_code"
                   @click="handleStartCount(data)"
+                />
+                <!-- Show rejected count for reference -->
+                <Button
+                  v-if="data.active_count_id && data.active_count_status === 'REJECTED'"
+                  icon="pi pi-eye"
+                  label="ดูที่ถูกปฏิเสธ"
+                  size="small"
+                  class="p-button-danger p-button-outlined"
+                  @click="navigateToCount(data.active_count_id)"
                 />
               </template>
 

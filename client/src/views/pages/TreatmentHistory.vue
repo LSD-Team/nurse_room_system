@@ -1,14 +1,18 @@
 <script lang="ts" setup>
   import { ref, onMounted, computed } from 'vue';
   import { FilterMatchMode } from '@primevue/core/api';
+  import Swal from 'sweetalert2';
   import { TreatmentService } from '@/services/treatment.service';
+  import EmployeeService from '@/services/employee.service';
   import { formatDate } from '@/utils/format.utils';
   import type { IVisitListItem, IVisitDetail, IVisitUsage, IVitals } from '@/interfaces/treatment.interfaces';
+  import type { IViewEmployee } from '@/shared/template-web-stack-2025/employee.interface';
 
   // ─── List ──────────────────────────────────────────────────────────────
   const visits = ref<IVisitListItem[]>([]);
   const loading = ref(false);
   const errorMsg = ref('');
+  const employees = ref<IViewEmployee[]>([]);
 
   // ─── Filters ───────────────────────────────────────────────────────────
   const filterDateFrom = ref<Date | null>(null);
@@ -32,6 +36,8 @@
   const detailVisit = ref<IVisitDetail | null>(null);
   const detailUsages = ref<IVisitUsage[]>([]);
   const detailLoading = ref(false);
+  const detailDeleting = ref(false);
+  const activeDetailTab = ref('0');
 
   // ─── Computed vitals from JSON ─────────────────────────────────────────
   const parsedVitals = computed<IVitals>(() => {
@@ -40,7 +46,13 @@
   });
 
   // ─────────────────────────────────────────────────────────────────────────
-  onMounted(() => loadVisits());
+  onMounted(async () => {
+    const [, emps] = await Promise.allSettled([
+      loadVisits(),
+      new EmployeeService().findAll(),
+    ]);
+    if (emps.status === 'fulfilled') employees.value = emps.value;
+  });
 
   async function loadVisits() {
     loading.value = true;
@@ -77,10 +89,19 @@
     }
   }
 
+  // EMP visits: SP returns null for patient_name → enrich from employees list
+  function getPatientDisplayName(visit: IVisitListItem | IVisitDetail): string {
+    if ((visit as any).patient_type === 'EMP' || (visit as any).employee_id) {
+      const emp = employees.value.find(e => e.ID === (visit as any).employee_id);
+      return emp?.thai_name || (visit as any).employee_id || '-';
+    }
+    return (visit as any).patient_name || (visit as any).ext_patient_name || '-';
+  }
+
   function treatmentSeverity(code: string) {
     const map: Record<string, string> = {
       REST: 'info',
-      DRESSING: 'warning',
+      DRESSING: 'warn',
       SEND_HOME: 'secondary',
       DISPENSE: 'success',
       EYE_WASH: 'contrast',
@@ -89,11 +110,37 @@
   }
 
   function patientTypeSeverity(type: string) {
-    return type === 'EMP' ? 'info' : 'warning';
+    return type === 'EMP' ? 'info' : 'warn';
   }
 
   function patientTypeLabel(type: string) {
     return type === 'EMP' ? 'พนักงาน' : 'บุคคลภายนอก';
+  }
+
+  async function deleteVisit() {
+    if (!detailVisit.value) return;
+    const confirm = await Swal.fire({
+      icon: 'warning',
+      title: 'ยืนยันการลบ',
+      html: `ต้องการลบบันทึกการรักษาวันที่<br><b>${detailVisit.value.visit_datetime ? new Date(detailVisit.value.visit_datetime).toLocaleString('th-TH') : '-'}</b><br>ระบบจะคืน Stock ยาทั้งหมดให้อัตโนมัติ`,
+      showCancelButton: true,
+      confirmButtonText: 'ลบ',
+      cancelButtonText: 'ยกเลิก',
+      confirmButtonColor: '#ef4444',
+      customClass: { container: 'swal-on-top' },
+    });
+    if (!confirm.isConfirmed) return;
+    detailDeleting.value = true;
+    try {
+      await TreatmentService.deleteVisit(detailVisit.value.visit_id);
+      showDetail.value = false;
+      await loadVisits();
+      Swal.fire({ icon: 'success', title: 'ลบบันทึกการรักษาสำเร็จ', timer: 1500, showConfirmButton: false, customClass: { container: 'swal-on-top' } });
+    } catch (err: any) {
+      Swal.fire({ icon: 'error', title: 'ไม่สามารถลบได้', text: err?.response?.data?.message || err?.message, customClass: { container: 'swal-on-top' } });
+    } finally {
+      detailDeleting.value = false;
+    }
   }
 </script>
 
@@ -146,7 +193,9 @@
       <Column field="visit_datetime" header="วันที่/เวลา" style="width: 10rem" sortable>
         <template #body="{ data }">{{ formatDate(data.visit_datetime) }}</template>
       </Column>
-      <Column field="patient_name" header="ชื่อผู้ป่วย" sortable />
+      <Column field="patient_name" header="ชื่อผู้ป่วย" sortable>
+        <template #body="{ data }">{{ getPatientDisplayName(data) }}</template>
+      </Column>
       <Column field="patient_type" header="ประเภท" style="width: 8rem">
         <template #body="{ data }">
           <Tag :value="patientTypeLabel(data.patient_type)" :severity="patientTypeSeverity(data.patient_type)" />
@@ -196,7 +245,7 @@
           <i class="pi pi-user text-2xl text-primary" />
           <div class="flex-1">
             <div class="font-bold text-lg">
-              {{ detailVisit.patient_type === 'EMP' ? detailVisit.employee_id : detailVisit.ext_patient_name }}
+              {{ getPatientDisplayName(detailVisit) }}
             </div>
             <div class="text-sm text-color-secondary">
               {{ detailVisit.patient_type === 'EXT' ? detailVisit.ext_patient_company : '' }}
@@ -208,81 +257,114 @@
           </div>
         </div>
       </div>
+      <div class="flex justify-end mb-2">
+        <Button icon="pi pi-trash" label="ลบบันทึกการรักษา" size="small" outlined severity="danger" :loading="detailDeleting" @click="deleteVisit" />
+      </div>
 
-      <TabView>
+      <Tabs v-model:value="activeDetailTab">
+        <TabList>
+          <Tab value="0">ข้อมูล Visit</Tab>
+          <Tab value="1">สัญญาณชีพ</Tab>
+          <Tab value="2">รายการยา ({{ detailUsages.length }})</Tab>
+        </TabList>
+        <TabPanels>
         <!-- Visit info tab -->
-        <TabPanel value="0" header="ข้อมูล Visit">
-          <div class="grid text-sm">
-            <div class="col-4 text-color-secondary font-medium">กะงาน</div>
-            <div class="col-8">{{ detailVisit.shift_code || '-' }}</div>
-            <div class="col-4 text-color-secondary font-medium">อาการ</div>
-            <div class="col-8">{{ detailVisit.symptoms || '-' }}</div>
-            <div class="col-4 text-color-secondary font-medium">กลุ่มโรค</div>
-            <div class="col-8">{{ detailVisit.disease_group_name || '-' }}</div>
-            <div class="col-4 text-color-secondary font-medium">ประเภทโรค</div>
-            <div class="col-8">{{ detailVisit.disease_sub_group_name || '-' }}</div>
-            <div class="col-4 text-color-secondary font-medium">ประเภทการรักษา</div>
-            <div class="col-8">
+        <TabPanel value="0">
+          <div class="text-sm flex flex-col divide-y" style="--tw-divide-opacity:1; border-color: var(--p-surface-200)">
+            <div class="flex items-start gap-3 py-2.5">
+              <span class="font-semibold text-color-secondary flex-none" style="width: 9rem">กะงาน</span>
+              <span>{{ detailVisit.shift_code || '-' }}</span>
+            </div>
+            <div class="flex items-start gap-3 py-2.5">
+              <span class="font-semibold text-color-secondary flex-none" style="width: 9rem">อาการ</span>
+              <span class="whitespace-pre-wrap">{{ detailVisit.symptoms || '-' }}</span>
+            </div>
+            <div class="flex items-start gap-3 py-2.5">
+              <span class="font-semibold text-color-secondary flex-none" style="width: 9rem">กลุ่มโรค</span>
+              <span>{{ detailVisit.disease_group_name || '-' }}</span>
+            </div>
+            <div class="flex items-start gap-3 py-2.5">
+              <span class="font-semibold text-color-secondary flex-none" style="width: 9rem">ประเภทโรค</span>
+              <span>{{ detailVisit.disease_sub_group_name || '-' }}</span>
+            </div>
+            <div class="flex items-center gap-3 py-2.5">
+              <span class="font-semibold text-color-secondary flex-none" style="width: 9rem">ประเภทการรักษา</span>
               <Tag v-if="detailVisit.treatment_code" :value="detailVisit.treatment_type_name" :severity="treatmentSeverity(detailVisit.treatment_code)" />
               <span v-else>-</span>
             </div>
-            <div class="col-4 text-color-secondary font-medium">อุบัติเหตุในงาน</div>
-            <div class="col-8">
+            <div class="flex items-center gap-3 py-2.5">
+              <span class="font-semibold text-color-secondary flex-none" style="width: 9rem">อุบัติเหตุในงาน</span>
               <Tag :value="detailVisit.accident_in_work_flag ? 'ใช่' : 'ไม่ใช่'" :severity="detailVisit.accident_in_work_flag ? 'danger' : 'secondary'" />
             </div>
-            <template v-if="detailVisit.refer_flag">
-              <div class="col-4 text-color-secondary font-medium">ส่งต่อ</div>
-              <div class="col-8">
-                <Tag value="ส่งต่อ" severity="warning" class="mr-2" />
-                {{ detailVisit.refer_type_name }} · {{ detailVisit.hospital_name_th || '-' }}
-              </div>
-            </template>
-            <div class="col-4 text-color-secondary font-medium">คำแนะนำพยาบาล</div>
-            <div class="col-8">{{ detailVisit.nursing_advice || '-' }}</div>
-            <div class="col-4 text-color-secondary font-medium">บันทึกโดย</div>
-            <div class="col-8">{{ detailVisit.created_by }}</div>
+            <div v-if="detailVisit.refer_flag" class="flex items-center gap-3 py-2.5">
+              <span class="font-semibold text-color-secondary flex-none" style="width: 9rem">ส่งต่อ</span>
+              <Tag value="ส่งต่อ" severity="warn" />
+              <span class="text-color-secondary">{{ detailVisit.refer_type_name }} · {{ detailVisit.hospital_name_th || '-' }}</span>
+            </div>
+            <div class="flex items-start gap-3 py-2.5">
+              <span class="font-semibold text-color-secondary flex-none" style="width: 9rem">คำแนะนำพยาบาล</span>
+              <span class="whitespace-pre-wrap">{{ detailVisit.nursing_advice || '-' }}</span>
+            </div>
+            <div class="flex items-center gap-3 py-2.5">
+              <span class="font-semibold text-color-secondary flex-none" style="width: 9rem">บันทึกโดย</span>
+              <span>{{ detailVisit.created_by }}</span>
+            </div>
           </div>
         </TabPanel>
 
         <!-- Vitals tab -->
-        <TabPanel value="1" header="สัญญาณชีพ">
+        <TabPanel value="1">
           <div v-if="Object.keys(parsedVitals).filter(k => parsedVitals[k as keyof IVitals] != null).length === 0" class="text-color-secondary text-center py-3">
             ไม่มีข้อมูลสัญญาณชีพ
           </div>
-          <div v-else class="grid text-sm">
+          <div v-else class="text-sm flex flex-col divide-y" style="--tw-divide-opacity:1; border-color: var(--p-surface-200)">
             <template v-if="parsedVitals.bp_systolic != null || parsedVitals.bp_diastolic != null">
-              <div class="col-5 text-color-secondary font-medium">ความดันโลหิต</div>
-              <div class="col-7">{{ parsedVitals.bp_systolic }}/{{ parsedVitals.bp_diastolic }} mmHg</div>
+              <div class="flex items-center gap-3 py-2.5">
+                <span class="font-semibold text-color-secondary flex-none" style="width: 10rem">ความดันโลหิต</span>
+                <span>{{ parsedVitals.bp_systolic }}/{{ parsedVitals.bp_diastolic }} <span class="text-color-secondary text-xs">mmHg</span></span>
+              </div>
             </template>
             <template v-if="parsedVitals.pulse != null">
-              <div class="col-5 text-color-secondary font-medium">ชีพจร</div>
-              <div class="col-7">{{ parsedVitals.pulse }} /min</div>
+              <div class="flex items-center gap-3 py-2.5">
+                <span class="font-semibold text-color-secondary flex-none" style="width: 10rem">ชีพจร</span>
+                <span>{{ parsedVitals.pulse }} <span class="text-color-secondary text-xs">/min</span></span>
+              </div>
             </template>
-            <template v-if="parsedVitals.temp != null">
-              <div class="col-5 text-color-secondary font-medium">อุณหภูมิ</div>
-              <div class="col-7">{{ parsedVitals.temp }} °C</div>
+            <template v-if="parsedVitals.temp_c != null">
+              <div class="flex items-center gap-3 py-2.5">
+                <span class="font-semibold text-color-secondary flex-none" style="width: 10rem">อุณหภูมิ</span>
+                <span>{{ parsedVitals.temp_c }} <span class="text-color-secondary text-xs">°C</span></span>
+              </div>
             </template>
-            <template v-if="parsedVitals.weight != null">
-              <div class="col-5 text-color-secondary font-medium">น้ำหนัก</div>
-              <div class="col-7">{{ parsedVitals.weight }} kg</div>
+            <template v-if="parsedVitals.weight_kg != null">
+              <div class="flex items-center gap-3 py-2.5">
+                <span class="font-semibold text-color-secondary flex-none" style="width: 10rem">น้ำหนัก</span>
+                <span>{{ parsedVitals.weight_kg }} <span class="text-color-secondary text-xs">kg</span></span>
+              </div>
             </template>
-            <template v-if="parsedVitals.height != null">
-              <div class="col-5 text-color-secondary font-medium">ส่วนสูง</div>
-              <div class="col-7">{{ parsedVitals.height }} cm</div>
+            <template v-if="parsedVitals.height_cm != null">
+              <div class="flex items-center gap-3 py-2.5">
+                <span class="font-semibold text-color-secondary flex-none" style="width: 10rem">ส่วนสูง</span>
+                <span>{{ parsedVitals.height_cm }} <span class="text-color-secondary text-xs">cm</span></span>
+              </div>
             </template>
-            <template v-if="parsedVitals.o2_sat != null">
-              <div class="col-5 text-color-secondary font-medium">O2 Saturation</div>
-              <div class="col-7">{{ parsedVitals.o2_sat }} %</div>
+            <template v-if="parsedVitals.spo2 != null">
+              <div class="flex items-center gap-3 py-2.5">
+                <span class="font-semibold text-color-secondary flex-none" style="width: 10rem">O2 Saturation</span>
+                <span>{{ parsedVitals.spo2 }} <span class="text-color-secondary text-xs">%</span></span>
+              </div>
             </template>
             <template v-if="parsedVitals.rr != null">
-              <div class="col-5 text-color-secondary font-medium">อัตราการหายใจ</div>
-              <div class="col-7">{{ parsedVitals.rr }} /min</div>
+              <div class="flex items-center gap-3 py-2.5">
+                <span class="font-semibold text-color-secondary flex-none" style="width: 10rem">อัตราการหายใจ</span>
+                <span>{{ parsedVitals.rr }} <span class="text-color-secondary text-xs">/min</span></span>
+              </div>
             </template>
           </div>
         </TabPanel>
 
         <!-- Usages tab -->
-        <TabPanel value="2" :header="`รายการยา (${detailUsages.length})`">
+        <TabPanel value="2">
           <DataTable :value="detailUsages" class="p-datatable-sm" emptyMessage="ไม่มีรายการยา/อุปกรณ์">
             <Column header="#" style="width: 3rem">
               <template #body="{ index }">{{ index + 1 }}</template>
@@ -293,7 +375,8 @@
             <Column field="unit_name" header="หน่วย" style="width: 5rem" />
           </DataTable>
         </TabPanel>
-      </TabView>
+        </TabPanels>
+      </Tabs>
     </div>
   </Dialog>
 </template>

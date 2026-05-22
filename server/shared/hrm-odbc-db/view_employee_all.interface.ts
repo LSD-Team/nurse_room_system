@@ -11,6 +11,7 @@ interface IViewEmployeeAll {
   position_level: string;
   JobPositionCode: string;
   WorkStatus: 'Active' | 'Resigned';
+  bloodeng: string;
 
   // organizational info
   ExeOfficeCode: string;

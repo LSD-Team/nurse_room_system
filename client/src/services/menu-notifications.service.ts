@@ -6,6 +6,7 @@ export interface MenuNotificationCounts {
   borrow: number;
   apv: number;
   all: number;
+  stock_count_apv: number;
 }
 
 export class MenuNotificationsService {
@@ -23,6 +24,7 @@ export class MenuNotificationsService {
         borrow: 0,
         apv: 0,
         all: 0,
+        stock_count_apv: 0,
       };
     }
   }

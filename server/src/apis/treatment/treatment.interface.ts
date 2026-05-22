@@ -83,6 +83,8 @@ export interface IVisitDetail {
   refer_type_name: string;
   created_by: string;
   created_at: string;
+  updated_by: string | null;
+  updated_at: string | null;
 }
 
 export interface IVisitUsage {
@@ -100,6 +102,29 @@ export interface IVisitUsage {
 export interface IUpdateVisitUsageBody {
   new_qty_base: number;
   reason: string;
+}
+
+export interface IUpdateUsageItem {
+  action: 'ADD' | 'EDIT' | 'DELETE';
+  visit_usage_id?: number;
+  item_id?: number;
+  qty_base?: number;
+}
+
+export interface IUpdateVisitBody {
+  symptoms?: string | null;
+  vitals_json?: string | null;
+  nursing_advice?: string | null;
+  group_id?: number | null;
+  disease_id?: number | null;
+  treatment_type_id?: number | null;
+  accident_in_work_flag?: boolean;
+  work_related_flag?: boolean;
+  refer_flag?: boolean;
+  refer_type_id?: number | null;
+  severity_id?: number | null;
+  reason: string;
+  usages?: IUpdateUsageItem[];
 }
 
 export interface IExternalPerson {
@@ -141,4 +166,68 @@ export interface IHospital {
   hospital_name_en: string;
   hospital_type: string;
   is_active: boolean;
+}
+
+export interface IPatientProfileQuery {
+  patient_type: 'EMP' | 'EXT';
+  employee_id?: string;
+  external_person_id?: number;
+}
+
+export interface IUpsertAllergyBody {
+  allergy_id?: number;
+  patient_id: number;
+  allergy_type: 'DRUG' | 'FOOD' | 'SUBSTANCE' | 'OTHER';
+  allergy_name: string;
+  item_id?: number;
+  reaction?: string;
+  severity: 'MILD' | 'MODERATE' | 'SEVERE' | 'LIFE_THREATENING';
+  source?: string;
+  noted_at?: string;
+}
+
+export interface IUpsertDiseaseBody {
+  condition_id?: number;
+  patient_id: number;
+  disease_name: string;
+  sub_group_id?: number;
+  diagnosed_year?: number;
+  control_status?: string;
+  note?: string;
+}
+
+export interface IPatientAllergyRecord {
+  allergy_id: number;
+  drug_name: string;
+  item_id: number | null;
+  reaction: string;
+  severity: 'MILD' | 'MODERATE' | 'SEVERE' | 'LIFE_THREATENING';
+  allergy_type: 'DRUG' | 'FOOD' | 'SUBSTANCE' | 'OTHER';
+  source: string;
+  noted_at: string;
+}
+
+export interface IPatientUnderlyingDiseaseRecord {
+  condition_id: number;
+  disease_name: string;
+  sub_group_id: number | null;
+  diagnosed_year: number | null;
+  control_status: string;
+}
+
+export interface IPatientPhysicalRecord {
+  weight_kg: number;
+  height_cm: number;
+  bmi: number | null;
+  measured_at: string;
+}
+
+export interface IPatientProfileResult {
+  patient_id: number;
+  patient_type: 'EMP' | 'EXT';
+  no_known_allergy: boolean;
+  total_visits: number;
+  allergies: IPatientAllergyRecord[];
+  underlying_diseases: IPatientUnderlyingDiseaseRecord[];
+  latest_physical: IPatientPhysicalRecord | null;
 }

@@ -1367,13 +1367,13 @@ Step 6: คำแนะนำ + บันทึก
 - [x] ทดสอบ endpoints ใน Swagger (`/api`)
 
 ### Phase 3 — Frontend
-- [ ] สร้าง `treatment.interfaces.ts` (client — รวม IExternalPerson)
-- [ ] สร้าง `treatment.service.ts` (client — รวม searchExternalPeople, createExternalPerson)
-- [ ] สร้าง `TreatmentRecord.vue` (form หลัก — Step 1 รองรับ dialog ลงทะเบียน EXT)
-- [ ] สร้าง `TreatmentHistory.vue` (ตาราง + filter + ดูรายละเอียด)
-- [ ] แก้ไข `router/index.ts`
-- [ ] `pnpm build` ผ่าน ✅
-- [ ] ทดสอบ flow ครบ: ค้นหาพนักงาน / ลงทะเบียนบุคคลภายนอก → กรอกข้อมูล → บันทึก → ตรวจ stock
+- [x] สร้าง `treatment.interfaces.ts` (client — รวม IExternalPerson)
+- [x] สร้าง `treatment.service.ts` (client — รวม searchExternalPeople, createExternalPerson)
+- [x] สร้าง `TreatmentRecord.vue` (form หลัก — Step 1 รองรับ dialog ลงทะเบียน EXT)
+- [x] สร้าง `TreatmentHistory.vue` (ตาราง + filter + ดูรายละเอียด)
+- [x] แก้ไข `router/index.ts`
+- [x] `pnpm build` ผ่าน ✅
+- [x] ทดสอบ flow ครบ: ค้นหาพนักงาน / ลงทะเบียนบุคคลภายนอก → กรอกข้อมูล → บันทึก → ตรวจ stock
 
 ---
 

@@ -9,6 +9,7 @@ export interface IStockOnHand {
   qty_base: number | null;
   item_min: number | null;
   item_max: number | null;
+  usage_unit_name_th: string | null;
 }
 
 export interface IStockMovement {
@@ -19,6 +20,7 @@ export interface IStockMovement {
   item_name_th: string;
   item_name_en: string;
   qty_base: number;
+  unit_name_th: string | null;
   ref_type: string;
   ref_id: string | null;
   created_by: string;
@@ -44,7 +46,8 @@ export class StockService {
         item_name_th,
         qty_base,
         item_min,
-        item_max
+        item_max,
+        usage_unit_name_th
       FROM view_items
       ORDER BY item_code
     `;
@@ -64,6 +67,7 @@ export class StockService {
         i.item_name_th,
         i.item_name_en,
         sm.qty_base,
+        i.usage_unit_name_th AS unit_name_th,
         sm.ref_type,
         sm.ref_id,
         sm.created_by,

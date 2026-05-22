@@ -1,10 +1,14 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
 import { DatabaseService } from '@/src/database/database.service';
 import type {
   ICreateVisitBody,
   ICreateExternalPersonBody,
   IGetVisitListQuery,
   IUpdateVisitUsageBody,
+  IUpdateVisitBody,
+  IPatientProfileQuery,
+  IUpsertAllergyBody,
+  IUpsertDiseaseBody,
 } from './treatment.interface';
 
 @Injectable()
@@ -105,6 +109,150 @@ export class TreatmentService {
     });
   }
 
+  // ─── GET: Patient Profile + Allergies + Underlying Diseases ───
+  async getPatientProfile(query: IPatientProfileQuery, createdBy: string) {
+    const db = this.DATABASE_NAME;
+
+    // 1. Get/create patient profile via SP
+    const profileResult = await this.db.executeStoredProcedure<{ patient_id: number; action: string }>(
+      db, 'sp_PP_01_GetOrCreatePatientProfile', {
+        PatientType:      query.patient_type,
+        EmployeeId:       query.employee_id ?? '',
+        ExternalPersonId: query.external_person_id ?? 0,
+        CreatedBy:        createdBy,
+      },
+    );
+
+    const patientId = profileResult[0]?.patient_id;
+    if (!patientId) {
+      throw new InternalServerErrorException('ไม่สามารถดึงข้อมูล patient profile ได้');
+    }
+
+    // 2. Parallel queries
+    const [profileData, allergies, diseases, visitCount, latestVitals] = await Promise.all([
+      this.db.query<any>(db,
+        `SELECT patient_id, patient_type, no_known_allergy FROM patient_profiles WHERE patient_id = @patientId`,
+        { patientId }),
+      this.db.query<any>(db,
+        `SELECT allergy_id, drug_name, item_id, reaction, severity, allergy_type, source, noted_at
+         FROM patient_allergies WHERE patient_id = @patientId AND is_active = 1 ORDER BY noted_at DESC`,
+        { patientId }),
+      this.db.query<any>(db,
+        `SELECT condition_id, disease_name, sub_group_id, diagnosed_year, control_status
+         FROM patient_underlying_diseases WHERE patient_id = @patientId AND is_active = 1 ORDER BY created_at DESC`,
+        { patientId }),
+      this.db.query<{ count: number }>(db,
+        `SELECT COUNT(*) AS count FROM visits WHERE patient_id = @patientId`,
+        { patientId }),
+      this.db.query<{ weight_kg: number; height_cm: number; measured_at: string }>(db,
+        `SELECT TOP 1 weight_kg, height_cm, measured_at FROM view_patient_latest_vitals WHERE patient_id = @patientId`,
+        { patientId }),
+    ]);
+
+    const lv = latestVitals[0] ?? null;
+    const latestPhysical = lv
+      ? {
+          weight_kg:   lv.weight_kg,
+          height_cm:   lv.height_cm,
+          bmi:         lv.weight_kg && lv.height_cm
+                         ? Math.round((lv.weight_kg / Math.pow(lv.height_cm / 100, 2)) * 10) / 10
+                         : null,
+          measured_at: lv.measured_at,
+        }
+      : null;
+
+    return {
+      patient_id:          patientId,
+      patient_type:        query.patient_type,
+      no_known_allergy:    !!(profileData[0]?.no_known_allergy),
+      total_visits:        visitCount[0]?.count ?? 0,
+      allergies:           allergies ?? [],
+      underlying_diseases: diseases ?? [],
+      latest_physical:     latestPhysical,
+    };
+  }
+
+  // ─── POST/PUT: Upsert patient allergy (sp_PP_02_UpsertPatientAllergy) ───
+  async upsertAllergy(body: IUpsertAllergyBody, notedBy: string) {
+    return this.db.executeStoredProcedure(this.DATABASE_NAME, 'sp_PP_02_UpsertPatientAllergy', {
+      AllergyId:   body.allergy_id ?? 0,
+      PatientId:   body.patient_id,
+      AllergyType: body.allergy_type,
+      AllergyName: body.allergy_name,
+      ItemId:      body.item_id ?? null,
+      Reaction:    body.reaction ?? null,
+      Severity:    body.severity,
+      Source:      body.source ?? 'SELF_REPORT',
+      NotedAt:     body.noted_at ?? null,
+      NotedBy:     notedBy,
+      IsActive:    1,
+    });
+  }
+
+  // ─── DELETE: Soft-delete patient allergy ───
+  async deleteAllergy(allergyId: number, patientId: number) {
+    const db = this.DATABASE_NAME;
+    const rows = await this.db.query<{ affected: number }>(db,
+      `UPDATE patient_allergies SET is_active = 0 WHERE allergy_id = @allergyId AND patient_id = @patientId;
+       SELECT @@ROWCOUNT AS affected`,
+      { allergyId, patientId });
+    const affected = rows[0]?.affected ?? 0;
+    if (!affected) throw new Error('ไม่พบข้อมูล หรือไม่มีสิทธิ์ลบ');
+    return { deleted: true };
+  }
+
+  // ─── POST/PUT: Upsert underlying disease (sp_PP_03_UpsertUnderlyingDisease) ───
+  async upsertDisease(body: IUpsertDiseaseBody, createdBy: string) {
+    return this.db.executeStoredProcedure(this.DATABASE_NAME, 'sp_PP_03_UpsertUnderlyingDisease', {
+      ConditionId:   body.condition_id ?? 0,
+      PatientId:     body.patient_id,
+      DiseaseName:   body.disease_name,
+      SubGroupId:    body.sub_group_id ?? null,
+      DiagnosedYear: body.diagnosed_year ?? null,
+      ControlStatus: body.control_status ?? null,
+      Note:          body.note ?? null,
+      IsActive:      1,
+      CreatedBy:     createdBy,
+    });
+  }
+
+  // ─── DELETE: Soft-delete underlying disease ───
+  async deleteDisease(conditionId: number, patientId: number) {
+    const db = this.DATABASE_NAME;
+    const rows = await this.db.query<{ affected: number }>(db,
+      `UPDATE patient_underlying_diseases SET is_active = 0 WHERE condition_id = @conditionId AND patient_id = @patientId;
+       SELECT @@ROWCOUNT AS affected`,
+      { conditionId, patientId });
+    const affected = rows[0]?.affected ?? 0;
+    if (!affected) throw new Error('ไม่พบข้อมูล หรือไม่มีสิทธิ์ลบ');
+    return { deleted: true };
+  }
+
+  // ─── GET: Visit history for a specific patient (filtered by patient_id) ───
+  async getPatientVisitHistory(patientId: number) {
+    const db = this.DATABASE_NAME;
+    return this.db.query<any>(db,
+      `SELECT
+         v.visit_id, v.visit_datetime, v.shift_code, v.patient_type,
+         v.employee_id, v.external_person_id, v.patient_id,
+         v.symptoms, v.nursing_advice, v.accident_in_work_flag, v.work_related_flag,
+         v.refer_flag, v.created_by, v.created_at,
+         dg.group_name_th  AS disease_group_name,
+         ds.sub_group_name_th AS disease_sub_group_name,
+         tt.treatment_name_th AS treatment_type_name,
+         tt.treatment_code,
+         rt.refer_name_th  AS refer_type_name,
+         (SELECT COUNT(*) FROM visit_usages vu WHERE vu.visit_id = v.visit_id AND vu.is_active = 1) AS usage_count
+       FROM visits v
+       LEFT JOIN disease_groups      dg ON dg.group_id          = v.group_id
+       LEFT JOIN disease_sub_groups  ds ON ds.sub_group_id       = v.disease_id
+       LEFT JOIN treatment_types     tt ON tt.treatment_type_id  = v.treatment_type_id
+       LEFT JOIN refer_types         rt ON rt.refer_type_id      = v.refer_type_id
+       WHERE v.patient_id = @patientId AND v.is_active = 1
+       ORDER BY v.visit_datetime DESC`,
+      { patientId });
+  }
+
   // ─── GET: Lookup data ทั้งหมด (parallel queries) ───
   async getLookups() {
     const db = this.DATABASE_NAME;
@@ -119,5 +267,51 @@ export class TreatmentService {
       ]);
 
     return { treatment_types, refer_types, severity_types, disease_groups, disease_sub_groups, hospitals };
+  }
+
+  // ─── GET: วันที่ stock count ที่ approved ล่าสุด (sp_TR_05) ───
+  async getLastApprovedStockDate(): Promise<{ last_approved_date: string | null }> {
+    const result = await this.db.executeStoredProcedure(this.DATABASE_NAME, 'sp_TR_05_GetLastApprovedStockDate', {});
+    return { last_approved_date: (result[0] as any)?.last_approved_date ?? null };
+  }
+
+  // ─── PUT: แก้ไข visit header + usages (sp_TR_06_UpdateVisit) ───
+  async updateVisit(visitId: number, body: IUpdateVisitBody, editedBy: string) {
+    const usagesJson = body.usages?.length ? JSON.stringify(body.usages) : null;
+    const result = await this.db.executeStoredProcedure(this.DATABASE_NAME, 'sp_TR_06_UpdateVisit', {
+      VisitId:            visitId,
+      EditedBy:           editedBy,
+      Reason:             body.reason ?? null,
+      Symptoms:           body.symptoms ?? null,
+      VitalsJson:         body.vitals_json ?? null,
+      NursingAdvice:      body.nursing_advice ?? null,
+      GroupId:            body.group_id ?? null,
+      DiseaseId:          body.disease_id ?? null,
+      TreatmentTypeId:    body.treatment_type_id ?? null,
+      AccidentInWorkFlag: body.accident_in_work_flag != null ? (body.accident_in_work_flag ? 1 : 0) : null,
+      WorkRelatedFlag:    body.work_related_flag != null ? (body.work_related_flag ? 1 : 0) : null,
+      ReferFlag:          body.refer_flag != null ? (body.refer_flag ? 1 : 0) : null,
+      ReferTypeId:        body.refer_type_id ?? null,
+      SeverityId:         body.severity_id ?? null,
+      UsagesJson:         usagesJson,
+    });
+    const row = result[0] as any;
+    if (!row?.Status) {
+      throw new InternalServerErrorException(row?.Message || 'Update failed');
+    }
+    return { message: row.Message };
+  }
+
+  // ─── DELETE: soft-delete visit (sp_TR_07_DeleteVisit) ───
+  async deleteVisit(visitId: number, deletedBy: string) {
+    const result = await this.db.executeStoredProcedure(this.DATABASE_NAME, 'sp_TR_07_DeleteVisit', {
+      VisitId:   visitId,
+      DeletedBy: deletedBy,
+    });
+    const row = result[0] as any;
+    if (!row?.Status) {
+      throw new InternalServerErrorException(row?.Message || 'Delete failed');
+    }
+    return { message: row.Message };
   }
 }
