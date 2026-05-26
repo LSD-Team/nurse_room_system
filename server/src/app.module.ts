@@ -15,6 +15,7 @@ import { PhysicalCountModule } from '@/src/apis/physical-count/physical-count.mo
 import { TreatmentModule } from '@/src/apis/treatment/treatment.module';
 import { ReferModule } from '@/src/apis/refer/refer.module';
 import { MasterDataModule } from '@/src/apis/master-data/master-data.module';
+import { MenuModule } from '@/src/apis/menu/menu.module';
 import { AuthModule } from '@/src/auth/auth.module';
 import { DatabaseModule } from '@/src/database/database.module';
 import { EmailModule } from '@/src/email/email.module';
@@ -49,6 +50,7 @@ import { AppController } from '@/src/app.controller';
     TreatmentModule,
     ReferModule,
     MasterDataModule,
+    MenuModule,
   ],
   controllers: [AppController],
   providers: [

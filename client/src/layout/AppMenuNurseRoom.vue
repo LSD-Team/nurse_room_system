@@ -1,378 +1,140 @@
 <script lang="ts" setup>
-  import { onMounted, computed } from 'vue';
-  import AppMenuItem from './AppMenuItem.vue';
-  import { useMenuNotificationsStore } from '@/stores/menu-notifications.store';
+import { onMounted, computed, ref } from 'vue';
+import AppMenuItem from './AppMenuItem.vue';
+import { useMenuNotificationsStore } from '@/stores/menu-notifications.store';
+import { Api } from '@/services/api.service';
 
-  // Define proper types for menu items
-  interface MenuItem {
-    label: string;
-    items?: MenuItem[];
-    icon?: string;
-    to?: string;
-    url?: string;
-    target?: string;
-    class?: string;
-    separator?: boolean;
-    color?: string;
-    badge?: number;
+// Define proper types for menu items
+interface MenuItem {
+  label: string;
+  items?: MenuItem[];
+  icon?: string;
+  to?: string;
+  url?: string;
+  target?: string;
+  class?: string;
+  separator?: boolean;
+  color?: string;
+  badge?: number;
+}
+
+const menuNotificationsStore = useMenuNotificationsStore();
+const rawMenus = ref<any[]>([]);
+const menuTree = ref<MenuItem[]>([]);
+
+onMounted(async () => {
+  await menuNotificationsStore.loadAllCounts();
+  try {
+    const menus = await Api.get<any[]>('/menus');
+    rawMenus.value = menus || [];
+    menuTree.value = buildTree(rawMenus.value);
+  } catch (error) {
+    console.error('[Menu] Failed to load menus:', error);
+  }
+});
+
+const model = computed(() => {
+  return menuTree.value;
+});
+
+function buildTree(items: any[]): MenuItem[] {
+  const map = new Map<number, any>();
+  items.forEach((i) => map.set(i.id, { ...i, children: [] }));
+  const roots: any[] = [];
+
+  items.forEach((i) => {
+    const node = map.get(i.id);
+    if (i.parent_id == null) {
+      roots.push(node);
+    } else {
+      const parent = map.get(i.parent_id);
+      if (parent) parent.children.push(node);
+      else roots.push(node);
+    }
+  });
+
+  function sortNodes(a: any, b: any) {
+    return (a.sort_order || 0) - (b.sort_order || 0) || (a.id - b.id);
   }
 
-  // ─── Use Menu Notifications Store ───
-  const menuNotificationsStore = useMenuNotificationsStore();
+  function mapNode(n: any): MenuItem {
+    const children = (n.children || []).sort(sortNodes).map(mapNode);
+    const item: MenuItem = {
+      label: n.name,
+      icon: n.icon || undefined,
+      to: n.route || undefined,
+      color: resolveColor(n),
+      items: children.length ? children : undefined,
+      badge: computeBadge(n),
+    };
+    return item;
+  }
 
-  onMounted(() => {
-    menuNotificationsStore.loadAllCounts();
-    // Optional: Auto-refresh every 30 seconds
-    // setInterval(() => menuNotificationsStore.refreshAll(), 30000);
-  });
+  return roots.sort(sortNodes).map(mapNode);
+}
 
-  const model = computed(() => {
-    const items: MenuItem[] = [
-      {
-        label: 'Nurse Room System',
-        items: [
-          {
-            label: 'บันทึกการรักษาพยาบาล',
-            icon: 'pi pi-fw pi-pencil',
-            color: 'text-red-300',
-            to: '/treatment-record',
-          },
-          // {
-          //   label: 'Dashboard',
-          //   icon: 'pi pi-fw pi-home',
-          //   color: 'text-blue-400',
-          //   to: '/',
-          // },
-          {
-            label: 'จัดซื้อ & ยืม ยา/เวชภัณฑ์',
-            icon: 'pi pi-fw pi-shopping-cart',
-            color: 'text-cyan-300',
-            badge: (() => {
-              const total = menuNotificationsStore.all;
-              return total > 0 ? total : undefined;
-            })(),
-            items: [
-              {
-                label: 'สั่งซื้อ',
-                icon: 'pi pi-fw pi-shopping-cart',
-                color: 'text-cyan-300',
-                to: '/purchase-orders',
-                badge:
-                  menuNotificationsStore.po > 0
-                    ? menuNotificationsStore.po
-                    : undefined,
-              },
-              {
-                label: 'รับเข้า',
-                icon: 'pi pi-fw pi-inbox',
-                color: 'text-cyan-300',
-                to: '/goods-receipt',
-                badge:
-                  menuNotificationsStore.rec > 0
-                    ? menuNotificationsStore.rec
-                    : undefined,
-              },
-              {
-                label: 'ยืม',
-                icon: 'pi pi-fw pi-share-alt',
-                color: 'text-cyan-300',
-                to: '/borrow-medicines',
-                badge:
-                  menuNotificationsStore.borrow > 0
-                    ? menuNotificationsStore.borrow
-                    : undefined,
-              },
-            ],
-          },
-          {
-            label: 'คลัง/สต็อก ยา/เวชภัณฑ์',
-            icon: 'pi pi-fw pi-database',
-            color: 'text-sky-300',
-            items: [
-              {
-                label: 'สถานะสต็อก',
-                icon: 'pi pi-fw pi-check-circle',
-                color: 'text-sky-300',
-                to: '/stock-status',
-              },
-              {
-                label: 'บันทึกเคลื่อนไหว',
-                icon: 'pi pi-fw pi-refresh',
-                color: 'text-sky-300',
-                to: '/movement-records',
-              },
-            ],
-          },
-          {
-            label: 'บันทึก Stock ประจำเดือน',
-            icon: 'pi pi-fw pi-calendar',
-            color: 'text-amber-400',
-            to: '/stock-monthly-record',
-          },
-          {
-            label: 'ข้อมูลพยาบาล',
-            icon: 'pi pi-fw pi-id-card',
-            color: 'text-emerald-300',
-            items: [
-              {
-                label: 'รายชื่อพยาบาล',
-                icon: 'pi pi-fw pi-user-edit',
-                color: 'text-emerald-300',
-                to: '/nurses-list',
-              },
-              {
-                label: 'ทีมพยาบาล',
-                icon: 'pi pi-fw pi-users',
-                color: 'text-emerald-300',
-                to: '/nurse-teams',
-              },
-              {
-                label: 'สัญญาจ้างงานพยาบาล',
-                icon: 'pi pi-fw pi-file',
-                color: 'text-emerald-300',
-                to: '/nurse-contracts',
-              },
-            ],
-          },
-          {
-            label: 'ข้อมูลหลัก (Master Data)',
-            icon: 'pi pi-fw pi-cog',
-            color: 'text-purple-300',
-            items: [
-              {
-                label: 'ผู้จัดจำหน่าย',
-                icon: 'pi pi-fw pi-truck',
-                color: 'text-purple-300',
-                to: '/suppliers',
-              },
-              {
-                label: 'ประเภทการรักษา',
-                icon: 'pi pi-fw pi-check',
-                color: 'text-purple-300',
-                to: '/treatment-types',
-              },
-              {
-                label: 'ประเภทการ Refer',
-                icon: 'pi pi-fw pi-share-alt',
-                color: 'text-purple-300',
-                to: '/refer-types',
-              },
-              {
-                label: 'กลุ่มโรคและประเภทของโรค',
-                icon: 'pi pi-fw pi-folder',
-                color: 'text-purple-300',
-                to: '/disease-master-data',
-              },
-              {
-                label: 'สถานพยาบาล',
-                icon: 'pi pi-fw pi-building',
-                color: 'text-purple-300',
-                to: '/medical-facilities',
-              },
-              {
-                label: 'รายการยา/เวชภัณฑ์',
-                icon: 'pi pi-fw pi-list',
-                color: 'text-purple-300',
-                to: '/medicine-items',
-              },
-              {
-                label: 'หน่วยนับ',
-                icon: 'pi pi-fw pi-sort-numeric-up',
-                color: 'text-purple-300',
-                to: '/units',
-              },
-              {
-                label: 'ราคายา/เวชภัณฑ์',
-                icon: 'pi pi-fw pi-dollar',
-                color: 'text-purple-300',
-                to: '/medicine-prices',
-              },
-            ],
-          },
-          {
-            label: 'พนักงานทำงานวันหยุดและอัพเดทข้อมูลประจำปี',
-            icon: 'pi pi-fw pi-users',
-            color: 'text-indigo-400',
-            items: [
-              {
-                label: 'ข้อมูลตรวจสุขภาพประจำปี',
-                icon: 'pi pi-fw pi-file',
-                color: 'text-orange-300',
-                to: '/annual-health-data',
-              },
-              {
-                label: 'อัพเดทข้อมูลประกันสังคมพนักงาน',
-                icon: 'pi pi-fw pi-refresh',
-                color: 'text-indigo-300',
-                to: '/social-security-update',
-              },
-              {
-                label: 'อัพเดทข้อมูลมะเร็งปากมดลูก',
-                icon: 'pi pi-fw pi-refresh',
-                color: 'text-indigo-300',
-                to: '/cervical-cancer-update',
-              },
-              {
-                label: 'ข้อมูลพนักงานทำงานวันหยุด',
-                icon: 'pi pi-fw pi-calendar',
-                color: 'text-indigo-300',
-                to: '/employee-holiday-update',
-              },
-            ],
-          },
-          {
-            label: 'อนุมัติการสั่งซื้อยา',
-            icon: 'pi pi-fw pi-check-square',
-            color: 'text-lime-400',
-            to: '/approve-purchase',
-            badge:
-              menuNotificationsStore.apv > 0
-                ? menuNotificationsStore.apv
-                : undefined,
-          },
-          {
-            label: 'อนุมัติการนับ Stock',
-            icon: 'pi pi-fw pi-check-circle',
-            color: 'text-teal-400',
-            to: '/stock-count-approval',
-            badge:
-              menuNotificationsStore.stockCountApv > 0
-                ? menuNotificationsStore.stockCountApv
-                : undefined,
-          },
-          {
-            label: 'เบิกยากรณีพิเศษ',
-            icon: 'pi pi-fw pi-exclamation-triangle',
-            color: 'text-yellow-400',
-            to: '/special-medicine-request',
-          },
-          {
-            label: 'รายงาน',
-            icon: 'pi pi-fw pi-file-pdf',
-            color: 'text-rose-400',
-            items: [
-              {
-                label: 'การรักษาพยาบาล',
-                icon: 'pi pi-fw pi-file',
-                color: 'text-rose-300',
-                to: '/report-treatment',
-              },
-              {
-                label: 'ประวัติการ Refer',
-                icon: 'pi pi-fw pi-file',
-                color: 'text-rose-300',
-                to: '/report-refer',
-              },
-              {
-                label: 'ประวัติการเกิดอุบัติเหตุในงาน',
-                icon: 'pi pi-fw pi-file',
-                color: 'text-rose-300',
-                to: '/report-accident',
-              },
-              {
-                label: 'ประวัติโรคที่คาดว่าเกิดจากการทำงาน',
-                icon: 'pi pi-fw pi-file',
-                color: 'text-rose-300',
-                to: '/report-occupational-disease',
-              },
-              {
-                label: 'ประวัติเจ็บป่วยจากโรงพยาบาล',
-                icon: 'pi pi-fw pi-file',
-                color: 'text-rose-300',
-                to: '/report-hospital-treatment',
-              },
-              {
-                label: 'ประวัติโรคเจ็บป่วยเรื้อรัง',
-                icon: 'pi pi-fw pi-file',
-                color: 'text-rose-300',
-                to: '/report-chronic-disease',
-              },
-              {
-                label: 'ผลตรวจสุขภาพเข้างานใหม่',
-                icon: 'pi pi-fw pi-file',
-                color: 'text-rose-300',
-                to: '/report-health-check-new',
-              },
-              {
-                label: 'ผลตรวจสุขภาพประจำปี E1+',
-                icon: 'pi pi-fw pi-file',
-                color: 'text-rose-300',
-                to: '/report-health-check-annual',
-              },
-              {
-                label: 'ผลตรวจสุขภาพกรณีโยกย้ายงาน',
-                icon: 'pi pi-fw pi-file',
-                color: 'text-rose-300',
-                to: '/report-health-check-transfer',
-              },
-              {
-                label: 'ผลตรวจมะเร็งปากมดลูก',
-                icon: 'pi pi-fw pi-file',
-                color: 'text-rose-300',
-                to: '/report-cervical-cancer',
-              },
-              {
-                label: 'ข้อมูลพยาบาล',
-                icon: 'pi pi-fw pi-file',
-                color: 'text-rose-300',
-                to: '/report-nurses',
-              },
-              {
-                label: 'จัดซื้อยา/เวชภัณฑ์',
-                icon: 'pi pi-fw pi-file',
-                color: 'text-rose-300',
-                to: '/report-purchase',
-              },
-              {
-                label: 'ยืมยา/เวชภัณฑ์',
-                icon: 'pi pi-fw pi-file',
-                color: 'text-rose-300',
-                to: '/report-borrow',
-              },
-              {
-                label: 'สต็อก ยา/เวชภัณฑ์ รายเดือน',
-                icon: 'pi pi-fw pi-file',
-                color: 'text-rose-300',
-                to: '/report-stock-monthly',
-              },
-              {
-                label: 'การใช้ ยา/เวชภัณฑ์ รายวัน',
-                icon: 'pi pi-fw pi-file',
-                color: 'text-rose-300',
-                to: '/report-usage-daily',
-              },
-              {
-                label: 'การรักษาพยาบาลรายโรค',
-                icon: 'pi pi-fw pi-file',
-                color: 'text-rose-300',
-                to: '/report-treatment-by-disease',
-              },
-              {
-                label: 'สถานพยาบาลประกันสังคม',
-                icon: 'pi pi-fw pi-file',
-                color: 'text-rose-300',
-                to: '/report-social-security',
-              },
-              {
-                label: 'ผลตรวจสุขภาพประจำปี OP-S4',
-                icon: 'pi pi-fw pi-file',
-                color: 'text-rose-300',
-                to: '/report-health-check-ops4',
-              },
-              {
-                label: 'การเบิกยากรณีพิเศษ',
-                icon: 'pi pi-fw pi-file',
-                color: 'text-rose-300',
-                to: '/report-special-medicine',
-              },
-            ],
-          },
-        ],
-      },
-    ];
+function resolveColor(node: any): string | undefined {
+  if (node.color) return node.color;
 
-    return items;
-  });
+  const byCode: Record<string, string> = {
+    TREATMENT_RECORD: 'text-red-300',
+    PURCHASE_BORROW_GROUP: 'text-cyan-300',
+    PO_LIST: 'text-cyan-300',
+    GOODS_RECEIPT: 'text-cyan-300',
+    BORROW_MEDICINES: 'text-cyan-300',
+    STOCK_GROUP: 'text-sky-300',
+    STOCK_STATUS: 'text-sky-300',
+    MOVEMENT_RECORDS: 'text-sky-300',
+    STOCK_MONTHLY_RECORD: 'text-amber-400',
+    NURSE_GROUP: 'text-emerald-300',
+    NURSES_LIST: 'text-emerald-300',
+    NURSE_TEAMS: 'text-emerald-300',
+    NURSE_CONTRACTS: 'text-emerald-300',
+    MASTER_DATA_GROUP: 'text-purple-300',
+    SUPPLIERS: 'text-purple-300',
+    TREATMENT_TYPES: 'text-purple-300',
+    REFER_TYPES: 'text-purple-300',
+    DISEASE_MASTER: 'text-purple-300',
+    MEDICAL_FACILITIES: 'text-purple-300',
+    MEDICINE_ITEMS: 'text-purple-300',
+    UNITS: 'text-purple-300',
+    MEDICINE_PRICES: 'text-purple-300',
+    EMP_HOLIDAY_GROUP: 'text-indigo-400',
+    ANNUAL_HEALTH_DATA: 'text-orange-300',
+    SOCIAL_SECURITY_UPDATE: 'text-indigo-300',
+    CERVICAL_CANCER_UPDATE: 'text-indigo-300',
+    EMPLOYEE_HOLIDAY_UPDATE: 'text-indigo-300',
+    APPROVE_PURCHASE: 'text-lime-400',
+    STOCK_COUNT_APPROVE_MENU: 'text-teal-400',
+    SPECIAL_MED_REQ: 'text-yellow-400',
+    REPORTS_GROUP: 'text-rose-400',
+  };
+  if (node.code && byCode[node.code]) return byCode[node.code];
+
+  const route = node.route as string | undefined;
+  if (!route) return undefined;
+  if (route.startsWith('/report-')) return 'text-rose-300';
+  if (route === '/stock-count-approval') return 'text-teal-400';
+  return undefined;
+}
+
+function computeBadge(node: any): number | undefined {
+  if (!node.route) return undefined;
+  const route = node.route;
+  if (route === '/purchase-orders')
+    return menuNotificationsStore.po > 0 ? menuNotificationsStore.po : undefined;
+  if (route === '/goods-receipt')
+    return menuNotificationsStore.rec > 0 ? menuNotificationsStore.rec : undefined;
+  if (route === '/borrow-medicines')
+    return menuNotificationsStore.borrow > 0 ? menuNotificationsStore.borrow : undefined;
+  if (route === '/approve-purchase')
+    return menuNotificationsStore.apv > 0 ? menuNotificationsStore.apv : undefined;
+  if (route === '/stock-count-approval')
+    return menuNotificationsStore.stockCountApv > 0
+      ? menuNotificationsStore.stockCountApv
+      : undefined;
+  return undefined;
+}
 </script>
 
 <template>
