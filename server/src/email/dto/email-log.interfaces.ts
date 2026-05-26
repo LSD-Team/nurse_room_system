@@ -7,7 +7,13 @@ export interface IEmailLog {
   document_type: 'PO' | 'BORROW';
   document_id: number;
   document_no: string;
-  notify_type: 'APPROVAL_PO' | 'APPROVAL_BORROW' | 'PO_REWORK' | 'BORROW_REWORK' | 'PO_COMPLETED' | 'BORROW_COMPLETED';
+  notify_type:
+    | 'APPROVAL_PO'
+    | 'APPROVAL_BORROW'
+    | 'PO_REWORK'
+    | 'BORROW_REWORK'
+    | 'PO_COMPLETED'
+    | 'BORROW_COMPLETED';
   recipient_emails: string; // comma-separated: 'email1@x.com,email2@x.com'
   cc_emails?: string;
   bcc_emails?: string;
@@ -29,7 +35,13 @@ export class CreateEmailLogDto {
   document_type: 'PO' | 'BORROW';
   document_id: number;
   document_no: string;
-  notify_type: 'APPROVAL_PO' | 'APPROVAL_BORROW' | 'PO_REWORK' | 'BORROW_REWORK' | 'PO_COMPLETED' | 'BORROW_COMPLETED';
+  notify_type:
+    | 'APPROVAL_PO'
+    | 'APPROVAL_BORROW'
+    | 'PO_REWORK'
+    | 'BORROW_REWORK'
+    | 'PO_COMPLETED'
+    | 'BORROW_COMPLETED';
   recipient_emails: string;
   cc_emails?: string;
   bcc_emails?: string;

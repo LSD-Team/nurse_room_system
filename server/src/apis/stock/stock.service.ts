@@ -51,10 +51,7 @@ export class StockService {
       FROM view_items
       ORDER BY item_code
     `;
-    return this.databaseService.query<IStockOnHand>(
-      this.DATABASE_NAME,
-      query,
-    );
+    return this.databaseService.query<IStockOnHand>(this.DATABASE_NAME, query);
   }
 
   async getMovementRecords(): Promise<IStockMovement[]> {

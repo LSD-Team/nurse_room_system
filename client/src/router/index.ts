@@ -13,7 +13,7 @@ const routes: RouteRecordRaw[] = [
       {
         path: '',
         name: 'dashboard',
-        component: () => import('@/views/Dashboard.vue'),
+        redirect: { name: 'treatmentRecord' },
       },
 
       // ===== การรักษาพยาบาล =====
@@ -102,12 +102,12 @@ const routes: RouteRecordRaw[] = [
       {
         path: 'medicine-items',
         name: 'medicineItems',
-        component: () => import('@/views/pages/Empty.vue'),
+        component: () => import('@/views/pages/MedicineItems.vue'),
       },
       {
         path: 'units',
         name: 'units',
-        component: () => import('@/views/pages/Empty.vue'),
+        component: () => import('@/views/pages/Units.vue'),
       },
       {
         path: 'medicine-prices',
@@ -170,27 +170,27 @@ const routes: RouteRecordRaw[] = [
       {
         path: 'suppliers',
         name: 'suppliers',
-        component: () => import('@/views/pages/Empty.vue'),
+        component: () => import('@/views/pages/Suppliers.vue'),
       },
       {
         path: 'treatment-types',
         name: 'treatmentTypes',
-        component: () => import('@/views/pages/Empty.vue'),
+        component: () => import('@/views/pages/TreatmentTypes.vue'),
       },
       {
         path: 'refer-types',
         name: 'referTypes',
-        component: () => import('@/views/pages/Empty.vue'),
+        component: () => import('@/views/pages/ReferTypes.vue'),
       },
       {
         path: 'disease-master-data',
         name: 'diseaseMasterData',
-        component: () => import('@/views/pages/Empty.vue'),
+        component: () => import('@/views/pages/DiseaseMasterData.vue'),
       },
       {
         path: 'medical-facilities',
         name: 'medicalFacilities',
-        component: () => import('@/views/pages/Empty.vue'),
+        component: () => import('@/views/pages/MedicalFacilities.vue'),
       },
 
       // ===== สุขภาพประจำปี =====

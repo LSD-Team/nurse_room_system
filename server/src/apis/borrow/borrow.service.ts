@@ -36,10 +36,7 @@ export class BorrowService {
       FROM view_borrowed_items_header
       ORDER BY borrow_id DESC
     `;
-    return this.databaseService.query<IBorrowHeader>(
-      this.DATABASE_NAME,
-      query,
-    );
+    return this.databaseService.query<IBorrowHeader>(this.DATABASE_NAME, query);
   }
 
   // โ”€โ”€โ”€ GET: เธฃเธฒเธขเธฅเธฐเน€เธญเธตเธขเธ” lines เธเธญเธเนเธเธขเธทเธก (view_borrowed_items) โ”€โ”€โ”€
@@ -58,11 +55,9 @@ export class BorrowService {
       WHERE borrow_id = @param0
       ORDER BY borrow_line_id
     `;
-    return this.databaseService.query<IBorrowLine>(
-      this.DATABASE_NAME,
-      query,
-      [borrowId],
-    );
+    return this.databaseService.query<IBorrowLine>(this.DATABASE_NAME, query, [
+      borrowId,
+    ]);
   }
 
   // โ”€โ”€โ”€ GET: Suppliers (for dropdown) โ”€โ”€โ”€
@@ -147,7 +142,9 @@ export class BorrowService {
 
     // Send approval notification email
     try {
-      const borrowHeader = await this.getBorrowHeaderById(parseInt(borrowId, 10));
+      const borrowHeader = await this.getBorrowHeaderById(
+        parseInt(borrowId, 10),
+      );
 
       if (borrowHeader) {
         // Send email to approvers of the first approval level
@@ -208,7 +205,8 @@ export class BorrowService {
             documentType: 'BORROW',
             toEmployeeIds: [borrowHeader.created_by],
             rejectedByName: actionedBy,
-            additionalMessage: remark || 'Please revise and resubmit your borrow request',
+            additionalMessage:
+              remark || 'Please revise and resubmit your borrow request',
             sentByEmployeeId: actionedBy,
           });
 
@@ -231,7 +229,7 @@ export class BorrowService {
           // If there are more approvals pending, send email to next approver
           if (pendingApprovals.length > 0) {
             const nextApproval = pendingApprovals[0]; // Get the first pending (lowest level)
-            
+
             try {
               await this.emailService.sendApprovalRequestByRoleCode(
                 nextApproval.approval_role,
@@ -260,8 +258,7 @@ export class BorrowService {
               documentType: 'BORROW',
               toEmployeeIds: [borrowHeader.created_by],
               approvedByName: actionedBy,
-              additionalMessage:
-                'Your borrow request has been fully approved',
+              additionalMessage: 'Your borrow request has been fully approved',
               sentByEmployeeId: actionedBy,
             });
 
@@ -336,7 +333,10 @@ export class BorrowService {
       );
       return result?.[0]?.count || 0;
     } catch (error) {
-      console.error('[BorrowService] Error getting borrow pending count:', error);
+      console.error(
+        '[BorrowService] Error getting borrow pending count:',
+        error,
+      );
       return 0;
     }
   }

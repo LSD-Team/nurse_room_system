@@ -123,8 +123,10 @@
     if (!selectedStatusFilter.value) return numberedHeaders.value;
     // Special handling for PENDING_APPROVAL to include APPROVED_L1 and APPROVED_L2
     if (selectedStatusFilter.value === 'PENDING_APPROVAL') {
-      return numberedHeaders.value.filter(
-        item => ['PENDING_APPROVAL', 'APPROVED_L1', 'APPROVED_L2'].includes(item.po_status)
+      return numberedHeaders.value.filter(item =>
+        ['PENDING_APPROVAL', 'APPROVED_L1', 'APPROVED_L2'].includes(
+          item.po_status
+        )
       );
     }
     return numberedHeaders.value.filter(
@@ -162,8 +164,10 @@
 
   const countPendingApproval = computed(
     () =>
-      numberedHeaders.value.filter(
-        item => ['PENDING_APPROVAL', 'APPROVED_L1', 'APPROVED_L2'].includes(item.po_status)
+      numberedHeaders.value.filter(item =>
+        ['PENDING_APPROVAL', 'APPROVED_L1', 'APPROVED_L2'].includes(
+          item.po_status
+        )
       ).length
   );
 
@@ -351,7 +355,8 @@
       for (let i = 1; i < headers.length; i++) {
         const pageDiv = printWindow.document.createElement('div');
         pageDiv.className = 'page-number';
-        pageDiv.style.cssText = 'position: absolute; top: 0; right: 0; font-size: 12px; color: #666;';
+        pageDiv.style.cssText =
+          'position: absolute; top: 0; right: 0; font-size: 12px; color: #666;';
         pageDiv.textContent = 'Page ' + pageNum;
         headers[i].appendChild(pageDiv);
         pageNum++;
@@ -1173,15 +1178,28 @@
             />
             <Column header="Min" style="min-width: 70px" bodyClass="text-right">
               <template #body="{ data }">
-                {{ data.item_min_po != null ? formatNumber(data.item_min_po) : '-' }}
+                {{
+                  data.item_min_po != null
+                    ? formatNumber(data.item_min_po)
+                    : '-'
+                }}
               </template>
             </Column>
             <Column header="Max" style="min-width: 70px" bodyClass="text-right">
               <template #body="{ data }">
-                {{ data.item_max_po != null ? formatNumber(data.item_max_po) : '-' }}
+                {{
+                  data.item_max_po != null
+                    ? formatNumber(data.item_max_po)
+                    : '-'
+                }}
               </template>
             </Column>
-            <Column header="คงเหลือปรับตามหน่วยซื้อ" headerClass="header-green" style="min-width: 120px" bodyClass="text-right">
+            <Column
+              header="คงเหลือปรับตามหน่วยซื้อ"
+              headerClass="header-green"
+              style="min-width: 120px"
+              bodyClass="text-right"
+            >
               <template #body="{ data }">
                 {{
                   data.qty_base != null && data.conversion_factor
@@ -1237,8 +1255,8 @@
         >
           รวมทั้งหมด: ฿{{ formatNumber(formTotalAmount) }}
         </div>
-
-      </div><!-- end flex flex-col gap-4 -->
+      </div>
+      <!-- end flex flex-col gap-4 -->
 
       <template #footer>
         <Button
@@ -1399,7 +1417,14 @@
           <div class="flex justify-end items-center gap-3 text-2xl">
             <span class="font-semibold">รวมทั้งหมด:</span>
             <span class="font-bold text-primary">
-              ฿{{ formatNumber(detailLines.reduce((sum, line) => sum + (line.total_price || 0), 0)) }}
+              ฿{{
+                formatNumber(
+                  detailLines.reduce(
+                    (sum, line) => sum + (line.total_price || 0),
+                    0
+                  )
+                )
+              }}
             </span>
           </div>
         </div>
@@ -1520,20 +1545,20 @@
 </template>
 
 <style scoped>
-::v-deep(.header-blue) {
-  background-color: #e6f7ff !important;
-  color: #0b5ed7 !important;
-}
-::v-deep(.header-blue) .p-column-title,
-::v-deep(.header-blue) .p-sortable-column-icon {
-  color: inherit !important;
-}
-::v-deep(.header-green) {
-  background-color: #e9f7ec !important;
-  color: #198754 !important;
-}
-::v-deep(.header-green) .p-column-title,
-::v-deep(.header-green) .p-sortable-column-icon {
-  color: inherit !important;
-}
+  ::v-deep(.header-blue) {
+    background-color: #e6f7ff !important;
+    color: #0b5ed7 !important;
+  }
+  ::v-deep(.header-blue) .p-column-title,
+  ::v-deep(.header-blue) .p-sortable-column-icon {
+    color: inherit !important;
+  }
+  ::v-deep(.header-green) {
+    background-color: #e9f7ec !important;
+    color: #198754 !important;
+  }
+  ::v-deep(.header-green) .p-column-title,
+  ::v-deep(.header-green) .p-sortable-column-icon {
+    color: inherit !important;
+  }
 </style>

@@ -144,16 +144,13 @@
       });
 
       selectedGr.value = null;
-      
+
       // ─── Reset status filter to ALL to see newly confirmed GR ───
       selectedGrStatusFilter.value = '';
-      
+
       // ─── Refresh all data ───
-      await Promise.all([
-        loadGrList(),
-        loadAvailablePos(),
-      ]);
-      
+      await Promise.all([loadGrList(), loadAvailablePos()]);
+
       // ─── Refresh menu badges ───
       const menuNotificationsStore = useMenuNotificationsStore();
       await Promise.all([
@@ -202,16 +199,13 @@
       });
 
       selectedGr.value = null;
-      
+
       // ─── Reset status filter to ALL ───
       selectedGrStatusFilter.value = '';
-      
+
       // ─── Refresh all data ───
-      await Promise.all([
-        loadGrList(),
-        loadAvailablePos(),
-      ]);
-      
+      await Promise.all([loadGrList(), loadAvailablePos()]);
+
       // ─── Refresh menu badges ───
       const menuNotificationsStore = useMenuNotificationsStore();
       await Promise.all([
@@ -278,7 +272,11 @@
 
     // Build jsonLines from qtyToReceive, excluding BORROW items
     const jsonLines = poLines.value
-      .filter(line => (qtyToReceive.value[line.po_line_id] || 0) > 0 && line.line_type !== 'BORROW')
+      .filter(
+        line =>
+          (qtyToReceive.value[line.po_line_id] || 0) > 0 &&
+          line.line_type !== 'BORROW'
+      )
       .map(line => ({
         item_id: line.item_id,
         qty: qtyToReceive.value[line.po_line_id] || 0,
@@ -320,14 +318,14 @@
       poLines.value = [];
       createFormNote.value = '';
       qtyToReceive.value = {};
-      
+
       // ─── Refresh badges ───
       const menuNotificationsStore = useMenuNotificationsStore();
       await Promise.all([
         menuNotificationsStore.refreshGrDraftCount(),
         menuNotificationsStore.refreshPoPendingCount(),
       ]);
-      
+
       await loadGrList();
       await loadAvailablePos();
     } catch (err: unknown) {
@@ -586,7 +584,13 @@
               frozen
             >
               <template #body="{ data }">
-                <div :style="{ backgroundColor: data.has_gr === 1 ? '#fef3c7' : 'transparent' }" class="px-3 py-2">
+                <div
+                  :style="{
+                    backgroundColor:
+                      data.has_gr === 1 ? '#fef3c7' : 'transparent',
+                  }"
+                  class="px-3 py-2"
+                >
                   {{ data.rowNo }}
                 </div>
               </template>
@@ -599,14 +603,26 @@
               frozen
             >
               <template #body="{ data }">
-                <div :style="{ backgroundColor: data.has_gr === 1 ? '#fef3c7' : 'transparent' }" class="px-3 py-2">
+                <div
+                  :style="{
+                    backgroundColor:
+                      data.has_gr === 1 ? '#fef3c7' : 'transparent',
+                  }"
+                  class="px-3 py-2"
+                >
                   {{ data.po_no }}
                 </div>
               </template>
             </Column>
             <Column field="po_date" header="PO Date" style="min-width: 120px">
               <template #body="{ data }">
-                <div :style="{ backgroundColor: data.has_gr === 1 ? '#fef3c7' : 'transparent' }" class="px-3 py-2">
+                <div
+                  :style="{
+                    backgroundColor:
+                      data.has_gr === 1 ? '#fef3c7' : 'transparent',
+                  }"
+                  class="px-3 py-2"
+                >
                   {{ formatDate(data.po_date) }}
                 </div>
               </template>
@@ -618,14 +634,26 @@
               style="min-width: 200px"
             >
               <template #body="{ data }">
-                <div :style="{ backgroundColor: data.has_gr === 1 ? '#fef3c7' : 'transparent' }" class="px-3 py-2">
+                <div
+                  :style="{
+                    backgroundColor:
+                      data.has_gr === 1 ? '#fef3c7' : 'transparent',
+                  }"
+                  class="px-3 py-2"
+                >
                   {{ data.supplier_name }}
                 </div>
               </template>
             </Column>
             <Column field="due_date" header="Due Date" style="min-width: 120px">
               <template #body="{ data }">
-                <div :style="{ backgroundColor: data.has_gr === 1 ? '#fef3c7' : 'transparent' }" class="px-3 py-2">
+                <div
+                  :style="{
+                    backgroundColor:
+                      data.has_gr === 1 ? '#fef3c7' : 'transparent',
+                  }"
+                  class="px-3 py-2"
+                >
                   {{ formatDate(data.due_date) }}
                 </div>
               </template>
@@ -637,7 +665,13 @@
               style="min-width: 100px"
             >
               <template #body="{ data }">
-                <div :style="{ backgroundColor: data.has_gr === 1 ? '#fef3c7' : 'transparent' }" class="px-3 py-2">
+                <div
+                  :style="{
+                    backgroundColor:
+                      data.has_gr === 1 ? '#fef3c7' : 'transparent',
+                  }"
+                  class="px-3 py-2"
+                >
                   <Tag
                     :value="data.status"
                     :severity="getPoStatusSeverity(data.status)"
@@ -652,7 +686,13 @@
               alignFrozen="right"
             >
               <template #body="{ data }">
-                <div :style="{ backgroundColor: data.has_gr === 1 ? '#fef3c7' : 'transparent' }" class="px-3 py-2">
+                <div
+                  :style="{
+                    backgroundColor:
+                      data.has_gr === 1 ? '#fef3c7' : 'transparent',
+                  }"
+                  class="px-3 py-2"
+                >
                   <Button
                     icon="pi pi-arrow-right"
                     rounded
@@ -731,7 +771,10 @@
           Enter the quantity you want to receive for each item
         </p>
         <Message severity="info" class="mb-3">
-          <small>Items marked as "Borrow" are for display only - they were already received and entered into the system previously</small>
+          <small>
+            Items marked as "Borrow" are for display only - they were already
+            received and entered into the system previously
+          </small>
         </Message>
         <DataTable :value="poLines" class="p-datatable-sm">
           <Column
@@ -773,7 +816,10 @@
           </Column>
           <Column header="Qty to Receive" style="min-width: 150px">
             <template #body="{ data }">
-              <div v-if="data.line_type === 'BORROW'" class="text-surface-500 italic">
+              <div
+                v-if="data.line_type === 'BORROW'"
+                class="text-surface-500 italic"
+              >
                 —
               </div>
               <div v-else class="flex items-center gap-2">
@@ -957,7 +1003,11 @@
               {{ formatNumber(data.conversion_factor || 0, 2) }}
             </template>
           </Column>
-          <Column field="total_price" header="Total (Qty × CF)" style="min-width: 130px">
+          <Column
+            field="total_price"
+            header="Total (Qty × CF)"
+            style="min-width: 130px"
+          >
             <template #body="{ data }">
               {{
                 formatNumber(

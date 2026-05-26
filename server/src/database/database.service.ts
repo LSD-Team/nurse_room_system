@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/restrict-template-expressions */
-/* eslint-disable @typescript-eslint/no-floating-promises */
+
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 
 //  ----- 📖 Library 📖 -----
@@ -26,7 +26,8 @@ export class DatabaseService {
   private readonly databaseName = databaseName();
   private readonly logger = new Logger(DatabaseService.name);
   private pools: Map<string, sql.ConnectionPool> = new Map();
-  private pendingConnections: Map<string, Promise<sql.ConnectionPool>> = new Map();
+  private pendingConnections: Map<string, Promise<sql.ConnectionPool>> =
+    new Map();
 
   public getDatabaseName() {
     return this.databaseName; // เรียกฟังก์ชันเพื่อดึงค่าจาก .env
@@ -106,7 +107,11 @@ export class DatabaseService {
 
     // ปิด pool เก่าที่ไม่ได้เชื่อมต่อ (ถ้ามี)
     if (existing) {
-      try { await existing.close(); } catch { /* ignore */ }
+      try {
+        await existing.close();
+      } catch {
+        /* ignore */
+      }
       this.pools.delete(database);
     }
 
@@ -228,7 +233,7 @@ export class DatabaseService {
     try {
       pool = await this.getConnection(database);
       const request = pool.request();
-      
+
       // Handle both array and object parameters
       if (Array.isArray(values)) {
         values.forEach((value, index) => {
@@ -239,7 +244,7 @@ export class DatabaseService {
           request.input(key, values[key]);
         });
       }
-      
+
       // this.logger.debug(`Query: ${this.replaceParams(sql, values || [])}`);
       const result = await request.query(sql);
       return result.recordset as T[];

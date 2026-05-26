@@ -85,7 +85,10 @@ export class PoController {
   // ─── GET /po/pending-count ───
   @Get('pending-count')
   @ApiOperation({ summary: 'Get count of POs with ORDERED or PARTIAL status' })
-  @ApiResponse({ status: 200, description: 'Returns count of ORDERED/PARTIAL POs' })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns count of ORDERED/PARTIAL POs',
+  })
   async getPoPendingCount() {
     const count = await this.poService.getPoPendingCount();
     return { count };
@@ -94,7 +97,10 @@ export class PoController {
   // ─── GET /po/approval-pending-count ───
   @Get('approval-pending-count')
   @ApiOperation({ summary: 'Get count of POs pending approval' })
-  @ApiResponse({ status: 200, description: 'Returns count of POs pending approval' })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns count of POs pending approval',
+  })
   async getApprovalPendingCount() {
     const count = await this.poService.getApprovalPendingCount();
     return { count };
@@ -177,10 +183,7 @@ export class PoController {
   @Post(':id/cancel')
   @ApiOperation({ summary: 'Cancel a PO (sp_POCancel)' })
   @ApiParam({ name: 'id', type: String })
-  async cancelPo(
-    @Param('id') id: string,
-    @Body() body: { Reason?: string },
-  ) {
+  async cancelPo(@Param('id') id: string, @Body() body: { Reason?: string }) {
     return this.poService.cancelPo(id, this.currentUser, body.Reason || null);
   }
 
@@ -201,6 +204,10 @@ export class PoController {
     @Param('id') id: string,
     @Body() body: { JsonLines: string },
   ) {
-    return this.poService.updateQtyReceived(id, this.currentUser, body.JsonLines);
+    return this.poService.updateQtyReceived(
+      id,
+      this.currentUser,
+      body.JsonLines,
+    );
   }
 }

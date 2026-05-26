@@ -467,7 +467,7 @@
           '\u0E41\u0E01\u0E49\u0E44\u0E02\u0E43\u0E1A\u0E22\u0E37\u0E21\u0E40\u0E23\u0E35\u0E22\u0E1A\u0E23\u0E49\u0E2D\u0E22',
           'success'
         );
-        
+
         // Refresh badge
         const menuNotificationsStore = useMenuNotificationsStore();
         await menuNotificationsStore.refreshBorrowPendingCount();
@@ -484,7 +484,7 @@
           '\u0E2A\u0E23\u0E49\u0E32\u0E07\u0E43\u0E1A\u0E22\u0E37\u0E21\u0E40\u0E23\u0E35\u0E22\u0E1A\u0E23\u0E49\u0E2D\u0E22',
           'success'
         );
-        
+
         // Refresh badge
         const menuNotificationsStore = useMenuNotificationsStore();
         await menuNotificationsStore.refreshBorrowPendingCount();
@@ -573,7 +573,7 @@
         'success'
       );
       await loadBorrowHeaders();
-      
+
       // Refresh badge
       const menuNotificationsStore = useMenuNotificationsStore();
       await menuNotificationsStore.refreshBorrowPendingCount();
@@ -605,7 +605,7 @@
       receiveConfirmLines.value = [];
       await Swal.fire('สำเร็จ', 'รับยาเข้าคลังสำเร็จ', 'success');
       await loadBorrowHeaders();
-      
+
       // Refresh badge
       const menuNotificationsStore = useMenuNotificationsStore();
       await menuNotificationsStore.refreshBorrowPendingCount();
@@ -1137,9 +1137,15 @@
           <div class="flex gap-2 mr-8">
             <Button
               v-if="uniqueDetailLogs.length > 0"
-              :icon="showDetailTimeline ? 'pi pi-chevron-up' : 'pi pi-chevron-down'"
+              :icon="
+                showDetailTimeline ? 'pi pi-chevron-up' : 'pi pi-chevron-down'
+              "
               :label="'Timeline'"
-              :severity="detailBorrow?.approval_status === 'REWORK' ? 'warning' : 'secondary'"
+              :severity="
+                detailBorrow?.approval_status === 'REWORK'
+                  ? 'warning'
+                  : 'secondary'
+              "
               size="small"
               @click="showDetailTimeline = !showDetailTimeline"
             />
@@ -1267,7 +1273,10 @@
         </DataTable>
 
         <!-- Approval Timeline -->
-        <div v-if="uniqueDetailLogs.length > 0 && showDetailTimeline" class="mt-4 border-t pt-4">
+        <div
+          v-if="uniqueDetailLogs.length > 0 && showDetailTimeline"
+          class="mt-4 border-t pt-4"
+        >
           <div class="font-semibold text-surface-500 mb-2">
             Timeline การอนุมัติ
           </div>

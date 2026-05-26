@@ -63,7 +63,9 @@ export class BorrowController {
 
   // GET /borrow/pending-count
   @Get('pending-count')
-  @ApiOperation({ summary: 'Get count of borrows with DRAFT or APPROVED status' })
+  @ApiOperation({
+    summary: 'Get count of borrows with DRAFT or APPROVED status',
+  })
   @ApiResponse({ status: 200, description: 'Returns count of pending borrows' })
   async getBorrowPendingCount() {
     const count = await this.borrowService.getBorrowPendingCount();

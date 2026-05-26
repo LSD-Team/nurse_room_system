@@ -62,10 +62,7 @@ export class MenuNotificationsService {
       const counts = await this.getAllCounts();
       return counts.borrow || 0;
     } catch (error) {
-      console.error(
-        '[MenuNotifications] Error fetching borrow count:',
-        error,
-      );
+      console.error('[MenuNotifications] Error fetching borrow count:', error);
       return 0;
     }
   }
@@ -78,7 +75,7 @@ export class MenuNotificationsService {
     } catch (error) {
       console.error(
         '[MenuNotifications] Error fetching approval count:',
-        error,
+        error
       );
       return 0;
     }
@@ -95,4 +92,3 @@ export class MenuNotificationsService {
     }
   }
 }
-

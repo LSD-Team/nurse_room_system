@@ -27,7 +27,7 @@ const layoutConfig = reactive<LayoutConfig>({
 });
 
 const layoutState = reactive<LayoutState>({
-  staticMenuDesktopInactive: false,
+  staticMenuDesktopInactive: true,
   overlayMenuActive: false,
   profileSidebarVisible: false,
   configSidebarVisible: false,

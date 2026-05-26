@@ -1,6 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { DatabaseService } from '@/src/database/database.service';
-import { CreateEmailLogDto, UpdateEmailLogDto, EmailLogResponse } from '@/src/email/dto/email-log.interfaces';
+import {
+  CreateEmailLogDto,
+  UpdateEmailLogDto,
+  EmailLogResponse,
+} from '@/src/email/dto/email-log.interfaces';
 
 /**
  * Email Log Service - จัดการบันทึกการส่ง email ทั้งหมด
@@ -44,11 +48,21 @@ export class EmailLogService {
 
       const ccEmailsStr = cc_emails ? `'${cc_emails}'` : 'NULL';
       const bccEmailsStr = bcc_emails ? `'${bcc_emails}'` : 'NULL';
-      const responseStr = external_service_response ? `'${external_service_response.replace(/'/g, "''")}'` : 'NULL';
-      const errorStr = error_message ? `'${error_message.replace(/'/g, "''")}'` : 'NULL';
-      const messageIdStr = external_message_id ? `'${external_message_id}'` : 'NULL';
-      const originalEmailStr = test_override_original_email ? `'${test_override_original_email.replace(/'/g, "''")}'` : 'NULL';
-      const sentByStr = sent_by_employee_id ? `'${sent_by_employee_id}'` : 'NULL';
+      const responseStr = external_service_response
+        ? `'${external_service_response.replace(/'/g, "''")}'`
+        : 'NULL';
+      const errorStr = error_message
+        ? `'${error_message.replace(/'/g, "''")}'`
+        : 'NULL';
+      const messageIdStr = external_message_id
+        ? `'${external_message_id}'`
+        : 'NULL';
+      const originalEmailStr = test_override_original_email
+        ? `'${test_override_original_email.replace(/'/g, "''")}'`
+        : 'NULL';
+      const sentByStr = sent_by_employee_id
+        ? `'${sent_by_employee_id}'`
+        : 'NULL';
 
       const sql = `
         INSERT INTO email_logs (
@@ -136,14 +150,16 @@ export class EmailLogService {
       }
 
       if (external_service_response !== undefined) {
-        const responseStr = external_service_response 
-          ? `'${external_service_response.replace(/'/g, "''")}'` 
+        const responseStr = external_service_response
+          ? `'${external_service_response.replace(/'/g, "''")}'`
           : 'NULL';
         updates.push(`external_service_response = ${responseStr}`);
       }
 
       if (error_message !== undefined) {
-        const errorStr = error_message ? `'${error_message.replace(/'/g, "''")}'` : 'NULL';
+        const errorStr = error_message
+          ? `'${error_message.replace(/'/g, "''")}'`
+          : 'NULL';
         updates.push(`error_message = ${errorStr}`);
       }
 
@@ -190,7 +206,10 @@ export class EmailLogService {
   async findById(emailLogId: number): Promise<any> {
     try {
       const sql = `SELECT * FROM email_logs WHERE email_log_id = ${emailLogId}`;
-      const result = await this.databaseService.query<any>(this.DATABASE_NAME, sql);
+      const result = await this.databaseService.query<any>(
+        this.DATABASE_NAME,
+        sql,
+      );
       return result[0] || null;
     } catch (error: any) {
       this.logger.error(
@@ -328,4 +347,3 @@ export class EmailLogService {
     }
   }
 }
-

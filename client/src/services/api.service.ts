@@ -26,7 +26,13 @@ export class Api {
   }
 
   private static shouldRefreshBullet(url: string): boolean {
-    const bulletRelatedPaths = ['/po/', '/gr/', '/borrow/', '/approval/', '/physical-count/'];
+    const bulletRelatedPaths = [
+      '/po/',
+      '/gr/',
+      '/borrow/',
+      '/approval/',
+      '/physical-count/',
+    ];
     return bulletRelatedPaths.some(path => url.includes(path));
   }
 

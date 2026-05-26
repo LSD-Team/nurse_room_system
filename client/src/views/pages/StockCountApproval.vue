@@ -15,11 +15,11 @@
   // ─── Computed: filter PENDING_APPROVAL with a SUBMITTED count ───
   const pendingApprovalItems = computed(() =>
     allPeriods.value.filter(
-      (p) =>
+      p =>
         p.period_status === 'PENDING_APPROVAL' &&
         p.active_count_id !== null &&
-        p.active_count_status === 'SUBMITTED',
-    ),
+        p.active_count_status === 'SUBMITTED'
+    )
   );
 
   // ─── Lifecycle ───
@@ -31,7 +31,11 @@
       loading.value = true;
       allPeriods.value = await PhysicalCountService.getAvailablePeriods();
     } catch (error: any) {
-      Swal.fire('ข้อผิดพลาด', error.message || 'ไม่สามารถโหลดข้อมูลได้', 'error');
+      Swal.fire(
+        'ข้อผิดพลาด',
+        error.message || 'ไม่สามารถโหลดข้อมูลได้',
+        'error'
+      );
     } finally {
       loading.value = false;
     }
@@ -50,11 +54,15 @@
   <div class="grid">
     <div class="col-12">
       <div class="card">
-
         <!-- Header -->
-        <div class="flex align-items-center justify-content-between w-full mb-4">
+        <div
+          class="flex align-items-center justify-content-between w-full mb-4"
+        >
           <div class="flex align-items-center gap-3">
-            <i class="pi pi-check-circle text-teal-500" style="font-size: 1.8rem"></i>
+            <i
+              class="pi pi-check-circle text-teal-500"
+              style="font-size: 1.8rem"
+            ></i>
             <span class="text-2xl font-bold">อนุมัติการนับ Stock</span>
           </div>
           <Button
@@ -68,7 +76,11 @@
         </div>
 
         <!-- Loading -->
-        <div v-if="loading" class="flex justify-content-center align-items-center" style="min-height: 200px">
+        <div
+          v-if="loading"
+          class="flex justify-content-center align-items-center"
+          style="min-height: 200px"
+        >
           <ProgressSpinner />
         </div>
 
@@ -87,12 +99,14 @@
           <div
             v-for="period in pendingApprovalItems"
             :key="period.period_code"
-            class="border-1 border-round surface-border p-4 flex align-items-center justify-content-between flex-wrap gap-3
-                   hover:surface-hover transition-colors transition-duration-150"
+            class="border-1 border-round surface-border p-4 flex align-items-center justify-content-between flex-wrap gap-3 hover:surface-hover transition-colors transition-duration-150"
           >
             <div class="flex flex-column gap-2">
               <div class="flex align-items-center gap-3">
-                <i class="pi pi-calendar text-teal-500" style="font-size: 1.2rem"></i>
+                <i
+                  class="pi pi-calendar text-teal-500"
+                  style="font-size: 1.2rem"
+                ></i>
                 <span class="text-xl font-bold">{{ period.period_code }}</span>
                 <Tag value="รออนุมัติ" severity="info" />
               </div>
@@ -100,11 +114,13 @@
                 <span>
                   <i class="pi pi-clock mr-1 text-xs"></i>
                   <strong>ช่วงเวลา:</strong>
-                  {{ formatDate(period.period_start) }} – {{ formatDate(period.period_end) }}
+                  {{ formatDate(period.period_start) }} –
+                  {{ formatDate(period.period_end) }}
                 </span>
                 <span>
                   <i class="pi pi-hashtag mr-1 text-xs"></i>
-                  <strong>Count ID:</strong> {{ period.active_count_id }}
+                  <strong>Count ID:</strong>
+                  {{ period.active_count_id }}
                 </span>
               </div>
             </div>
@@ -117,7 +133,6 @@
             />
           </div>
         </div>
-
       </div>
     </div>
   </div>

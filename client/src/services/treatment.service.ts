@@ -33,34 +33,56 @@ export class TreatmentService {
   }
 
   // ─── Allergies ────────────────────────────────────────────────────────
-  static async upsertAllergy(body: IUpsertAllergyBody): Promise<{ allergy_id: number; action: string }> {
+  static async upsertAllergy(
+    body: IUpsertAllergyBody
+  ): Promise<{ allergy_id: number; action: string }> {
     return Api.post('/treatment/patient-profile/allergy', body);
   }
 
-  static async deleteAllergy(allergyId: number, patientId: number): Promise<{ deleted: boolean }> {
-    return Api.delete(`/treatment/patient-profile/allergy/${allergyId}?patient_id=${patientId}`);
+  static async deleteAllergy(
+    allergyId: number,
+    patientId: number
+  ): Promise<{ deleted: boolean }> {
+    return Api.delete(
+      `/treatment/patient-profile/allergy/${allergyId}?patient_id=${patientId}`
+    );
   }
 
   // ─── Diseases ─────────────────────────────────────────────────────────
-  static async upsertDisease(body: IUpsertDiseaseBody): Promise<{ condition_id: number; action: string }> {
+  static async upsertDisease(
+    body: IUpsertDiseaseBody
+  ): Promise<{ condition_id: number; action: string }> {
     return Api.post('/treatment/patient-profile/disease', body);
   }
 
-  static async deleteDisease(conditionId: number, patientId: number): Promise<{ deleted: boolean }> {
-    return Api.delete(`/treatment/patient-profile/disease/${conditionId}?patient_id=${patientId}`);
+  static async deleteDisease(
+    conditionId: number,
+    patientId: number
+  ): Promise<{ deleted: boolean }> {
+    return Api.delete(
+      `/treatment/patient-profile/disease/${conditionId}?patient_id=${patientId}`
+    );
   }
 
-  static async getPatientVisitHistory(patientId: number): Promise<IVisitListItem[]> {
-    return Api.get<IVisitListItem[]>(`/treatment/patient-profile/${patientId}/visits`);
+  static async getPatientVisitHistory(
+    patientId: number
+  ): Promise<IVisitListItem[]> {
+    return Api.get<IVisitListItem[]>(
+      `/treatment/patient-profile/${patientId}/visits`
+    );
   }
 
   // ─── External People ──────────────────────────────────────────────────
-  static async searchExternalPeople(search?: string): Promise<IExternalPerson[]> {
+  static async searchExternalPeople(
+    search?: string
+  ): Promise<IExternalPerson[]> {
     const params = search ? `?search=${encodeURIComponent(search)}` : '';
     return Api.get<IExternalPerson[]>(`/treatment/external-people${params}`);
   }
 
-  static async createExternalPerson(body: ICreateExternalPersonBody): Promise<{ external_person_id: number }> {
+  static async createExternalPerson(
+    body: ICreateExternalPersonBody
+  ): Promise<{ external_person_id: number }> {
     return Api.post('/treatment/external-people', body);
   }
 
@@ -73,25 +95,40 @@ export class TreatmentService {
     page_no?: number;
   }): Promise<IVisitListItem[]> {
     const qs = params
-      ? '?' + Object.entries(params).filter(([, v]) => v != null).map(([k, v]) => `${k}=${encodeURIComponent(String(v))}`).join('&')
+      ? '?' +
+        Object.entries(params)
+          .filter(([, v]) => v != null)
+          .map(([k, v]) => `${k}=${encodeURIComponent(String(v))}`)
+          .join('&')
       : '';
     return Api.get<IVisitListItem[]>(`/treatment/visits${qs}`);
   }
 
-  static async getVisitById(visitId: number): Promise<{ visit: IVisitDetail; usages: IVisitUsage[] }> {
-    return Api.get<{ visit: IVisitDetail; usages: IVisitUsage[] }>(`/treatment/visits/${visitId}`);
+  static async getVisitById(
+    visitId: number
+  ): Promise<{ visit: IVisitDetail; usages: IVisitUsage[] }> {
+    return Api.get<{ visit: IVisitDetail; usages: IVisitUsage[] }>(
+      `/treatment/visits/${visitId}`
+    );
   }
 
-  static async createVisit(body: ICreateVisitBody): Promise<{ visit_id: number }> {
+  static async createVisit(
+    body: ICreateVisitBody
+  ): Promise<{ visit_id: number }> {
     return Api.post('/treatment/visits', body);
   }
 
   static async getLastStockCountDate(): Promise<string | null> {
-    const res = await Api.get<{ last_approved_date: string | null }>('/treatment/last-stock-count-date');
+    const res = await Api.get<{ last_approved_date: string | null }>(
+      '/treatment/last-stock-count-date'
+    );
     return res.last_approved_date;
   }
 
-  static async updateVisit(visitId: number, body: IUpdateVisitBody): Promise<{ message: string }> {
+  static async updateVisit(
+    visitId: number,
+    body: IUpdateVisitBody
+  ): Promise<{ message: string }> {
     return Api.put(`/treatment/visits/${visitId}`, body);
   }
 

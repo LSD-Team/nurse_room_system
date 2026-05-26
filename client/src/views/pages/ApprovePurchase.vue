@@ -154,14 +154,17 @@
     try {
       console.log('[loadPendingApprovals] starting...');
       const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('API request timeout after 30s')), 30000)
+        setTimeout(
+          () => reject(new Error('API request timeout after 30s')),
+          30000
+        )
       );
-      
-      const data = await Promise.race([
+
+      const data = (await Promise.race([
         ApprovalService.getPendingApprovals(),
         timeoutPromise,
-      ]) as IPendingApprovalItem[];
-      
+      ])) as IPendingApprovalItem[];
+
       console.log('[loadPendingApprovals] success, data:', data);
       pendingItems.value = data;
     } catch (error) {
@@ -283,14 +286,17 @@
       }
       selectedItem.value = null;
       await Swal.fire('สำเร็จ', actionLabel[action] + 'เรียบร้อย', 'success');
-      
+
       try {
         await loadPendingApprovals();
       } catch (loadError) {
-        console.error('[handleApprove] Error reloading pending approvals:', loadError);
+        console.error(
+          '[handleApprove] Error reloading pending approvals:',
+          loadError
+        );
         // Still continue to refresh badges
       }
-      
+
       // Refresh badges
       const menuNotificationsStore = useMenuNotificationsStore();
       try {
@@ -573,7 +579,10 @@
             <span class="font-bold text-primary">
               ฿{{
                 Number(
-                  poLines.reduce((sum, line) => sum + (line.total_price || 0), 0)
+                  poLines.reduce(
+                    (sum, line) => sum + (line.total_price || 0),
+                    0
+                  )
                 ).toLocaleString('en-US', { minimumFractionDigits: 2 })
               }}
             </span>
@@ -644,7 +653,10 @@
             <span class="font-bold text-primary">
               ฿{{
                 Number(
-                  borrowLines.reduce((sum, line) => sum + (line.total_price || 0), 0)
+                  borrowLines.reduce(
+                    (sum, line) => sum + (line.total_price || 0),
+                    0
+                  )
                 ).toLocaleString('en-US', { minimumFractionDigits: 2 })
               }}
             </span>

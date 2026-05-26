@@ -12,13 +12,16 @@ import { EmailLogService } from '@/src/email/services/email-log.service';
 
 //  ----- 📂 DTO 📂 -----
 import { SendEmailDto } from '@/src/email/dto/sent-email.dto';
-import { ISendApprovalEmailPayload, ENotifyType } from '@/src/email/dto/send-approval-email.dto';
+import {
+  ISendApprovalEmailPayload,
+  ENotifyType,
+} from '@/src/email/dto/send-approval-email.dto';
 
 @Injectable()
 export class EmailService {
   //  💪 constructor
   private readonly logger = new Logger(EmailService.name);
-  
+
   constructor(
     private readonly httpService: HttpService,
     private readonly databaseService: DatabaseService,
@@ -28,7 +31,7 @@ export class EmailService {
     const testOverride = this.configService.get<string>('TEST_EMAIL_OVERRIDE');
     const nodeEnv = this.configService.get<string>('NODE_ENV');
     this.logger.debug(
-      `📧 EmailService initialized | NODE_ENV: ${nodeEnv} | TEST_EMAIL_OVERRIDE: ${testOverride ? '✅ ' + testOverride : '❌ NOT SET'}`
+      `📧 EmailService initialized | NODE_ENV: ${nodeEnv} | TEST_EMAIL_OVERRIDE: ${testOverride ? '✅ ' + testOverride : '❌ NOT SET'}`,
     );
   }
 
@@ -41,22 +44,19 @@ export class EmailService {
    */
   private async send_email_service(emailData: SendEmailDto): Promise<any> {
     try {
-      const emailServiceUrl = this.configService.get<string>('EMAIL_SERVICE_URL');
+      const emailServiceUrl =
+        this.configService.get<string>('EMAIL_SERVICE_URL');
 
       if (!emailServiceUrl) {
         throw new Error('EMAIL_SERVICE_URL is not configured');
       }
 
       const response = await firstValueFrom(
-        this.httpService.post<any>(
-          `${emailServiceUrl}/email/send`,
-          emailData,
-          {
-            headers: {
-              'Content-Type': 'application/json',
-            },
+        this.httpService.post<any>(`${emailServiceUrl}/email/send`, emailData, {
+          headers: {
+            'Content-Type': 'application/json',
           },
-        ),
+        }),
       );
 
       // Handle response safely
@@ -71,10 +71,7 @@ export class EmailService {
         ? JSON.stringify(error.response.data)
         : error.message;
 
-      this.logger.error(
-        `❌ Failed to send email: ${errorMsg}`,
-        error.stack,
-      );
+      this.logger.error(`❌ Failed to send email: ${errorMsg}`, error.stack);
 
       throw new Error(`Failed to send email: ${error.message}`);
     }
@@ -83,7 +80,9 @@ export class EmailService {
   /**
    * ดึง email จาก employee IDs
    */
-  private async getEmailsByEmployeeIds(employeeIds: string[]): Promise<string[]> {
+  private async getEmailsByEmployeeIds(
+    employeeIds: string[],
+  ): Promise<string[]> {
     if (!employeeIds || employeeIds.length === 0) {
       return [];
     }
@@ -118,7 +117,9 @@ export class EmailService {
   /**
    * ดึง email จาก role_code (approval_roles table)
    */
-  private async getApproverEmailsByRoleCode(roleCode: string): Promise<string[]> {
+  private async getApproverEmailsByRoleCode(
+    roleCode: string,
+  ): Promise<string[]> {
     const query = `
       SELECT DISTINCT vea.email
       FROM approval_roles ar
@@ -251,9 +252,12 @@ export class EmailService {
       [ENotifyType.BORROW_REWORK]: 'rework-borrow.template.html',
       [ENotifyType.PO_COMPLETED]: 'completed-po.template.html',
       [ENotifyType.BORROW_COMPLETED]: 'completed-borrow.template.html',
-      [ENotifyType.APPROVAL_PHYSICAL_COUNT]: 'approval-physical-count.template.html',
-      [ENotifyType.PHYSICAL_COUNT_APPROVED]: 'approved-physical-count.template.html',
-      [ENotifyType.PHYSICAL_COUNT_REJECTED]: 'rejected-physical-count.template.html',
+      [ENotifyType.APPROVAL_PHYSICAL_COUNT]:
+        'approval-physical-count.template.html',
+      [ENotifyType.PHYSICAL_COUNT_APPROVED]:
+        'approved-physical-count.template.html',
+      [ENotifyType.PHYSICAL_COUNT_REJECTED]:
+        'rejected-physical-count.template.html',
     };
 
     const templateFile = templateMap[notifyType];
@@ -298,20 +302,22 @@ export class EmailService {
         approved_by_name: payload.approvedByName || '',
         rejected_by_name: payload.rejectedByName || '',
         additional_message: payload.additionalMessage || '',
-        sent_at: new Date().toLocaleString('en-GB', { timeZone: 'Asia/Bangkok' }),
+        sent_at: new Date().toLocaleString('en-GB', {
+          timeZone: 'Asia/Bangkok',
+        }),
       };
 
       const html = this.renderTemplate(template, variables);
 
       // Build subject
-      const subject = this.buildSubject(
-        payload.documentNo,
-        payload.notifyType,
-      );
+      const subject = this.buildSubject(payload.documentNo, payload.notifyType);
 
       // Test mode - redirect to test email
-      const isProduction = this.configService.get<string>('NODE_ENV') === 'production';
-      const testEmailOverride = this.configService.get<string>('TEST_EMAIL_OVERRIDE');
+      const isProduction =
+        this.configService.get<string>('NODE_ENV') === 'production';
+      const testEmailOverride = this.configService.get<string>(
+        'TEST_EMAIL_OVERRIDE',
+      );
 
       let finalToEmails = toEmails;
       let finalCcEmails = ccEmails;
@@ -332,14 +338,21 @@ export class EmailService {
         cc: finalCcEmails.length > 0 ? finalCcEmails.join(',') : undefined,
         subject,
         html,
-        sent_from_system: this.configService.get<string>('APP_NAME') || 'NURSE_ROOM_SYSTEM',
+        sent_from_system:
+          this.configService.get<string>('APP_NAME') || 'NURSE_ROOM_SYSTEM',
       };
 
       await this.send_email_service(emailData);
 
       // Create email log
       try {
-        const notifyTypeStr = payload.notifyType as 'APPROVAL_PO' | 'APPROVAL_BORROW' | 'PO_REWORK' | 'BORROW_REWORK' | 'PO_COMPLETED' | 'BORROW_COMPLETED';
+        const notifyTypeStr = payload.notifyType as
+          | 'APPROVAL_PO'
+          | 'APPROVAL_BORROW'
+          | 'PO_REWORK'
+          | 'BORROW_REWORK'
+          | 'PO_COMPLETED'
+          | 'BORROW_COMPLETED';
         const recipientEmails = finalToEmails.join(', ');
         await this.emailLogService.create({
           document_type: payload.documentType,
@@ -347,13 +360,16 @@ export class EmailService {
           document_no: payload.documentNo,
           notify_type: notifyTypeStr,
           recipient_emails: recipientEmails,
-          cc_emails: finalCcEmails.length > 0 ? finalCcEmails.join(', ') : undefined,
+          cc_emails:
+            finalCcEmails.length > 0 ? finalCcEmails.join(', ') : undefined,
           subject: subject,
           sent_status: 'SUCCESS',
           is_test_override: isTestMode,
           sent_by_employee_id: payload.sentByEmployeeId || undefined,
         });
-        this.logger.log(`✅ Email log created for approval email: ${payload.documentNo}`);
+        this.logger.log(
+          `✅ Email log created for approval email: ${payload.documentNo}`,
+        );
       } catch (logError) {
         this.logger.warn(`Failed to log approval email: ${logError.message}`);
       }
@@ -402,7 +418,10 @@ export class EmailService {
       );
 
       // Load template
-      const notifyType = documentType === 'PO' ? ENotifyType.APPROVAL_PO : ENotifyType.APPROVAL_BORROW;
+      const notifyType =
+        documentType === 'PO'
+          ? ENotifyType.APPROVAL_PO
+          : ENotifyType.APPROVAL_BORROW;
       const templateFile = this.getTemplateFileByNotifyType(notifyType);
       const template = this.loadTemplate(templateFile);
 
@@ -415,7 +434,9 @@ export class EmailService {
         approved_by_name: '',
         rejected_by_name: '',
         additional_message: '',
-        sent_at: new Date().toLocaleString('en-GB', { timeZone: 'Asia/Bangkok' }),
+        sent_at: new Date().toLocaleString('en-GB', {
+          timeZone: 'Asia/Bangkok',
+        }),
       };
 
       const html = this.renderTemplate(template, variables);
@@ -424,8 +445,11 @@ export class EmailService {
       const subject = this.buildSubject(documentNo, notifyType);
 
       // Test mode - redirect to test email
-      const isProduction = this.configService.get<string>('NODE_ENV') === 'production';
-      const testEmailOverride = this.configService.get<string>('TEST_EMAIL_OVERRIDE');
+      const isProduction =
+        this.configService.get<string>('NODE_ENV') === 'production';
+      const testEmailOverride = this.configService.get<string>(
+        'TEST_EMAIL_OVERRIDE',
+      );
 
       let finalToEmails = approverEmails;
       let isTestMode = false;
@@ -443,7 +467,8 @@ export class EmailService {
         to: finalToEmails.join(','),
         subject,
         html,
-        sent_from_system: this.configService.get<string>('APP_NAME') || 'NURSE_ROOM_SYSTEM',
+        sent_from_system:
+          this.configService.get<string>('APP_NAME') || 'NURSE_ROOM_SYSTEM',
       };
 
       await this.send_email_service(emailData);
@@ -463,9 +488,13 @@ export class EmailService {
           is_test_override: isTestMode,
           sent_by_employee_id: sentByEmployeeId || undefined,
         });
-        this.logger.log(`✅ Email log created for approval request: ${documentNo}`);
+        this.logger.log(
+          `✅ Email log created for approval request: ${documentNo}`,
+        );
       } catch (logError) {
-        this.logger.warn(`Failed to log approval request email: ${logError.message}`);
+        this.logger.warn(
+          `Failed to log approval request email: ${logError.message}`,
+        );
       }
 
       this.logger.log(

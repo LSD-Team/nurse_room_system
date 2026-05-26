@@ -118,11 +118,9 @@ export class PoService {
       WHERE a.po_id = @param0
       ORDER BY a.approval_level
     `;
-    return this.databaseService.query<IPoApproval>(
-      this.DATABASE_NAME,
-      query,
-      [poId],
-    );
+    return this.databaseService.query<IPoApproval>(this.DATABASE_NAME, query, [
+      poId,
+    ]);
   }
 
   // ─── GET: Suppliers (for dropdown) ───
@@ -162,9 +160,7 @@ export class PoService {
   // ─── GET: การยืมที่รอ settle ───
   async getPendingBorrows(supplierId: string | null) {
     const supplierIdInt = supplierId ? parseInt(supplierId, 10) : null;
-    const whereClause = supplierIdInt
-      ? `AND bh.supplier_id = @param0`
-      : '';
+    const whereClause = supplierIdInt ? `AND bh.supplier_id = @param0` : '';
     const query = `
       SELECT
         bh.borrow_id,
@@ -387,11 +383,11 @@ export class PoService {
         SELECT 'Error' AS Status, ERROR_MESSAGE() AS Message;
       END CATCH;
     `;
-    return this.databaseService.query(
-      this.DATABASE_NAME,
-      query,
-      [parseInt(poId, 10), borrowIdsJson, updatedBy],
-    );
+    return this.databaseService.query(this.DATABASE_NAME, query, [
+      parseInt(poId, 10),
+      borrowIdsJson,
+      updatedBy,
+    ]);
   }
 
   // ─── POST: ส่งอนุมัติ (sp_PO_03_SubmitPO) ───
@@ -495,7 +491,7 @@ export class PoService {
           // If there are more approvals pending, send email to next approver
           if (pendingApprovals.length > 0) {
             const nextApproval = pendingApprovals[0]; // Get the first pending (lowest level)
-            
+
             try {
               await this.emailService.sendApprovalRequestByRoleCode(
                 nextApproval.approval_role,
@@ -545,11 +541,7 @@ export class PoService {
   }
 
   // ─── POST: ยกเลิก PO (sp_POCancel) ───
-  async cancelPo(
-    poId: string,
-    cancelledBy: string,
-    reason: string | null,
-  ) {
+  async cancelPo(poId: string, cancelledBy: string, reason: string | null) {
     return this.databaseService.executeStoredProcedure(
       this.DATABASE_NAME,
       'sp_POCancel',
@@ -593,11 +585,7 @@ export class PoService {
   }
 
   // ─── PUT: อัปเดต qty_received ของ PO lines ───
-  async updateQtyReceived(
-    poId: string,
-    receivedBy: string,
-    jsonLines: string,
-  ) {
+  async updateQtyReceived(poId: string, receivedBy: string, jsonLines: string) {
     // jsonLines format: [{ po_line_id, qty_received }, ...]
     const lines = JSON.parse(jsonLines);
 
@@ -642,7 +630,10 @@ export class PoService {
     );
 
     if (result && result.length > 0) {
-      const { total_order, total_received } = result[0] as { total_order: number; total_received: number };
+      const { total_order, total_received } = result[0] as {
+        total_order: number;
+        total_received: number;
+      };
 
       // Determine new status
       let newStatus = 'PARTIAL';
@@ -659,15 +650,11 @@ export class PoService {
         WHERE po_id = @PoId
       `;
 
-      await this.databaseService.query(
-        this.DATABASE_NAME,
-        updateStatusQuery,
-        {
-          PoId: poId,
-          Status: newStatus,
-          UpdatedBy: receivedBy,
-        },
-      );
+      await this.databaseService.query(this.DATABASE_NAME, updateStatusQuery, {
+        PoId: poId,
+        Status: newStatus,
+        UpdatedBy: receivedBy,
+      });
     }
 
     return { success: true, message: 'Qty received updated successfully' };

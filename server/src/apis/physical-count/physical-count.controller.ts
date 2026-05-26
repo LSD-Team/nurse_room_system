@@ -1,10 +1,13 @@
-import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
 import {
-  ApiOperation,
-  ApiParam,
-  ApiResponse,
-  ApiTags,
-} from '@nestjs/swagger';
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Put,
+} from '@nestjs/common';
+import { ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { PhysicalCountService } from './physical-count.service';
 import { JwtPayloadData } from '@/shared/lsd-system-center/auth.interface';
 
@@ -59,9 +62,7 @@ export class PhysicalCountController {
     status: 200,
     description: 'Period created successfully',
   })
-  async createPeriod(
-    @Body() body: { periodEnd: string },
-  ) {
+  async createPeriod(@Body() body: { periodEnd: string }) {
     return this.physicalCountService.createPeriod(
       new Date(body.periodEnd),
       this.currentUser,

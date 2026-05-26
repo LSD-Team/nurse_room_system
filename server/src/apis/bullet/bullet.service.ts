@@ -18,10 +18,10 @@ export class BulletService {
     `;
 
     try {
-      const results = await this.databaseService.query<{ list: string; count: number }>(
-        this.DATABASE_NAME,
-        viewQuery,
-      );
+      const results = await this.databaseService.query<{
+        list: string;
+        count: number;
+      }>(this.DATABASE_NAME, viewQuery);
 
       const countsMap: Record<string, number> = {};
       results.forEach((row) => {

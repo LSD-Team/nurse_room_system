@@ -19,7 +19,9 @@
   const filteredMovements = computed(() => {
     let result = movements.value;
     if (selectedMovementType.value && selectedMovementType.value !== 'All') {
-      result = result.filter(m => m.movement_type === selectedMovementType.value);
+      result = result.filter(
+        m => m.movement_type === selectedMovementType.value
+      );
     }
     if (filterDateFrom.value) {
       const from = new Date(filterDateFrom.value);
@@ -35,7 +37,9 @@
   });
 
   const movementTypeOptions = computed(() => {
-    const types = [...new Set(movements.value.map(m => m.movement_type))].sort();
+    const types = [
+      ...new Set(movements.value.map(m => m.movement_type)),
+    ].sort();
     return [
       { label: 'All', value: '' },
       ...types.map(t => ({ label: t, value: t })),
@@ -75,21 +79,22 @@
   function exportExcel() {
     const data = filteredMovements.value.map((m, i) => ({
       '#': i + 1,
-      'วันที่': formatSysdatetimeoffset(m.created_at),
-      'ผู้สร้าง': m.created_by_name || m.created_by,
-      'ประเภทเคลื่อนไหว': m.movement_type,
+      วันที่: formatSysdatetimeoffset(m.created_at),
+      ผู้สร้าง: m.created_by_name || m.created_by,
+      ประเภทเคลื่อนไหว: m.movement_type,
       'รายการยา/เวชภัณฑ์ (TH)': m.item_name_th,
       'รายการยา/เวชภัณฑ์ (EN)': m.item_name_en,
-      'จำนวน': m.qty_base,
-      'หน่วย': m.unit_name_th || '',
-      'เหตุผล': m.reason || '',
+      จำนวน: m.qty_base,
+      หน่วย: m.unit_name_th || '',
+      เหตุผล: m.reason || '',
     }));
     const ws = XLSX.utils.json_to_sheet(data);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Movement Records');
-    const dateTag = filterDateFrom.value || filterDateTo.value
-      ? `_${filterDateFrom.value?.toLocaleDateString('th-TH') || ''}-${filterDateTo.value?.toLocaleDateString('th-TH') || ''}`
-      : '';
+    const dateTag =
+      filterDateFrom.value || filterDateTo.value
+        ? `_${filterDateFrom.value?.toLocaleDateString('th-TH') || ''}-${filterDateTo.value?.toLocaleDateString('th-TH') || ''}`
+        : '';
     XLSX.writeFile(wb, `movement-records${dateTag}.xlsx`);
   }
 
@@ -150,9 +155,21 @@
               </template>
             </Select>
             <label class="text-sm font-medium ml-2">ตั้งแต่:</label>
-            <DatePicker v-model="filterDateFrom" dateFormat="dd/mm/yy" placeholder="วันที่เริ่มต้น" class="w-36" showClear />
+            <DatePicker
+              v-model="filterDateFrom"
+              dateFormat="dd/mm/yy"
+              placeholder="วันที่เริ่มต้น"
+              class="w-36"
+              showClear
+            />
             <label class="text-sm font-medium">ถึง:</label>
-            <DatePicker v-model="filterDateTo" dateFormat="dd/mm/yy" placeholder="วันที่สิ้นสุด" class="w-36" showClear />
+            <DatePicker
+              v-model="filterDateTo"
+              dateFormat="dd/mm/yy"
+              placeholder="วันที่สิ้นสุด"
+              class="w-36"
+              showClear
+            />
             <Button
               v-if="filterDateFrom || filterDateTo"
               icon="pi pi-times"
@@ -160,7 +177,10 @@
               severity="secondary"
               outlined
               size="small"
-              @click="filterDateFrom = null; filterDateTo = null"
+              @click="
+                filterDateFrom = null;
+                filterDateTo = null;
+              "
             />
           </div>
           <div class="flex gap-2 items-center">
@@ -173,10 +193,19 @@
               @click="exportExcel"
               :disabled="filteredMovements.length === 0"
             />
-            <Button icon="pi pi-refresh" rounded text @click="loadMovements" v-tooltip="'โหลดใหม่'" />
+            <Button
+              icon="pi pi-refresh"
+              rounded
+              text
+              @click="loadMovements"
+              v-tooltip="'โหลดใหม่'"
+            />
             <IconField>
               <InputIcon class="pi pi-search" />
-              <InputText v-model="filters['global'].value" placeholder="ค้นหา..." />
+              <InputText
+                v-model="filters['global'].value"
+                placeholder="ค้นหา..."
+              />
             </IconField>
           </div>
         </div>
@@ -248,13 +277,11 @@
         </template>
       </Column>
 
-      <Column
-        field="unit_name_th"
-        :header="'หน่วย'"
-        style="min-width: 80px"
-      >
+      <Column field="unit_name_th" :header="'หน่วย'" style="min-width: 80px">
         <template #body="{ data }">
-          <span class="text-color-secondary">{{ data.unit_name_th || '-' }}</span>
+          <span class="text-color-secondary">
+            {{ data.unit_name_th || '-' }}
+          </span>
         </template>
       </Column>
 

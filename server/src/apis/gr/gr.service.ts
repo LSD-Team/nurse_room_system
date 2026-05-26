@@ -192,9 +192,7 @@ export class GrService {
       return results || [];
     } catch (error) {
       console.error('[GrService] Error in getAvailablePos:', error);
-      throw new InternalServerErrorException(
-        'Failed to fetch available POs',
-      );
+      throw new InternalServerErrorException('Failed to fetch available POs');
     }
   }
 
@@ -245,9 +243,7 @@ export class GrService {
       return results || [];
     } catch (error) {
       console.error('[GrService] Error in getPendingItems:', error);
-      throw new InternalServerErrorException(
-        'Failed to fetch pending items',
-      );
+      throw new InternalServerErrorException('Failed to fetch pending items');
     }
   }
 
@@ -372,12 +368,12 @@ export class GrService {
         WHERE ph.po_id = ${poId}
         GROUP BY ph.po_id, ph.status
       `;
-      
+
       const statusCheckResult = await this.databaseService.query<{
         po_id: number;
         new_status: string;
       }>(this.DATABASE_NAME, query);
-      
+
       if (statusCheckResult && statusCheckResult.length > 0) {
         const { new_status } = statusCheckResult[0];
         const updateQuery = `
@@ -438,11 +434,14 @@ export class GrService {
       }
 
       console.log('[GrService] GR cancelled successfully:', response);
-      
+
       // ─── After cancelling GR, update PO status (as background task, don't block response) ───
       if (poIdFromGr) {
-        this.updatePoStatusAfterGrConfirm(poIdFromGr).catch(err => {
-          console.error('[GrService] Error updating PO status in background:', err);
+        this.updatePoStatusAfterGrConfirm(poIdFromGr).catch((err) => {
+          console.error(
+            '[GrService] Error updating PO status in background:',
+            err,
+          );
         });
       }
 

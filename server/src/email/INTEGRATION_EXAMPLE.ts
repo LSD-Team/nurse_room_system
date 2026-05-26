@@ -29,7 +29,7 @@ export class PoServiceWithEmailIntegration {
    * When a new PO is created and needs approval
    * Call this after inserting PO into database
    */
-  /*
+/*
   async createPoAndNotifyApprovers(
     poNo: string,
     poTitle: string,
@@ -57,7 +57,7 @@ export class PoServiceWithEmailIntegration {
    * When PO approval is rejected and needs rework
    * Call this when approver rejects at any level
    */
-  /*
+/*
   async rejectPoAndNotifyCreator(
     poId: number,
     poNo: string,
@@ -88,7 +88,7 @@ export class PoServiceWithEmailIntegration {
    * When PO final approval is completed (all levels approved)
    * Call this after last level approver approves
    */
-  /*
+/*
   async completePOApprovalAndNotifyCreator(
     poId: number,
     poNo: string,
@@ -131,7 +131,7 @@ export class BorrowServiceWithEmailIntegration {
   /**
    * When a new Borrow document is created
    */
-  /*
+/*
   async createBorrowAndNotifyApprovers(
     borrowNo: string,
     borrowTitle: string,
@@ -157,7 +157,7 @@ export class BorrowServiceWithEmailIntegration {
   /**
    * When Borrow is rejected and needs rework
    */
-  /*
+/*
   async rejectBorrowAndNotifyCreator(
     borrowId: number,
     borrowNo: string,
@@ -187,7 +187,7 @@ export class BorrowServiceWithEmailIntegration {
   /**
    * When Borrow final approval is completed
    */
-  /*
+/*
   async completeBorrowApprovalAndNotifyCreator(
     borrowId: number,
     borrowNo: string,
@@ -232,7 +232,7 @@ export class ApprovalControllerWithEmail {
   /**
    * Endpoint: POST /api/approvals/approve-po/:id
    */
-  /*
+/*
   @Post('approve-po/:id')
   async approvePo(@Body() payload: any): Promise<void> {
     const { poId, approverName, approverEmployeeId } = payload;
@@ -264,7 +264,7 @@ export class ApprovalControllerWithEmail {
   /**
    * Endpoint: POST /api/approvals/reject-po/:id
    */
-  /*
+/*
   @Post('reject-po/:id')
   async rejectPo(@Body() payload: any): Promise<void> {
     const { poId, rejectorName, rejectorEmployeeId, reason } = payload;
@@ -366,7 +366,7 @@ export class CompleteApprovalWorkflow {
   /**
    * Complete workflow: Create PO -> Send approval request -> Handle approval/rejection
    */
-  /*
+/*
   async handlePOApprovalWorkflow(action: 'APPROVE' | 'REJECT', poId: number) {
     // Get PO details
     const poHeader = await this.database.query(

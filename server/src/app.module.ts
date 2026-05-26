@@ -13,6 +13,8 @@ import { PoModule } from '@/src/apis/po/po.module';
 import { StockModule } from '@/src/apis/stock/stock.module';
 import { PhysicalCountModule } from '@/src/apis/physical-count/physical-count.module';
 import { TreatmentModule } from '@/src/apis/treatment/treatment.module';
+import { ReferModule } from '@/src/apis/refer/refer.module';
+import { MasterDataModule } from '@/src/apis/master-data/master-data.module';
 import { AuthModule } from '@/src/auth/auth.module';
 import { DatabaseModule } from '@/src/database/database.module';
 import { EmailModule } from '@/src/email/email.module';
@@ -29,7 +31,9 @@ import { AppController } from '@/src/app.controller';
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath:
-        process.env.NODE_ENV === 'production' ? '.env.production' : '.env.development',
+        process.env.NODE_ENV === 'production'
+          ? '.env.production'
+          : '.env.development',
     }),
     AuthModule,
     DatabaseModule,
@@ -43,6 +47,8 @@ import { AppController } from '@/src/app.controller';
     StockModule,
     PhysicalCountModule,
     TreatmentModule,
+    ReferModule,
+    MasterDataModule,
   ],
   controllers: [AppController],
   providers: [

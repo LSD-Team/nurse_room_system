@@ -3,7 +3,10 @@ import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import { EmailService } from '@/src/email/email.service';
 import { DatabaseService } from '@/src/database/database.service';
-import { ENotifyType, ISendApprovalEmailPayload } from '@/src/email/dto/send-approval-email.dto';
+import {
+  ENotifyType,
+  ISendApprovalEmailPayload,
+} from '@/src/email/dto/send-approval-email.dto';
 import { of } from 'rxjs';
 import * as fs from 'fs';
 
@@ -93,9 +96,7 @@ describe('EmailService', () => {
       // Mock template file
       const templatePath = expect.stringContaining('approval-po.template.html');
       jest.spyOn(fs, 'existsSync').mockReturnValue(true);
-      jest.spyOn(fs, 'readFileSync').mockReturnValue(
-        '<p>{{document_no}}</p>',
-      );
+      jest.spyOn(fs, 'readFileSync').mockReturnValue('<p>{{document_no}}</p>');
 
       const payload: ISendApprovalEmailPayload = {
         notifyType: ENotifyType.APPROVAL_PO,
@@ -127,9 +128,7 @@ describe('EmailService', () => {
       ]);
 
       jest.spyOn(fs, 'existsSync').mockReturnValue(true);
-      jest.spyOn(fs, 'readFileSync').mockReturnValue(
-        '<p>{{document_no}}</p>',
-      );
+      jest.spyOn(fs, 'readFileSync').mockReturnValue('<p>{{document_no}}</p>');
 
       const payload: ISendApprovalEmailPayload = {
         notifyType: ENotifyType.APPROVAL_BORROW,
@@ -160,9 +159,7 @@ describe('EmailService', () => {
       ]);
 
       jest.spyOn(fs, 'existsSync').mockReturnValue(true);
-      jest.spyOn(fs, 'readFileSync').mockReturnValue(
-        '<p>{{document_no}}</p>',
-      );
+      jest.spyOn(fs, 'readFileSync').mockReturnValue('<p>{{document_no}}</p>');
 
       const payload: ISendApprovalEmailPayload = {
         notifyType: ENotifyType.APPROVAL_PO,

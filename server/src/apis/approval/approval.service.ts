@@ -250,7 +250,7 @@ export class ApprovalService {
       query,
       [userId],
     );
-    return result.map(r => r.role_code);
+    return result.map((r) => r.role_code);
   }
 
   // ─── POST: Approve PO (sp_PO_04_ApprovePO) ───
@@ -272,6 +272,11 @@ export class ApprovalService {
     remark: string | null,
   ) {
     // Call BorrowService which includes email logic
-    return this.borrowService.approveBorrow(borrowId, action, actionedBy, remark);
+    return this.borrowService.approveBorrow(
+      borrowId,
+      action,
+      actionedBy,
+      remark,
+    );
   }
 }

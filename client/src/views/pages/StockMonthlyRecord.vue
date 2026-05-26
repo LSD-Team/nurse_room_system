@@ -32,7 +32,11 @@
       loading.value = true;
       periods.value = await PhysicalCountService.getAvailablePeriods();
     } catch (error: any) {
-      Swal.fire('ข้อผิดพลาด', error.message || 'ไม่สามารถโหลดข้อมูลได้', 'error');
+      Swal.fire(
+        'ข้อผิดพลาด',
+        error.message || 'ไม่สามารถโหลดข้อมูลได้',
+        'error'
+      );
     } finally {
       loading.value = false;
     }
@@ -47,10 +51,20 @@
       loading.value = true;
       await PhysicalCountService.createPeriod(toDateString(newPeriodEnd.value));
       showCreateDialog.value = false;
-      await Swal.fire({ title: 'สำเร็จ', text: 'สร้าง Period สำเร็จ', icon: 'success', timer: 1500, showConfirmButton: false });
+      await Swal.fire({
+        title: 'สำเร็จ',
+        text: 'สร้าง Period สำเร็จ',
+        icon: 'success',
+        timer: 1500,
+        showConfirmButton: false,
+      });
       await loadPeriods();
     } catch (error: any) {
-      Swal.fire('ข้อผิดพลาด', error.message || 'สร้าง Period ไม่สำเร็จ', 'error');
+      Swal.fire(
+        'ข้อผิดพลาด',
+        error.message || 'สร้าง Period ไม่สำเร็จ',
+        'error'
+      );
     } finally {
       loading.value = false;
     }
@@ -73,9 +87,14 @@
 
     try {
       actionLoadingCode.value = period.period_code;
-      const result = await PhysicalCountService.createPhysicalCount({ PeriodCode: period.period_code });
+      const result = await PhysicalCountService.createPhysicalCount({
+        PeriodCode: period.period_code,
+      });
       if (result.Status === 1 && result.CountId) {
-        router.push({ name: 'stockCountDetail', params: { countId: result.CountId } });
+        router.push({
+          name: 'stockCountDetail',
+          params: { countId: result.CountId },
+        });
       } else {
         Swal.fire('ข้อผิดพลาด', result.Message, 'error');
         await loadPeriods();
@@ -93,7 +112,9 @@
 
   function openEditDialog(period: any) {
     editingPeriodCode.value = period.period_code;
-    editingPeriodEnd.value = period.period_end ? new Date(period.period_end) : null;
+    editingPeriodEnd.value = period.period_end
+      ? new Date(period.period_end)
+      : null;
     showEditDialog.value = true;
   }
 
@@ -106,11 +127,17 @@
       loading.value = true;
       const result = await PhysicalCountService.editPeriodEnd(
         editingPeriodCode.value,
-        toDateString(editingPeriodEnd.value),
+        toDateString(editingPeriodEnd.value)
       );
       if (result.result.Status === 'Success') {
         showEditDialog.value = false;
-        await Swal.fire({ title: 'สำเร็จ', text: result.result.Message, icon: 'success', timer: 1500, showConfirmButton: false });
+        await Swal.fire({
+          title: 'สำเร็จ',
+          text: result.result.Message,
+          icon: 'success',
+          timer: 1500,
+          showConfirmButton: false,
+        });
         await loadPeriods();
       } else {
         Swal.fire('ข้อผิดพลาด', result.result.Message, 'error');
@@ -138,9 +165,17 @@
 
     try {
       loading.value = true;
-      const result = await PhysicalCountService.deletePeriod(period.period_code);
+      const result = await PhysicalCountService.deletePeriod(
+        period.period_code
+      );
       if (result.Status === 'Success') {
-        await Swal.fire({ title: 'สำเร็จ', text: result.Message, icon: 'success', timer: 1500, showConfirmButton: false });
+        await Swal.fire({
+          title: 'สำเร็จ',
+          text: result.Message,
+          icon: 'success',
+          timer: 1500,
+          showConfirmButton: false,
+        });
         await loadPeriods();
       } else {
         Swal.fire('ข้อผิดพลาด', result.Message, 'error');
@@ -171,8 +206,8 @@
 
   const filteredPeriods = computed(() =>
     statusFilter.value
-      ? periods.value.filter((p) => p.period_status === statusFilter.value)
-      : periods.value,
+      ? periods.value.filter(p => p.period_status === statusFilter.value)
+      : periods.value
   );
 
   const statusSeverity = (status: string) => {
@@ -193,18 +228,25 @@
   <div class="grid">
     <div class="col-12">
       <div class="card">
-
         <!-- Header -->
-        <div class="flex align-items-center justify-content-between w-full mb-4">
+        <div
+          class="flex align-items-center justify-content-between w-full mb-4"
+        >
           <div class="flex align-items-center gap-3">
-            <i class="pi pi-calendar text-amber-400" style="font-size: 1.8rem"></i>
+            <i
+              class="pi pi-calendar text-amber-400"
+              style="font-size: 1.8rem"
+            ></i>
             <span class="text-2xl font-bold">บันทึก Stock ประจำเดือน</span>
           </div>
           <Button
             icon="pi pi-plus"
             label="สร้าง Period ใหม่"
             class="p-button-success mx-2"
-            @click="showCreateDialog = true; newPeriodEnd = null"
+            @click="
+              showCreateDialog = true;
+              newPeriodEnd = null;
+            "
           />
         </div>
 
@@ -218,7 +260,11 @@
               :label="opt.value ?? 'ทั้งหมด'"
               size="small"
               :outlined="statusFilter !== opt.value"
-              :severity="opt.value === null ? 'secondary' : statusSeverity(opt.value as string)"
+              :severity="
+                opt.value === null
+                  ? 'secondary'
+                  : statusSeverity(opt.value as string)
+              "
               @click="statusFilter = opt.value"
             />
           </div>
@@ -241,18 +287,38 @@
             </div>
           </template>
 
-          <Column field="period_code" header="Period Code" :sortable="true" style="min-width: 10rem" />
-          <Column field="period_start" header="วันเริ่มต้น" :sortable="true" style="min-width: 11rem">
+          <Column
+            field="period_code"
+            header="Period Code"
+            :sortable="true"
+            style="min-width: 10rem"
+          />
+          <Column
+            field="period_start"
+            header="วันเริ่มต้น"
+            :sortable="true"
+            style="min-width: 11rem"
+          >
             <template #body="{ data }">
               {{ formatDate(data.period_start as string) }}
             </template>
           </Column>
-          <Column field="period_end" header="วันสิ้นสุด" :sortable="true" style="min-width: 11rem">
+          <Column
+            field="period_end"
+            header="วันสิ้นสุด"
+            :sortable="true"
+            style="min-width: 11rem"
+          >
             <template #body="{ data }">
               {{ formatDate(data.period_end as string) }}
             </template>
           </Column>
-          <Column field="period_status" header="สถานะ" :sortable="true" style="min-width: 14rem">
+          <Column
+            field="period_status"
+            header="สถานะ"
+            :sortable="true"
+            style="min-width: 14rem"
+          >
             <template #body="{ data }">
               <Tag
                 :value="statusLabel(data.period_status)"
@@ -260,8 +326,16 @@
               />
             </template>
           </Column>
-          <Column field="created_by" header="สร้างโดย" style="min-width: 10rem" />
-          <Column field="created_at" header="สร้างเมื่อ" style="min-width: 13rem">
+          <Column
+            field="created_by"
+            header="สร้างโดย"
+            style="min-width: 10rem"
+          />
+          <Column
+            field="created_at"
+            header="สร้างเมื่อ"
+            style="min-width: 13rem"
+          >
             <template #body="{ data }">
               {{ formatSysdatetimeoffset(data.created_at as string) }}
             </template>
@@ -311,7 +385,9 @@
                   @click="handleDeletePeriod(data)"
                 />
                 <Button
-                  v-if="data.active_count_id && data.active_count_status === 'DRAFT'"
+                  v-if="
+                    data.active_count_id && data.active_count_status === 'DRAFT'
+                  "
                   icon="pi pi-pencil-square"
                   label="กำลังนับ"
                   size="small"
@@ -329,7 +405,10 @@
                 />
                 <!-- Show rejected count for reference -->
                 <Button
-                  v-if="data.active_count_id && data.active_count_status === 'REJECTED'"
+                  v-if="
+                    data.active_count_id &&
+                    data.active_count_status === 'REJECTED'
+                  "
                   icon="pi pi-eye"
                   label="ดูที่ถูกปฏิเสธ"
                   size="small"
@@ -340,7 +419,10 @@
 
               <!-- PENDING_APPROVAL: view/navigate to submitted count -->
               <Button
-                v-else-if="data.period_status === 'PENDING_APPROVAL' && data.active_count_id"
+                v-else-if="
+                  data.period_status === 'PENDING_APPROVAL' &&
+                  data.active_count_id
+                "
                 icon="pi pi-eye"
                 label="ดูรายการ"
                 size="small"
@@ -350,7 +432,11 @@
 
               <!-- SNAPSHOT_DONE / CLOSED: view approved count detail -->
               <Button
-                v-else-if="(data.period_status === 'SNAPSHOT_DONE' || data.period_status === 'CLOSED') && data.active_count_id"
+                v-else-if="
+                  (data.period_status === 'SNAPSHOT_DONE' ||
+                    data.period_status === 'CLOSED') &&
+                  data.active_count_id
+                "
                 icon="pi pi-eye"
                 label="ดูรายละเอียด"
                 size="small"
@@ -374,10 +460,15 @@
     >
       <div class="flex flex-column gap-3 pt-2">
         <p class="text-sm text-gray-500 m-0">
-          ระบบจะคำนวณ <strong>วันเริ่มต้น</strong> จาก Period ก่อนหน้าให้อัตโนมัติ
+          ระบบจะคำนวณ
+          <strong>วันเริ่มต้น</strong>
+          จาก Period ก่อนหน้าให้อัตโนมัติ
         </p>
         <div>
-          <label class="block text-sm font-semibold mb-2">วันที่สิ้นสุด Period <span class="text-red-500">*</span></label>
+          <label class="block text-sm font-semibold mb-2">
+            วันที่สิ้นสุด Period
+            <span class="text-red-500">*</span>
+          </label>
           <Calendar
             v-model="newPeriodEnd"
             dateFormat="dd/mm/yy"
@@ -388,7 +479,12 @@
         </div>
       </div>
       <template #footer>
-        <Button label="ยกเลิก" icon="pi pi-times" class="p-button-text" @click="showCreateDialog = false" />
+        <Button
+          label="ยกเลิก"
+          icon="pi pi-times"
+          class="p-button-text"
+          @click="showCreateDialog = false"
+        />
         <Button
           label="สร้าง Period"
           icon="pi pi-check"
@@ -408,14 +504,19 @@
     >
       <div class="flex flex-column gap-3 pt-2">
         <div class="p-3 border-round surface-100">
-          <span class="text-sm text-gray-500">Period Code: </span>
+          <span class="text-sm text-gray-500">Period Code:</span>
           <span class="font-bold">{{ editingPeriodCode }}</span>
         </div>
         <p class="text-sm text-amber-600 m-0">
-          ⚠️ แก้ไขได้เฉพาะ Period ที่มีสถานะ <strong>OPEN</strong> เท่านั้น
+          ⚠️ แก้ไขได้เฉพาะ Period ที่มีสถานะ
+          <strong>OPEN</strong>
+          เท่านั้น
         </p>
         <div>
-          <label class="block text-sm font-semibold mb-2">วันที่สิ้นสุดใหม่ <span class="text-red-500">*</span></label>
+          <label class="block text-sm font-semibold mb-2">
+            วันที่สิ้นสุดใหม่
+            <span class="text-red-500">*</span>
+          </label>
           <Calendar
             v-model="editingPeriodEnd"
             dateFormat="dd/mm/yy"
@@ -426,7 +527,12 @@
         </div>
       </div>
       <template #footer>
-        <Button label="ยกเลิก" icon="pi pi-times" class="p-button-text" @click="showEditDialog = false" />
+        <Button
+          label="ยกเลิก"
+          icon="pi pi-times"
+          class="p-button-text"
+          @click="showEditDialog = false"
+        />
         <Button
           label="บันทึก"
           icon="pi pi-check"

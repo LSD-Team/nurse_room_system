@@ -83,10 +83,7 @@ export class PhysicalCountService {
   // ────────────────────────────────────────────────────────────────
   // 0. sp_Snapshot_01_CreateStockPeriod — สร้าง period
   // ────────────────────────────────────────────────────────────────
-  async createPeriod(
-    periodEnd: Date,
-    createdBy: string,
-  ): Promise<any> {
+  async createPeriod(periodEnd: Date, createdBy: string): Promise<any> {
     this.logger.debug(
       `createPeriod: periodEnd=${periodEnd.toISOString()}, createdBy=${createdBy}`,
     );
@@ -100,7 +97,9 @@ export class PhysicalCountService {
       },
     );
 
-    return results && results[0] ? results[0] : { Status: 0, Message: 'No response from SP' };
+    return results && results[0]
+      ? results[0]
+      : { Status: 0, Message: 'No response from SP' };
   }
 
   // ────────────────────────────────────────────────────────────────
@@ -115,17 +114,20 @@ export class PhysicalCountService {
       `createPhysicalCount: periodCode=${periodCode}, createdBy=${createdBy}`,
     );
 
-    const results = await this.databaseService.executeStoredProcedure<IPhysicalCountCreateResponse>(
-      this.DATABASE_NAME,
-      'sp_PhysCount_01_Create',
-      {
-        PeriodCode: periodCode,
-        CreatedBy: createdBy,
-        Note: note || null,
-      },
-    );
+    const results =
+      await this.databaseService.executeStoredProcedure<IPhysicalCountCreateResponse>(
+        this.DATABASE_NAME,
+        'sp_PhysCount_01_Create',
+        {
+          PeriodCode: periodCode,
+          CreatedBy: createdBy,
+          Note: note || null,
+        },
+      );
 
-    return results && results[0] ? results[0] : { Status: 0, Message: 'No response from SP' };
+    return results && results[0]
+      ? results[0]
+      : { Status: 0, Message: 'No response from SP' };
   }
 
   // ────────────────────────────────────────────────────────────────
@@ -137,16 +139,19 @@ export class PhysicalCountService {
   ): Promise<IPhysicalCountSaveLinesResponse> {
     this.logger.debug(`saveCountLines: countId=${countId}`);
 
-    const results = await this.databaseService.executeStoredProcedure<IPhysicalCountSaveLinesResponse>(
-      this.DATABASE_NAME,
-      'sp_PhysCount_02_SaveLines',
-      {
-        CountId: countId,
-        JsonData: jsonData,
-      },
-    );
+    const results =
+      await this.databaseService.executeStoredProcedure<IPhysicalCountSaveLinesResponse>(
+        this.DATABASE_NAME,
+        'sp_PhysCount_02_SaveLines',
+        {
+          CountId: countId,
+          JsonData: jsonData,
+        },
+      );
 
-    return results && results[0] ? results[0] : { Status: 0, Message: 'No response from SP' };
+    return results && results[0]
+      ? results[0]
+      : { Status: 0, Message: 'No response from SP' };
   }
 
   // ────────────────────────────────────────────────────────────────
@@ -156,42 +161,55 @@ export class PhysicalCountService {
     this.logger.debug(`getComparison: countId=${countId}`);
 
     // SP03 returns 2 result sets: [0]=header row, [1]=lines[]
-    const recordsets = await this.databaseService.executeStoredProcedureMultiple<any>(
-      this.DATABASE_NAME,
-      'sp_PhysCount_03_GetComparison',
-      { CountId: countId },
-    );
+    const recordsets =
+      await this.databaseService.executeStoredProcedureMultiple<any>(
+        this.DATABASE_NAME,
+        'sp_PhysCount_03_GetComparison',
+        { CountId: countId },
+      );
 
-    this.logger.debug(`getComparison recordsets.length=${recordsets?.length}, set0.length=${recordsets?.[0]?.length}, set1.length=${recordsets?.[1]?.length}`);
+    this.logger.debug(
+      `getComparison recordsets.length=${recordsets?.length}, set0.length=${recordsets?.[0]?.length}, set1.length=${recordsets?.[1]?.length}`,
+    );
 
     const header: IPhysicalCountHeader = recordsets?.[0]?.[0] ?? null;
     const lines: IPhysicalCountLine[] = recordsets?.[1] ?? [];
 
     // Enrich header with employee names from view_employee_all
     if (header) {
-      const ids = [header.created_by, header.submitted_by, header.approved_by]
-        .filter((id): id is string => !!id);
+      const ids = [
+        header.created_by,
+        header.submitted_by,
+        header.approved_by,
+      ].filter((id): id is string => !!id);
 
       if (ids.length > 0) {
         const placeholders = ids.map((_, i) => `@p${i}`).join(', ');
         const nameQuery = `SELECT ID, eng_name FROM view_employee_all WHERE ID IN (${placeholders})`;
         const nameParams: Record<string, string> = {};
-        ids.forEach((id, i) => { nameParams[`p${i}`] = id; });
+        ids.forEach((id, i) => {
+          nameParams[`p${i}`] = id;
+        });
 
-        const nameRows = await this.databaseService.query<{ ID: string; eng_name: string }>(
-          this.DATABASE_NAME,
-          nameQuery,
-          nameParams,
+        const nameRows = await this.databaseService.query<{
+          ID: string;
+          eng_name: string;
+        }>(this.DATABASE_NAME, nameQuery, nameParams);
+
+        const nameMap = new Map(
+          nameRows.map((r) => [String(r.ID), r.eng_name]),
         );
-
-        const nameMap = new Map(nameRows.map((r) => [String(r.ID), r.eng_name]));
-        header.created_by_name  = nameMap.get(String(header.created_by))  ?? null;
-        header.submitted_by_name = header.submitted_by ? (nameMap.get(String(header.submitted_by)) ?? null) : null;
-        header.approved_by_name  = header.approved_by  ? (nameMap.get(String(header.approved_by))  ?? null) : null;
+        header.created_by_name = nameMap.get(String(header.created_by)) ?? null;
+        header.submitted_by_name = header.submitted_by
+          ? (nameMap.get(String(header.submitted_by)) ?? null)
+          : null;
+        header.approved_by_name = header.approved_by
+          ? (nameMap.get(String(header.approved_by)) ?? null)
+          : null;
       } else {
-        header.created_by_name   = null;
+        header.created_by_name = null;
         header.submitted_by_name = null;
-        header.approved_by_name  = null;
+        header.approved_by_name = null;
       }
     }
 
@@ -205,18 +223,24 @@ export class PhysicalCountService {
     countId: number,
     submittedBy: string,
   ): Promise<IPhysicalCountSubmitResponse> {
-    this.logger.debug(`submitCount: countId=${countId}, submittedBy=${submittedBy}`);
-
-    const results = await this.databaseService.executeStoredProcedure<IPhysicalCountSubmitResponse>(
-      this.DATABASE_NAME,
-      'sp_PhysCount_04_Submit',
-      {
-        CountId: countId,
-        SubmittedBy: submittedBy,
-      },
+    this.logger.debug(
+      `submitCount: countId=${countId}, submittedBy=${submittedBy}`,
     );
 
-    const response = results && results[0] ? results[0] : { Status: 0, Message: 'No response from SP' };
+    const results =
+      await this.databaseService.executeStoredProcedure<IPhysicalCountSubmitResponse>(
+        this.DATABASE_NAME,
+        'sp_PhysCount_04_Submit',
+        {
+          CountId: countId,
+          SubmittedBy: submittedBy,
+        },
+      );
+
+    const response =
+      results && results[0]
+        ? results[0]
+        : { Status: 0, Message: 'No response from SP' };
 
     // ✅ ส่งอนุมัติสำเร็จ ให้ส่ง email ให้ GROUP_LEAD
     if (response.Status === 1 && response.PeriodCode) {
@@ -244,25 +268,37 @@ export class PhysicalCountService {
     countId: number,
     approvedBy: string,
   ): Promise<IPhysicalCountApproveResponse> {
-    this.logger.debug(`approveCount: countId=${countId}, approvedBy=${approvedBy}`);
-
-    const results = await this.databaseService.executeStoredProcedure<IPhysicalCountApproveResponse>(
-      this.DATABASE_NAME,
-      'sp_PhysCount_05_Approve',
-      {
-        CountId: countId,
-        ApprovedBy: approvedBy,
-      },
+    this.logger.debug(
+      `approveCount: countId=${countId}, approvedBy=${approvedBy}`,
     );
 
-    const response = results && results[0] ? results[0] : { Status: 0, Message: 'No response from SP' };
+    const results =
+      await this.databaseService.executeStoredProcedure<IPhysicalCountApproveResponse>(
+        this.DATABASE_NAME,
+        'sp_PhysCount_05_Approve',
+        {
+          CountId: countId,
+          ApprovedBy: approvedBy,
+        },
+      );
+
+    const response =
+      results && results[0]
+        ? results[0]
+        : { Status: 0, Message: 'No response from SP' };
 
     // ✅ อนุมัติสำเร็จ ให้ส่ง email ให้ผู้ที่ส่ง
     if (response.Status === 1 && response.CountId) {
       try {
-        await this.sendApprovedEmailToSubmitter(response.CountId, response.PeriodCode || '');
+        await this.sendApprovedEmailToSubmitter(
+          response.CountId,
+          response.PeriodCode || '',
+        );
       } catch (error) {
-        this.logger.error(`Failed to send approved email for countId=${countId}:`, error);
+        this.logger.error(
+          `Failed to send approved email for countId=${countId}:`,
+          error,
+        );
       }
     }
 
@@ -281,17 +317,21 @@ export class PhysicalCountService {
       `rejectCount: countId=${countId}, rejectedBy=${rejectedBy}, reason=${rejectedReason}`,
     );
 
-    const results = await this.databaseService.executeStoredProcedure<IPhysicalCountRejectResponse>(
-      this.DATABASE_NAME,
-      'sp_PhysCount_06_Reject',
-      {
-        CountId: countId,
-        RejectedBy: rejectedBy,
-        RejectedReason: rejectedReason,
-      },
-    );
+    const results =
+      await this.databaseService.executeStoredProcedure<IPhysicalCountRejectResponse>(
+        this.DATABASE_NAME,
+        'sp_PhysCount_06_Reject',
+        {
+          CountId: countId,
+          RejectedBy: rejectedBy,
+          RejectedReason: rejectedReason,
+        },
+      );
 
-    const response = results && results[0] ? results[0] : { Status: 0, Message: 'No response from SP' };
+    const response =
+      results && results[0]
+        ? results[0]
+        : { Status: 0, Message: 'No response from SP' };
 
     // ✅ ปฏิเสธสำเร็จ ให้ส่ง email ให้ผู้ที่ส่ง พร้อมเหตุผล
     if (response.Status === 1 && response.CountId) {
@@ -302,7 +342,10 @@ export class PhysicalCountService {
           rejectedReason,
         );
       } catch (error) {
-        this.logger.error(`Failed to send rejection email for countId=${countId}:`, error);
+        this.logger.error(
+          `Failed to send rejection email for countId=${countId}:`,
+          error,
+        );
       }
     }
 
@@ -331,7 +374,9 @@ export class PhysicalCountService {
 
     // SP returns 2 result sets: [0] status/message, [1] updated period record
     const result: IEditPeriodEndResponse =
-      results && results.length > 0 ? results[0] : { Status: 'Error', Message: 'No response from SP' };
+      results && results.length > 0
+        ? results[0]
+        : { Status: 'Error', Message: 'No response from SP' };
     const period: IStockPeriod | undefined =
       results && results.length > 1 ? results[1] : undefined;
 
@@ -344,13 +389,14 @@ export class PhysicalCountService {
   async deletePeriod(periodCode: string): Promise<IDeletePeriodResponse> {
     this.logger.debug(`deletePeriod: periodCode=${periodCode}`);
 
-    const results = await this.databaseService.executeStoredProcedure<IDeletePeriodResponse>(
-      this.DATABASE_NAME,
-      'sp_Snapshot_05_deletePeriod',
-      {
-        PeriodCode: periodCode,
-      },
-    );
+    const results =
+      await this.databaseService.executeStoredProcedure<IDeletePeriodResponse>(
+        this.DATABASE_NAME,
+        'sp_Snapshot_05_deletePeriod',
+        {
+          PeriodCode: periodCode,
+        },
+      );
 
     return results && results[0]
       ? results[0]
@@ -377,10 +423,9 @@ export class PhysicalCountService {
         WHERE role_code = 'GROUP_LEAD' AND is_active = 1
       `;
 
-      const groupLeads = await this.databaseService.query<{ approver_id: string }>(
-        this.DATABASE_NAME,
-        groupLeadQuery,
-      );
+      const groupLeads = await this.databaseService.query<{
+        approver_id: string;
+      }>(this.DATABASE_NAME, groupLeadQuery);
 
       if (!groupLeads || groupLeads.length === 0) {
         this.logger.warn('No active GROUP_LEAD found');
@@ -402,7 +447,9 @@ export class PhysicalCountService {
 
       await this.emailService.sendApprovalEmail(payload);
 
-      this.logger.log(`✅ Approval email sent to GROUP_LEAD for countId=${countId}`);
+      this.logger.log(
+        `✅ Approval email sent to GROUP_LEAD for countId=${countId}`,
+      );
     } catch (error) {
       this.logger.error(`❌ Failed to send approval email:`, error);
       throw error;
@@ -429,7 +476,10 @@ export class PhysicalCountService {
         created_by: string;
       }>(this.DATABASE_NAME, query, [countId]);
 
-      const submittedBy = results && results[0] ? results[0].submitted_by || results[0].created_by : null;
+      const submittedBy =
+        results && results[0]
+          ? results[0].submitted_by || results[0].created_by
+          : null;
 
       if (!submittedBy) {
         this.logger.warn(`No submitter found for countId=${countId}`);
@@ -479,7 +529,10 @@ export class PhysicalCountService {
         created_by: string;
       }>(this.DATABASE_NAME, query, [countId]);
 
-      const submittedBy = results && results[0] ? results[0].submitted_by || results[0].created_by : null;
+      const submittedBy =
+        results && results[0]
+          ? results[0].submitted_by || results[0].created_by
+          : null;
 
       if (!submittedBy) {
         this.logger.warn(`No submitter found for countId=${countId}`);

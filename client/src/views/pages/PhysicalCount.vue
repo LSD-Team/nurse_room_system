@@ -96,8 +96,10 @@
         const day = String(date.getDate()).padStart(2, '0');
         return `${year}-${month}-${day}`;
       };
-      
-      const result = await PhysicalCountService.createPeriod(formatDate(periodEnd.value));
+
+      const result = await PhysicalCountService.createPeriod(
+        formatDate(periodEnd.value)
+      );
       await Swal.fire(
         'สำเร็จ',
         `สร้าง Period ${result.period_code} เสร็จแล้ว`,
@@ -154,7 +156,7 @@
 
     try {
       loading.value = true;
-      const linesToSave = countLines.value.map((line) => ({
+      const linesToSave = countLines.value.map(line => ({
         item_id: line.item_id,
         qty_counted: line.qty_counted,
         note: line.note ?? '',
@@ -162,7 +164,7 @@
 
       const result = await PhysicalCountService.saveCountLines(
         selectedCountId.value,
-        linesToSave,
+        linesToSave
       );
 
       await Swal.fire('สำเร็จ', result.Message, 'success');
@@ -202,7 +204,7 @@
     try {
       loading.value = true;
       const result = await PhysicalCountService.submitCount(
-        selectedCountId.value,
+        selectedCountId.value
       );
 
       await Swal.fire('สำเร็จ', result.Message, 'success');
@@ -227,7 +229,7 @@
     try {
       loading.value = true;
       const result = await PhysicalCountService.approveCount(
-        selectedCountId.value,
+        selectedCountId.value
       );
 
       await Swal.fire('สำเร็จ', result.Message, 'success');
@@ -258,7 +260,7 @@
       loading.value = true;
       const result = await PhysicalCountService.rejectCount(
         selectedCountId.value,
-        rejectionReason.value,
+        rejectionReason.value
       );
 
       await Swal.fire('สำเร็จ', result.Message, 'success');
@@ -306,7 +308,9 @@
   <div class="grid">
     <div class="col-12">
       <div class="card">
-        <div class="flex align-items-center justify-content-between w-full mb-4">
+        <div
+          class="flex align-items-center justify-content-between w-full mb-4"
+        >
           <span class="text-2xl font-bold">นับสต็อกยา/เวชภัณฑ์</span>
           <div class="flex gap-2">
             <Button
@@ -360,7 +364,11 @@
             :sortable="true"
             style="min-width: 10rem"
           />
-          <Column field="period_name" header="ชื่อ Period" style="min-width: 12rem" />
+          <Column
+            field="period_name"
+            header="ชื่อ Period"
+            style="min-width: 12rem"
+          />
           <Column
             field="count_status"
             header="สถานะ"
@@ -368,7 +376,12 @@
             style="min-width: 10rem"
           >
             <template #body="{ data }">
-              <span :class="['px-3 py-1 rounded-full text-sm font-semibold', statusBadgeClass(data.count_status)]">
+              <span
+                :class="[
+                  'px-3 py-1 rounded-full text-sm font-semibold',
+                  statusBadgeClass(data.count_status),
+                ]"
+              >
                 {{ statusLabel(data.count_status) }}
               </span>
             </template>
@@ -387,7 +400,10 @@
             header="สร้างโดย"
             style="min-width: 10rem"
           />
-          <Column header="การกระทำ" style="min-width: 20rem; text-align: center">
+          <Column
+            header="การกระทำ"
+            style="min-width: 20rem; text-align: center"
+          >
             <template #body="{ data }">
               <!-- DRAFT: ให้นับ -->
               <Button
@@ -455,7 +471,7 @@
     <div class="col-12">
       <div class="card">
         <span class="text-2xl font-bold">รายการ Stock Periods</span>
-        
+
         <DataTable
           :value="periods"
           :loading="loading"
@@ -469,7 +485,9 @@
         >
           <template #header>
             <div class="flex align-items-center justify-content-between">
-              <span class="text-sm text-gray-600">รายการ Period ที่สามารถนำไปใช้สร้างการนับสต็อก</span>
+              <span class="text-sm text-gray-600">
+                รายการ Period ที่สามารถนำไปใช้สร้างการนับสต็อก
+              </span>
             </div>
           </template>
 
@@ -497,11 +515,7 @@
               {{ formatDate(data.period_end as string) }}
             </template>
           </Column>
-          <Column
-            field="period_status"
-            header="สถานะ"
-            style="min-width: 10rem"
-          >
+          <Column field="period_status" header="สถานะ" style="min-width: 10rem">
             <template #body="{ data }">
               <Tag
                 :value="data.period_status"
@@ -509,12 +523,12 @@
                   data.period_status === 'OPEN'
                     ? 'success'
                     : data.period_status === 'COUNTING'
-                    ? 'warning'
-                    : data.period_status === 'PENDING_APPROVAL'
-                    ? 'info'
-                    : data.period_status === 'SNAPSHOT_DONE'
-                    ? 'success'
-                    : 'secondary'
+                      ? 'warning'
+                      : data.period_status === 'PENDING_APPROVAL'
+                        ? 'info'
+                        : data.period_status === 'SNAPSHOT_DONE'
+                          ? 'success'
+                          : 'secondary'
                 "
               />
             </template>
@@ -627,10 +641,16 @@
     >
       <div class="grid mb-4">
         <div class="col-6">
-          <p><strong>เลขที่นับ:</strong> #{{ selectedCountDetail?.count_id }}</p>
+          <p>
+            <strong>เลขที่นับ:</strong>
+            #{{ selectedCountDetail?.count_id }}
+          </p>
         </div>
         <div class="col-6">
-          <p><strong>Period:</strong> {{ selectedCountDetail?.period_code }}</p>
+          <p>
+            <strong>Period:</strong>
+            {{ selectedCountDetail?.period_code }}
+          </p>
         </div>
       </div>
 
@@ -709,16 +729,16 @@
                 data.diff_qty > 0
                   ? 'bg-green-100 text-green-800'
                   : data.diff_qty < 0
-                  ? 'bg-red-100 text-red-800'
-                  : 'bg-blue-100 text-blue-800',
+                    ? 'bg-red-100 text-red-800'
+                    : 'bg-blue-100 text-blue-800',
               ]"
             >
               {{
                 data.diff_qty > 0
                   ? 'เกิน ' + Math.abs(data.diff_qty)
                   : data.diff_qty < 0
-                  ? 'ขาด ' + Math.abs(data.diff_qty)
-                  : 'ตรง'
+                    ? 'ขาด ' + Math.abs(data.diff_qty)
+                    : 'ตรง'
               }}
             </span>
           </template>

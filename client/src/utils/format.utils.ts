@@ -13,16 +13,20 @@
  * @param dateString SYSDATETIMEOFFSET format string
  * @returns Formatted datetime as stored in DB (DD/MM/YYYY, HH:MM)
  */
-export function formatSysdatetimeoffset(dateString: string | null | undefined): string {
+export function formatSysdatetimeoffset(
+  dateString: string | null | undefined
+): string {
   if (!dateString) return '-';
-  
+
   try {
     // Handle both formats from MSSQL driver:
     // - SYSDATETIMEOFFSET raw: "2026-05-11 09:10:29.8000000 +00:00"
     // - After driver serialization: "2026-05-11T09:10:29.800Z"
-    const match = dateString.trim().match(/^(\d{4})-(\d{2})-(\d{2})[T\s]+(\d{2}):(\d{2})/);
+    const match = dateString
+      .trim()
+      .match(/^(\d{4})-(\d{2})-(\d{2})[T\s]+(\d{2}):(\d{2})/);
     if (!match) return dateString;
-    
+
     const [, year, month, day, hour, minute] = match;
     return `${day}/${month}/${year} ${hour}:${minute}`;
   } catch (error) {

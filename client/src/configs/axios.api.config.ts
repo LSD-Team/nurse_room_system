@@ -68,7 +68,11 @@ API.interceptors.response.use(
 
       // Network error or server down — no response at all
       if (!response) {
-        await Swal.fire('ข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อกับ server ได้', 'error');
+        await Swal.fire(
+          'ข้อผิดพลาด',
+          'ไม่สามารถเชื่อมต่อกับ server ได้',
+          'error'
+        );
         return Promise.reject(error);
       }
 

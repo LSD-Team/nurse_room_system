@@ -1,4 +1,11 @@
-import { Controller, Get, Param, ParseIntPipe, Post, Body } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Param,
+  ParseIntPipe,
+  Post,
+  Body,
+} from '@nestjs/common';
 import {
   ApiOperation,
   ApiParam,
@@ -7,7 +14,12 @@ import {
   ApiBody,
 } from '@nestjs/swagger';
 import { GrService } from './gr.service';
-import { IAvailablePo, IGrDetail, IGrHeaderList, IPendingItem } from './gr.interface';
+import {
+  IAvailablePo,
+  IGrDetail,
+  IGrHeaderList,
+  IPendingItem,
+} from './gr.interface';
 
 interface CreateGrRequestDto {
   po_id: number;
@@ -76,7 +88,8 @@ export class GrController {
         po_id: { type: 'number', example: 1 },
         json_lines: {
           type: 'string',
-          example: '[{"item_id": 1, "qty": 10.0000, "po_line_id": 648}, {"item_id": 2, "qty": 5.0000, "po_line_id": 649}]',
+          example:
+            '[{"item_id": 1, "qty": 10.0000, "po_line_id": 648}, {"item_id": 2, "qty": 5.0000, "po_line_id": 649}]',
           nullable: true,
         },
         note: { type: 'string', example: 'Some remark', nullable: true },
@@ -94,7 +107,7 @@ export class GrController {
       note: dto.note,
     });
 
-    const createdBy = (global.jwtPayload as any)?.UserID || 'SYSTEM';
+    const createdBy = global.jwtPayload?.UserID || 'SYSTEM';
     return this.grService.createGr(
       dto.po_id,
       dto.json_lines,
@@ -111,7 +124,7 @@ export class GrController {
   async confirmGr(
     @Param('id', ParseIntPipe) grId: number,
   ): Promise<ConfirmGrResponseDto> {
-    const confirmedBy = (global.jwtPayload as any)?.UserID || 'SYSTEM';
+    const confirmedBy = global.jwtPayload?.UserID || 'SYSTEM';
     return this.grService.confirmGr(grId, confirmedBy);
   }
 
@@ -123,7 +136,7 @@ export class GrController {
   async cancelGr(
     @Param('id', ParseIntPipe) grId: number,
   ): Promise<ConfirmGrResponseDto> {
-    const cancelledBy = (global.jwtPayload as any)?.UserID || 'SYSTEM';
+    const cancelledBy = global.jwtPayload?.UserID || 'SYSTEM';
     return this.grService.cancelGr(grId, cancelledBy);
   }
 

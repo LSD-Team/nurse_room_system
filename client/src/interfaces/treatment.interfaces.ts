@@ -208,7 +208,40 @@ export interface IVisitUsageForm {
   qty_base: number;
 }
 
-// ─── Create Visit ─────────────────────────────────────────────────────
+// ─── Refer Tracking ──────────────────────────────────────────────────
+export interface IReferCase {
+  refer_case_id: number | null; // null = implicit case from visit (not yet in refer_cases table)
+  visit_id: number;
+  refer_no: number;
+  refer_type_id: number;
+  refer_code: string;
+  refer_name_en: string;
+  status: 'OPEN' | 'CLOSED' | 'CANCELLED';
+  opened_at: string;
+  closed_at: string | null;
+  refer_reason: string | null;
+  visit_datetime: string;
+  symptoms: string | null;
+  disease_group_name: string | null;
+  disease_sub_group_name: string | null;
+}
+
+export interface IReferFollowup {
+  followup_id: number;
+  refer_case_id: number;
+  followup_no: number;
+  followup_at: string;
+  outcome: 'ADMISSION' | 'BACK_TO_COMPANY' | 'BACK_TO_HOME' | 'FOLLOWUP_ONLY';
+  back_to_work_date: string | null;
+  next_appointment_at: string | null;
+  room_no: string | null;
+  followup_note: string | null;
+  hospital_id: number | null;
+  hospital_name_th: string | null;
+  hospital_name_en: string | null;
+  hospital_code: string | null;
+  treatment_cost: number | null;
+}
 export interface ICreateVisitBody {
   patient_type: 'EMP' | 'EXT';
   employee_id?: string;
