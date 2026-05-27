@@ -11,14 +11,10 @@
             "id": "3521531aa1e485e3",
             "type": "leaf",
             "state": {
-              "type": "markdown",
-              "state": {
-                "file": "holiday_info.md",
-                "mode": "source",
-                "source": false
-              },
+              "type": "empty",
+              "state": {},
               "icon": "lucide-file",
-              "title": "holiday_info"
+              "title": "New tab"
             }
           }
         ]
@@ -186,25 +182,30 @@
   "active": "3521531aa1e485e3",
   "lastOpenFiles": [
     "migrations/create_vw_report_stock_monthly.sql",
-    "report-stock-monthly.md",
-    "sp_POCancel.sql",
-    "guideline_refer.md",
-    "production_mail.md",
-    "sp_SC_04_Close.sql",
-    "09_add_status_to_special_drug_claims.sql",
-    "refer_rec_en.md",
-    "refer_rec.md",
-    "nurse_room_test_phase1.md",
-    "08_add_stock_count_apv_to_bullet_view.sql",
-    "07_fix_sp03_movement_types.sql",
-    "06_alter_snapshot_sps_allow_counting.sql",
+    "migrations/add_menu_color.sql",
+    "migrations",
+    "email/templates/rejected.template.html",
+    "email/templates/process.notify.template.html",
+    "email/templates/on-process.template.html",
+    "email/templates/notify.concerner.rejected.template.html",
+    "email/templates/notify.concerner.completed.template.html",
+    "email/templates/notify.approver.rejected.template.html",
+    "email/templates/notify.approver.completed.template.html",
+    "email/templates/confirm-assignment.template.html",
     "treatment_record_edit.md",
     "treatment_record.md",
     "toTreatment_record.md",
-    "Tables.md",
-    "sp_PP_03_UpsertUnderlyingDisease.sql",
-    "Tables_summary.md",
     "stock_adj.md",
-    "05_alter_sp03_comparison_extra_cols.sql"
+    "special_drug_claim_step2.md",
+    "special_drug_claim.md",
+    "holiday_info.md",
+    "report-stock-monthly.md",
+    "guideline_refer.md",
+    "production_mail.md",
+    "refer_rec_en.md",
+    "refer_rec.md",
+    "nurse_room_test_phase1.md",
+    "Tables.md",
+    "Tables_summary.md"
   ]
 }
