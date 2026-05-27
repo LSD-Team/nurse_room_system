@@ -84,7 +84,7 @@
 
   async function handleCreatePeriod() {
     if (!periodEnd.value) {
-      Swal.fire('ข้อผิดพลาด', 'กรุณาเลือกวันที่สิ้นสุด Period', 'warning');
+      Swal.fire('Error', 'Please select a Period end date', 'warning');
       return;
     }
 
@@ -101,15 +101,15 @@
         formatDate(periodEnd.value)
       );
       await Swal.fire(
-        'สำเร็จ',
-        `สร้าง Period ${result.period_code} เสร็จแล้ว`,
+        'Success',
+        `Created Period ${result.period_code} successfully`,
         'success'
       );
       showCreatePeriodDialog.value = false;
       // หลังสร้าง Period สำเร็จ อาจต้องเรียก refresh periods list
       // แต่สำหรับตอนนี้ไม่มี periods dropdown ให้ update
     } catch (error: any) {
-      Swal.fire('ข้อผิดพลาด', error.message, 'error');
+      Swal.fire('Error', error.message, 'error');
     } finally {
       loading.value = false;
     }
@@ -117,7 +117,7 @@
 
   async function handleCreate() {
     if (!selectedPeriodCode.value) {
-      Swal.fire('ข้อผิดพลาด', 'กรุณาเลือก Period Code', 'warning');
+      Swal.fire('Error', 'Please select a Period Code', 'warning');
       return;
     }
 
@@ -126,11 +126,11 @@
       const result = await PhysicalCountService.createPhysicalCount({
         PeriodCode: selectedPeriodCode.value,
       });
-      await Swal.fire('สำเร็จ', result.Message, 'success');
+      await Swal.fire('Success', result.Message, 'success');
       showCreateDialog.value = false;
       await loadPhysicalCounts();
     } catch (error: any) {
-      Swal.fire('ข้อผิดพลาด', error.message, 'error');
+      Swal.fire('Error', error.message, 'error');
     } finally {
       loading.value = false;
     }
@@ -145,7 +145,7 @@
       countLines.value = data.lines;
       showCountingDialog.value = true;
     } catch (error: any) {
-      Swal.fire('ข้อผิดพลาด', error.message, 'error');
+      Swal.fire('Error', error.message, 'error');
     } finally {
       loading.value = false;
     }
@@ -167,11 +167,11 @@
         linesToSave
       );
 
-      await Swal.fire('สำเร็จ', result.Message, 'success');
+      await Swal.fire('Success', result.Message, 'success');
       showCountingDialog.value = false;
       await loadPhysicalCounts();
     } catch (error: any) {
-      Swal.fire('ข้อผิดพลาด', error.message, 'error');
+      Swal.fire('Error', error.message, 'error');
     } finally {
       loading.value = false;
     }
@@ -186,7 +186,7 @@
       comparisonData.value = data.lines;
       showComparisonDialog.value = true;
     } catch (error: any) {
-      Swal.fire('ข้อผิดพลาด', error.message, 'error');
+      Swal.fire('Error', error.message, 'error');
     } finally {
       loading.value = false;
     }
@@ -207,11 +207,11 @@
         selectedCountId.value
       );
 
-      await Swal.fire('สำเร็จ', result.Message, 'success');
+      await Swal.fire('Success', result.Message, 'success');
       showSubmitDialog.value = false;
       await loadPhysicalCounts();
     } catch (error: any) {
-      Swal.fire('ข้อผิดพลาด', error.message, 'error');
+      Swal.fire('Error', error.message, 'error');
     } finally {
       loading.value = false;
     }
@@ -232,11 +232,11 @@
         selectedCountId.value
       );
 
-      await Swal.fire('สำเร็จ', result.Message, 'success');
+      await Swal.fire('Success', result.Message, 'success');
       showApprovalDialog.value = false;
       await loadPhysicalCounts();
     } catch (error: any) {
-      Swal.fire('ข้อผิดพลาด', error.message, 'error');
+      Swal.fire('Error', error.message, 'error');
     } finally {
       loading.value = false;
     }
@@ -252,7 +252,7 @@
     if (!selectedCountId.value) return;
 
     if (!rejectionReason.value) {
-      Swal.fire('ข้อผิดพลาด', 'กรุณากรอกเหตุผลการปฏิเสธ', 'warning');
+      Swal.fire('Error', 'Please enter a rejection reason', 'warning');
       return;
     }
 
@@ -263,11 +263,11 @@
         rejectionReason.value
       );
 
-      await Swal.fire('สำเร็จ', result.Message, 'success');
+      await Swal.fire('Success', result.Message, 'success');
       showRejectDialog.value = false;
       await loadPhysicalCounts();
     } catch (error: any) {
-      Swal.fire('ข้อผิดพลาด', error.message, 'error');
+      Swal.fire('Error', error.message, 'error');
     } finally {
       loading.value = false;
     }
@@ -286,10 +286,10 @@
 
   const statusLabel = (status: string) => {
     const labelMap: Record<string, string> = {
-      DRAFT: 'รายการร่าง',
-      PENDING_APPROVAL: 'รอการอนุมัติ',
-      APPROVED: 'อนุมัติแล้ว',
-      REJECTED: 'ปฏิเสธแล้ว',
+      DRAFT: 'Draft',
+      PENDING_APPROVAL: 'Waiting for Approval',
+      APPROVED: 'Approved',
+      REJECTED: 'Rejected',
     };
     return labelMap[status] || status;
   };

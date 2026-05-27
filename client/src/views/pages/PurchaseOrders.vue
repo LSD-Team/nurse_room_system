@@ -281,7 +281,7 @@
           .signature-section { display: grid; grid-template-columns: 1fr 1fr; gap: 50px; margin-top: 50px; }
           .signature-box { text-align: center; font-size: 12px; }
           .signature-line { border-top: 1px solid #000; margin-top: 50px; padding-top: 10px; }
-          @media print { 
+          @media print {
             body { padding: 0; }
             .page-number { position: fixed; top: 20px; right: 30px; }
           }
@@ -525,15 +525,15 @@
 
   async function savePo() {
     if (!selectedSupplierId.value) {
-      await Swal.fire('แจ้งเตือน', 'กรุณาเลือก Supplier', 'warning');
+      await Swal.fire('Warning', 'Please select a Supplier', 'warning');
       return;
     }
 
     const itemsToOrder = orderItems.value.filter(item => item.qty_order > 0);
     if (itemsToOrder.length === 0 && selectedBorrowIds.value.length === 0) {
       await Swal.fire(
-        'แจ้งเตือน',
-        'กรุณากรอกจำนวนสั่งซื้อหรือเลือกรายการยืมที่ต้องการ Settle อย่างน้อย 1 รายการ',
+        'Warning',
+        'Please enter an order quantity or select at least one borrow item to settle',
         'warning'
       );
       return;
@@ -559,11 +559,11 @@
         });
         showFormDialog.value = false;
         await loadPoHeaders();
-        await Swal.fire('สำเร็จ', 'แก้ไข PO เรียบร้อย', 'success');
+        await Swal.fire('Success', 'PO updated successfully', 'success');
       } else {
         const poDate = formatDateToString(formPoDate.value);
         if (!poDate) {
-          await Swal.fire('แจ้งเตือน', 'กรุณาระบุวันที่สั่งซื้อ', 'warning');
+          await Swal.fire('Warning', 'Please specify the purchase date', 'warning');
           return;
         }
 
@@ -580,7 +580,7 @@
         });
         showFormDialog.value = false;
         await loadPoHeaders();
-        await Swal.fire('สำเร็จ', 'สร้าง PO เรียบร้อย', 'success');
+        await Swal.fire('Success', 'PO created successfully', 'success');
 
         // Refresh badge
         const menuNotificationsStore = useMenuNotificationsStore();
@@ -591,34 +591,70 @@
     }
   }
 
-  function approvalStatusIcon(status: string): string {
-    const map: Record<string, string> = {
-      APPROVE: 'pi pi-check',
-      REJECT: 'pi pi-times',
-      PENDING: 'pi pi-clock',
-      CANCELLED: 'pi pi-ban',
+  function approvalStatusLabel(item: IPoApproval, poStatus: string): string {
+    if (item.status === 'APPROVE') return 'Approved';
+    if (item.status === 'REJECT') return 'Rejected';
+    if (item.status === 'REWORK') return 'Rework Required';
+    if (item.status === 'CANCELLED') return 'Cancelled';
+
+    // If PENDING, check if it is the current step or upcoming
+    const currentLevelMap: Record<string, number> = {
+      PENDING_APPROVAL: 1,
+      APPROVED_L1: 2,
+      APPROVED_L2: 3,
     };
-    return map[status] || 'pi pi-circle';
+    const currentLevel = currentLevelMap[poStatus] || 0;
+
+    if (item.approval_level === currentLevel) {
+      return 'Waiting for Approval';
+    } else if (item.approval_level > currentLevel) {
+      return 'Upcoming Step';
+    }
+
+    return 'Pending';
   }
 
-  function approvalStatusColor(status: string): string {
-    const map: Record<string, string> = {
-      APPROVE: '#22C55E',
-      REJECT: '#EF4444',
-      PENDING: '#F59E0B',
-      CANCELLED: '#6B7280',
+  function approvalStatusSeverity(item: IPoApproval, poStatus: string): string {
+    if (item.status === 'APPROVE') return 'success';
+    if (item.status === 'REJECT') return 'danger';
+    if (item.status === 'REWORK' || item.status === 'CANCELLED') return 'secondary';
+
+    const currentLevelMap: Record<string, number> = {
+      PENDING_APPROVAL: 1,
+      APPROVED_L1: 2,
+      APPROVED_L2: 3,
     };
-    return map[status] || '#6B7280';
+    const currentLevel = currentLevelMap[poStatus] || 0;
+
+    if (item.approval_level === currentLevel) return 'warn';
+    return 'secondary';
   }
 
-  function approvalStatusLabel(status: string): string {
-    const map: Record<string, string> = {
-      APPROVE: 'อนุมัติ',
-      REJECT: 'ปฏิเสธ',
-      PENDING: 'รอการอนุมัติ',
-      CANCELLED: 'ยกเลิก',
+  function approvalStatusIcon(item: IPoApproval, poStatus: string): string {
+    if (item.status === 'APPROVE') return 'pi pi-check';
+    if (item.status === 'REJECT') return 'pi pi-times';
+    if (item.status === 'CANCELLED') return 'pi pi-ban';
+
+    const currentLevelMap: Record<string, number> = {
+      PENDING_APPROVAL: 1,
+      APPROVED_L1: 2,
+      APPROVED_L2: 3,
     };
-    return map[status] || status;
+    const currentLevel = currentLevelMap[poStatus] || 0;
+
+    if (item.approval_level === currentLevel) return 'pi pi-clock';
+    if (item.approval_level > currentLevel) return 'pi pi-calendar-plus';
+
+    return 'pi pi-circle';
+  }
+
+  function formatRole(role: string): string {
+    const map: Record<string, string> = {
+      GROUP_LEAD: 'Group Leader',
+      MANAGER: 'Manager',
+      DEPARTMENT: 'Department Head',
+    };
+    return map[role] || role;
   }
 
   async function viewDetail(row: IPoHeader) {
@@ -643,18 +679,18 @@
 
   async function submitPo(row: IPoHeader) {
     const result = await Swal.fire({
-      title: 'ยืนยันส่งอนุมัติ?',
+      title: 'Confirm Submission?',
       text: 'PO ' + row.po_no,
       icon: 'question',
       showCancelButton: true,
-      confirmButtonText: 'ส่งอนุมัติ',
-      cancelButtonText: 'ยกเลิก',
+      confirmButtonText: 'Submit for Approval',
+      cancelButtonText: 'Cancel',
     });
     if (!result.isConfirmed) return;
 
     try {
       await PoService.submitPo(row.po_id);
-      await Swal.fire('สำเร็จ', 'ส่งอนุมัติเรียบร้อย', 'success');
+      await Swal.fire('Success', 'Submitted for approval successfully', 'success');
       await loadPoHeaders();
     } catch (err: any) {
       // Error handled by axios interceptor
@@ -663,21 +699,21 @@
 
   async function cancelPo(row: IPoHeader) {
     const { value, isConfirmed } = await Swal.fire({
-      title: 'ยกเลิก PO ' + row.po_no + '?',
+      title: 'Cancel PO ' + row.po_no + '?',
       input: 'textarea',
-      inputLabel: 'เหตุผล (ถ้ามี)',
+      inputLabel: 'Reason (if any)',
       showCancelButton: true,
-      confirmButtonText: 'ยกเลิก PO',
+      confirmButtonText: 'Cancel PO',
       confirmButtonColor: '#dc3545',
-      cancelButtonText: 'ปิด',
+      cancelButtonText: 'Close',
     });
     if (!isConfirmed) return;
 
     try {
       await PoService.cancelPo(row.po_id, value || undefined);
       await Swal.fire(
-        'สำเร็จ',
-        'ยกเลิก PO ' + row.po_no + ' สำเร็จ',
+        'Success',
+        'PO ' + row.po_no + ' cancelled successfully',
         'success'
       );
       await loadPoHeaders();
@@ -692,13 +728,13 @@
     <div class="flex items-center justify-between mb-4">
       <div>
         <h2 class="text-2xl font-bold text-surface-900 dark:text-surface-0">
-          สั่งซื้อยา/เวชภัณฑ์
+          Purchase Order
         </h2>
         <p class="text-surface-500 mt-1">
           รายละเอียดการสั่งซื้อยา/เวชภัณฑ์ (Purchase Orders)
         </p>
       </div>
-      <Button label="สร้าง PO" icon="pi pi-plus" @click="openCreateDialog" />
+      <Button label="Create PO" icon="pi pi-plus" @click="openCreateDialog" />
     </div>
 
     <Message v-if="errorMsg" severity="error" class="mb-4">
@@ -819,8 +855,8 @@
         </div>
       </template>
 
-      <template #empty>ไม่พบข้อมูล</template>
-      <template #loading>กำลังโหลดข้อมูล...</template>
+      <template #empty>No data found</template>
+      <template #loading>Loading data...</template>
 
       <Column
         field="rowNo"
@@ -831,7 +867,7 @@
       />
       <Column
         field="po_no"
-        header="เลขที่ PO"
+        header="PO Number"
         sortable
         style="min-width: 160px"
         frozen
@@ -847,7 +883,7 @@
       </Column>
       <Column
         field="po_date"
-        header="วันที่สั่งซื้อ"
+        header="PO Date"
         sortable
         style="min-width: 130px"
       >
@@ -855,7 +891,7 @@
       </Column>
       <Column
         field="due_date"
-        header="วันครบกำหนด"
+        header="Due Date"
         sortable
         style="min-width: 130px"
       >
@@ -871,7 +907,7 @@
       />
       <Column
         field="po_status"
-        header="สถานะ PO"
+        header="PO Status"
         sortable
         style="min-width: 160px"
       >
@@ -884,7 +920,7 @@
       </Column>
       <Column
         field="approval_role"
-        header="บทบาทผู้อนุมัติ"
+        header="Approval Role"
         style="min-width: 130px"
       >
         <template #body="{ data }">
@@ -893,7 +929,7 @@
       </Column>
       <Column
         field="approval_status"
-        header="สถานะการอนุมัติ"
+        header="Approval Status"
         style="min-width: 130px"
       >
         <template #body="{ data }">
@@ -902,7 +938,7 @@
       </Column>
       <Column
         field="created_by_eng_name"
-        header="ผู้สร้าง"
+        header="Created By"
         style="min-width: 130px"
       >
         <template #body="{ data }">
@@ -910,7 +946,7 @@
         </template>
       </Column>
       <Column
-        header="จัดการ"
+        header="Actions"
         style="min-width: 200px"
         frozen
         alignFrozen="right"
@@ -919,7 +955,7 @@
           <div class="flex gap-1 flex-wrap">
             <template v-if="data.po_status === 'DRAFT'">
               <Button
-                label="แก้ไข"
+                label="Edit"
                 icon="pi pi-pencil"
                 severity="info"
                 size="small"
@@ -927,7 +963,7 @@
                 @click="openEditDialog(data)"
               />
               <Button
-                label="ส่งอนุมัติ"
+                label="Submit for Approval"
                 icon="pi pi-send"
                 severity="info"
                 size="small"
@@ -935,7 +971,7 @@
                 @click="submitPo(data)"
               />
               <Button
-                label="ยกเลิก"
+                label="Cancel"
                 icon="pi pi-times"
                 severity="danger"
                 size="small"
@@ -950,11 +986,11 @@
                 )
               "
             >
-              <Badge value="รอการอนุมัติ" severity="warn" />
+              <Badge value="Waiting for Approval" severity="warn" />
             </template>
             <template v-else-if="data.po_status === 'ORDERED'">
               <Button
-                label="ยกเลิก"
+                label="Cancel"
                 icon="pi pi-times"
                 severity="danger"
                 size="small"
@@ -965,10 +1001,10 @@
             <template
               v-else-if="['PARTIAL', 'CLOSED'].includes(data.po_status)"
             >
-              <Badge value="สำเร็จ" severity="info" />
+              <Badge value="Success" severity="info" />
             </template>
             <template v-else-if="data.po_status === 'CANCELLED'">
-              <Badge value="ยกเลิก" severity="danger" />
+              <Badge value="Cancelled" severity="danger" />
             </template>
           </div>
         </template>
@@ -978,7 +1014,7 @@
     <!-- ===== Form Dialog (Create / Edit PO) ===== -->
     <Dialog
       v-model:visible="showFormDialog"
-      :header="isEditing ? 'แก้ไข PO' : 'สร้างใบสั่งซื้อ (PO)'"
+      :header="isEditing ? 'Edit PO' : 'Create Purchase Order'"
       modal
       :style="{ width: '1300px' }"
       :closable="true"
@@ -992,7 +1028,7 @@
             :options="suppliers"
             optionLabel="supplier_name"
             optionValue="supplier_id"
-            placeholder="เลือก Supplier"
+            placeholder="Select Supplier"
             :disabled="isEditing"
             filter
             @change="onSupplierChange"
@@ -1002,7 +1038,7 @@
         <!-- Dates -->
         <div class="grid grid-cols-2 gap-4">
           <div class="flex flex-col gap-2">
-            <label class="font-semibold">วันที่สั่งซื้อ *</label>
+            <label class="font-semibold">Order Date *</label>
             <DatePicker
               v-model="formPoDate"
               dateFormat="dd/mm/yy"
@@ -1011,7 +1047,7 @@
             />
           </div>
           <div class="flex flex-col gap-2">
-            <label class="font-semibold">วันครบกำหนด</label>
+            <label class="font-semibold">Due Date</label>
             <DatePicker
               v-model="formDueDate"
               dateFormat="dd/mm/yy"
@@ -1023,7 +1059,7 @@
 
         <!-- Note -->
         <div class="flex flex-col gap-2">
-          <label class="font-semibold">หมายเหตุ (optional)</label>
+          <label class="font-semibold">Note (optional)</label>
           <Textarea v-model="formNote" rows="2" />
         </div>
 
@@ -1033,7 +1069,7 @@
           class="flex flex-col gap-2"
         >
           <label class="font-semibold">
-            รายการยืมที่สามารถ Settle (เลือกเพื่อรวมเข้า PO)
+            Borrow Items that can be Settled (Select to include in PO)
           </label>
           <DataTable
             :value="pendingBorrows"
@@ -1051,7 +1087,7 @@
             </Column>
             <Column
               field="borrow_no"
-              header="เลขที่ใบยืม"
+              header="Borrow No"
               style="min-width: 150px"
             >
               <template #body="{ data }">
@@ -1065,7 +1101,7 @@
             </Column>
             <Column
               field="borrow_date"
-              header="วันที่ยืม"
+              header="Borrow Date"
               style="min-width: 120px"
             >
               <template #body="{ data }">
@@ -1079,12 +1115,12 @@
             />
             <Column
               field="item_count"
-              header="จำนวนรายการ"
+              header="Item Count"
               style="min-width: 100px"
               bodyClass="text-right"
             />
             <Column
-              header="มูลค่ารวม"
+              header="Total Amount"
               style="min-width: 120px"
               bodyClass="text-right"
             >
@@ -1098,19 +1134,19 @@
         <!-- All Items Table -->
         <div v-if="selectedSupplierId" class="flex flex-col gap-2">
           <div class="flex items-center justify-between">
-            <label class="font-semibold">รายการยา/เวชภัณฑ์ทั้งหมด</label>
+            <label class="font-semibold">All Items</label>
             <div class="flex items-center gap-3">
               <span
                 v-if="orderItemsWithQty.length > 0"
                 class="text-sm font-semibold text-primary"
               >
-                เลือก {{ orderItemsWithQty.length }} รายการ
+                Selected {{ orderItemsWithQty.length }} items
               </span>
               <IconField>
                 <InputIcon class="pi pi-search" />
                 <InputText
                   v-model="itemsFilterText"
-                  placeholder="ค้นหารายการยา..."
+                  placeholder="Search items..."
                   class="w-64"
                 />
               </IconField>
@@ -1142,11 +1178,11 @@
             :rows="50"
             :rowsPerPageOptions="[20, 50, 100]"
           >
-            <template #empty>ไม่พบรายการ</template>
-            <Column field="item_code" header="รหัส" style="min-width: 100px" />
+            <template #empty>No items found</template>
+            <Column field="item_code" header="Code" style="min-width: 100px" />
             <Column
               field="item_name_th"
-              header="ชื่อยา"
+              header="Item Name"
               style="min-width: 220px"
             >
               <template #body="{ data }">
@@ -1157,7 +1193,7 @@
               </template>
             </Column>
             <Column
-              header="คงเหลือ"
+              header="Stock"
               headerClass="header-blue"
               style="min-width: 90px"
               bodyClass="text-right"
@@ -1172,7 +1208,7 @@
             </Column>
             <Column
               field="usage_unit_name_th"
-              header="หน่วยใช้"
+              header="Usage Unit"
               headerClass="header-blue"
               style="min-width: 80px"
             />
@@ -1195,7 +1231,7 @@
               </template>
             </Column>
             <Column
-              header="คงเหลือปรับตามหน่วยซื้อ"
+              header="Remaining Adjusted by Purchase Unit"
               headerClass="header-green"
               style="min-width: 120px"
               bodyClass="text-right"
@@ -1210,12 +1246,12 @@
             </Column>
             <Column
               field="unit_name_th"
-              header="หน่วยซื้อ"
+              header="Purchase Unit"
               headerClass="header-green"
               style="min-width: 80px"
             />
             <Column
-              header="ราคา/หน่วย"
+              header="Unit Price"
               style="min-width: 100px"
               bodyClass="text-right"
             >
@@ -1223,7 +1259,7 @@
                 ฿{{ formatNumber(data.unit_price) }}
               </template>
             </Column>
-            <Column header="จำนวนสั่งซื้อ" style="min-width: 150px">
+            <Column header="Order Quantity" style="min-width: 150px">
               <template #body="{ data }">
                 <InputNumber
                   v-model="data.qty_order"
@@ -1235,7 +1271,7 @@
               </template>
             </Column>
             <Column
-              header="รวม"
+              header="Total"
               style="min-width: 110px"
               bodyClass="text-right"
             >
@@ -1253,21 +1289,21 @@
           v-if="orderItemsWithQty.length > 0"
           class="flex justify-end text-lg font-bold"
         >
-          รวมทั้งหมด: ฿{{ formatNumber(formTotalAmount) }}
+          Total: ฿{{ formatNumber(formTotalAmount) }}
         </div>
       </div>
       <!-- end flex flex-col gap-4 -->
 
       <template #footer>
         <Button
-          label="ยกเลิก"
+          label="Cancel"
           icon="pi pi-times"
           severity="secondary"
           text
           @click="showFormDialog = false"
         />
         <Button
-          :label="isEditing ? 'บันทึก' : 'สร้าง PO'"
+          :label="isEditing ? 'Save' : 'Create PO'"
           icon="pi pi-check"
           @click="savePo"
         />
@@ -1302,11 +1338,11 @@
       <div v-if="detailPo" class="flex flex-col gap-4">
         <div class="grid grid-cols-2 gap-4">
           <div>
-            <span class="font-semibold text-surface-500">เลขที่ PO:</span>
+            <span class="font-semibold text-surface-500">PO No:</span>
             <span class="ml-2">{{ detailPo.po_no }}</span>
           </div>
           <div>
-            <span class="font-semibold text-surface-500">วันที่สั่งซื้อ:</span>
+            <span class="font-semibold text-surface-500">Order Date:</span>
             <span class="ml-2">{{ formatDate(detailPo.po_date) }}</span>
           </div>
           <div>
@@ -1314,13 +1350,13 @@
             <span class="ml-2">{{ detailPo.supplier_name }}</span>
           </div>
           <div>
-            <span class="font-semibold text-surface-500">วันครบกำหนด:</span>
+            <span class="font-semibold text-surface-500">Due Date:</span>
             <span class="ml-2">
               {{ detailPo.due_date ? formatDate(detailPo.due_date) : '-' }}
             </span>
           </div>
           <div>
-            <span class="font-semibold text-surface-500">สถานะ PO:</span>
+            <span class="font-semibold text-surface-500">PO Status:</span>
             <Tag
               class="ml-2"
               :value="statusLabel(detailPo.po_status)"
@@ -1328,11 +1364,11 @@
             />
           </div>
           <div v-if="detailPo.created_by_eng_name">
-            <span class="font-semibold text-surface-500">ผู้สร้าง:</span>
+            <span class="font-semibold text-surface-500">Created By:</span>
             <span class="ml-2">{{ detailPo.created_by_eng_name }}</span>
           </div>
           <div v-if="detailPo.note" class="col-span-2">
-            <span class="font-semibold text-surface-500">หมายเหตุ:</span>
+            <span class="font-semibold text-surface-500">Note:</span>
             <span class="ml-2">{{ detailPo.note }}</span>
           </div>
         </div>
@@ -1344,12 +1380,12 @@
           dataKey="po_line_id"
           class="p-datatable-sm"
         >
-          <template #empty>ไม่พบข้อมูล</template>
+          <template #empty>No data found</template>
           <Column header="#" style="min-width: 50px">
             <template #body="{ index }">{{ index + 1 }}</template>
           </Column>
-          <Column field="item_code" header="รหัสยา" style="min-width: 100px" />
-          <Column field="item_name_th" header="ชื่อยา" style="min-width: 220px">
+          <Column field="item_code" header="Item Code" style="min-width: 100px" />
+          <Column field="item_name_th" header="Item Name" style="min-width: 220px">
             <template #body="{ data }">
               <div>{{ data.item_name_th }}</div>
               <div class="text-sm text-surface-400">
@@ -1357,7 +1393,7 @@
               </div>
             </template>
           </Column>
-          <Column field="line_type" header="ประเภท" style="min-width: 90px">
+          <Column field="line_type" header="Line Type" style="min-width: 90px">
             <template #body="{ data }">
               <Tag
                 :value="data.line_type"
@@ -1367,7 +1403,7 @@
           </Column>
           <Column
             field="qty_order"
-            header="จำนวนสั่ง"
+            header="Quantity Ordered"
             style="min-width: 90px"
             bodyClass="text-right"
           >
@@ -1377,7 +1413,7 @@
           </Column>
           <Column
             field="qty_received"
-            header="รับแล้ว"
+            header="Quantity Received"
             style="min-width: 80px"
             bodyClass="text-right"
           >
@@ -1387,12 +1423,12 @@
           </Column>
           <Column
             field="purchase_unit_name_th"
-            header="หน่วยซื้อ"
+            header="Purchase Unit"
             style="min-width: 100px"
           />
           <Column
             field="unit_price"
-            header="ราคา/หน่วย"
+            header="Unit Price"
             style="min-width: 110px"
             bodyClass="text-right"
           >
@@ -1402,7 +1438,7 @@
           </Column>
           <Column
             field="total_price"
-            header="รวม"
+            header="Total"
             style="min-width: 110px"
             bodyClass="text-right"
           >
@@ -1415,7 +1451,7 @@
         <!-- Total Summary -->
         <div class="mt-3 bg-surface-100 p-4 rounded border border-surface-200">
           <div class="flex justify-end items-center gap-3 text-2xl">
-            <span class="font-semibold">รวมทั้งหมด:</span>
+            <span class="font-semibold">Total :</span>
             <span class="font-bold text-primary">
               ฿{{
                 formatNumber(
@@ -1430,20 +1466,66 @@
         </div>
         <div v-if="detailApprovals.length > 0" class="mt-4">
           <div class="font-semibold text-surface-500 mb-2">
-            Timeline การอนุมัติ
+            Approval Timeline
           </div>
           <Timeline :value="detailApprovals" align="left" class="pl-2">
             <template #marker="{ item }">
               <span
                 class="flex items-center justify-center rounded-full border-2 w-8 h-8"
                 :style="{
-                  borderColor: approvalStatusColor(item.status),
-                  backgroundColor: approvalStatusColor(item.status) + '1A',
+                  borderColor:
+                    approvalStatusSeverity(item, detailPo?.po_status || '') ===
+                    'success'
+                      ? '#22C55E'
+                      : approvalStatusSeverity(
+                            item,
+                            detailPo?.po_status || ''
+                          ) === 'danger'
+                        ? '#EF4444'
+                        : approvalStatusSeverity(
+                              item,
+                              detailPo?.po_status || ''
+                            ) === 'warn'
+                          ? '#F59E0B'
+                          : '#6B7280',
+                  backgroundColor:
+                    (approvalStatusSeverity(item, detailPo?.po_status || '') ===
+                    'success'
+                      ? '#22C55E'
+                      : approvalStatusSeverity(
+                            item,
+                            detailPo?.po_status || ''
+                          ) === 'danger'
+                        ? '#EF4444'
+                        : approvalStatusSeverity(
+                              item,
+                              detailPo?.po_status || ''
+                            ) === 'warn'
+                          ? '#F59E0B'
+                          : '#6B7280') + '1A',
                 }"
               >
                 <i
-                  :class="approvalStatusIcon(item.status)"
-                  :style="{ color: approvalStatusColor(item.status) }"
+                  :class="approvalStatusIcon(item, detailPo?.po_status || '')"
+                  :style="{
+                    color:
+                      approvalStatusSeverity(
+                        item,
+                        detailPo?.po_status || ''
+                      ) === 'success'
+                        ? '#22C55E'
+                        : approvalStatusSeverity(
+                              item,
+                              detailPo?.po_status || ''
+                            ) === 'danger'
+                          ? '#EF4444'
+                          : approvalStatusSeverity(
+                                item,
+                                detailPo?.po_status || ''
+                              ) === 'warn'
+                            ? '#F59E0B'
+                            : '#6B7280',
+                  }"
                 />
               </span>
             </template>
@@ -1451,14 +1533,13 @@
               <div class="mb-3">
                 <div class="flex items-center gap-2 mb-1">
                   <Tag
-                    :value="approvalStatusLabel(item.status)"
-                    :style="{
-                      backgroundColor: approvalStatusColor(item.status),
-                      color: '#fff',
-                    }"
+                    :value="approvalStatusLabel(item, detailPo?.po_status || '')"
+                    :severity="
+                      approvalStatusSeverity(item, detailPo?.po_status || '')
+                    "
                   />
                   <span class="text-sm text-surface-500">
-                    {{ item.approval_role }}
+                    {{ formatRole(item.approval_role) }}
                     (L{{ item.approval_level }})
                   </span>
                 </div>
@@ -1484,7 +1565,7 @@
     <!-- ===== Borrow Detail Dialog ===== -->
     <Dialog
       v-model:visible="showBorrowDetailDialog"
-      :header="'รายละเอียดใบยืม ' + borrowDetailNo"
+      :header="'Borrow Detail ' + borrowDetailNo"
       modal
       :style="{ width: '800px' }"
       :closable="true"
@@ -1495,12 +1576,12 @@
         dataKey="borrow_line_id"
         class="p-datatable-sm"
       >
-        <template #empty>ไม่พบข้อมูล</template>
+        <template #empty>No data found</template>
         <Column header="#" style="min-width: 50px">
           <template #body="{ index }">{{ index + 1 }}</template>
         </Column>
-        <Column field="item_code" header="รหัสยา" style="min-width: 100px" />
-        <Column field="item_name_th" header="ชื่อยา" style="min-width: 250px">
+        <Column field="item_code" header="Item Code" style="min-width: 100px" />
+        <Column field="item_name_th" header="Item Name" style="min-width: 250px">
           <template #body="{ data }">
             <div>{{ data.item_name_th }}</div>
             <div class="text-sm text-surface-400">
@@ -1510,18 +1591,18 @@
         </Column>
         <Column
           field="qty_borrow"
-          header="จำนวน"
+          header="Quantity"
           style="min-width: 80px"
           bodyClass="text-right"
         />
         <Column
           field="purchase_unit_name_th"
-          header="หน่วย"
+          header="Unit"
           style="min-width: 100px"
         />
         <Column
           field="unit_price"
-          header="ราคา/หน่วย"
+          header="Price/Unit"
           style="min-width: 110px"
           bodyClass="text-right"
         >
@@ -1531,7 +1612,7 @@
         </Column>
         <Column
           field="total_price"
-          header="รวม"
+          header="Total"
           style="min-width: 110px"
           bodyClass="text-right"
         >

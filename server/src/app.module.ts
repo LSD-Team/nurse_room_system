@@ -16,6 +16,8 @@ import { TreatmentModule } from '@/src/apis/treatment/treatment.module';
 import { ReferModule } from '@/src/apis/refer/refer.module';
 import { MasterDataModule } from '@/src/apis/master-data/master-data.module';
 import { MenuModule } from '@/src/apis/menu/menu.module';
+import { SpecialDrugClaimModule } from '@/src/apis/special-drug-claim/special-drug-claim.module';
+import { HolidayWorkModule } from '@/src/apis/holiday-work/holiday-work.module';
 import { AuthModule } from '@/src/auth/auth.module';
 import { DatabaseModule } from '@/src/database/database.module';
 import { EmailModule } from '@/src/email/email.module';
@@ -51,6 +53,8 @@ import { AppController } from '@/src/app.controller';
     ReferModule,
     MasterDataModule,
     MenuModule,
+    SpecialDrugClaimModule,
+    HolidayWorkModule,
   ],
   controllers: [AppController],
   providers: [

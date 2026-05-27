@@ -1,69 +1,81 @@
 import AXIOS from '@/configs/axios.api.config';
 import type { LoadingOptions } from '@/interfaces/api.interfaces';
 import { useMainStore } from '@/stores/main.store';
-import { useMenuNotificationsStore } from '@/stores/menu-notifications.store';
 import type { AxiosRequestConfig } from 'axios';
 
 export class Api {
-  // private static mainStore = useMainStore();
-  private static defaultDelay = 0; // ค่า delay เริ่มต้น 300ms
+  private static defaultDelay = 0;
+  private static requestCount = 0;
 
   private static async handleLoading(
     show: boolean,
-    options?: LoadingOptions
+    options?: LoadingOptions & { silent?: boolean }
   ): Promise<void> {
-    // console.info('handleLoading => ', show, options);
+    if (options?.silent) return;
+
     const mainStore = useMainStore();
     if (show) {
-      const message = options?.message || 'Loading...';
-      await mainStore.setLoading(true, message);
-    } else {
-      if (options?.delay) {
-        await new Promise(resolve => setTimeout(resolve, options.delay));
+      this.requestCount++;
+      if (this.requestCount === 1) {
+        const message = options?.message || 'Loading...';
+        await mainStore.setLoading(true, message);
       }
-      await mainStore.setLoading(false);
+    } else {
+      this.requestCount = Math.max(0, this.requestCount - 1);
+      if (this.requestCount === 0) {
+        if (options?.delay) {
+          await new Promise(resolve => setTimeout(resolve, options.delay));
+        }
+        await mainStore.setLoading(false);
+      }
     }
   }
 
   private static shouldRefreshBullet(url: string): boolean {
+    const cleanUrl = url.startsWith('/') ? url : `/${url}`;
     const bulletRelatedPaths = [
-      '/po/',
-      '/gr/',
-      '/borrow/',
-      '/approval/',
-      '/physical-count/',
+      '/po',
+      '/gr',
+      '/borrow',
+      '/approval',
+      '/physical-count',
+      '/stock',
+      '/treatment'
     ];
-    return bulletRelatedPaths.some(path => url.includes(path));
+    const shouldRefresh = bulletRelatedPaths.some(path => cleanUrl.startsWith(path));
+    return shouldRefresh;
   }
 
   private static async refreshBullet(): Promise<void> {
     try {
+      // Use dynamic import to break circular dependency: Api -> Store -> Service -> Api
+      const { useMenuNotificationsStore } = await import('@/stores/menu-notifications.store');
       const notificationsStore = useMenuNotificationsStore();
-      await notificationsStore.refreshAll();
+      await notificationsStore.loadAllCounts(true); // Always silent when refreshing in background
     } catch (error) {
       console.warn('[Api] Warning: Failed to refresh bullet counts:', error);
-      // Don't throw - this is a side effect and shouldn't break the main API call
     }
   }
 
   static async get<T>(
     url: string,
     config?: AxiosRequestConfig,
-    loadingOptions?: LoadingOptions
+    loadingOptions?: LoadingOptions & { silent?: boolean }
   ): Promise<T> {
+    const finalConfig = { ...config, silent: loadingOptions?.silent } as any;
     try {
       await this.handleLoading(true, loadingOptions);
-      const response = await AXIOS.get<T>(url, config);
-      // console.info(`GET ${url} => `, response.data);
+      const response = await AXIOS.get<T>(url, finalConfig);
       if (this.shouldRefreshBullet(url)) {
         await this.refreshBullet();
       }
       await this.handleLoading(false, {
         delay: loadingOptions?.delay || this.defaultDelay,
-      });
+        silent: loadingOptions?.silent,
+      } as any);
       return response.data;
     } catch (error) {
-      await this.handleLoading(false);
+      await this.handleLoading(false, { silent: loadingOptions?.silent } as any);
       throw error;
     }
   }
@@ -72,43 +84,52 @@ export class Api {
     url: string,
     data?: any,
     config?: AxiosRequestConfig,
-    loadingOptions?: LoadingOptions
+    loadingOptions?: LoadingOptions & { silent?: boolean }
   ): Promise<T> {
+    const finalConfig = { ...config, silent: loadingOptions?.silent } as any;
     try {
       await this.handleLoading(true, loadingOptions);
-      const response = await AXIOS.post<T>(url, data, config);
-      console.info(`POST ${url} => `, response.data);
+      const response = await AXIOS.post<T>(url, data, finalConfig);
       if (this.shouldRefreshBullet(url)) {
         await this.refreshBullet();
       }
       await this.handleLoading(false, {
         delay: loadingOptions?.delay || this.defaultDelay,
-      });
+        silent: loadingOptions?.silent,
+      } as any);
       return response.data;
     } catch (error) {
-      await this.handleLoading(false);
+      if (this.shouldRefreshBullet(url)) {
+        await this.refreshBullet();
+      }
+      await this.handleLoading(false, { silent: loadingOptions?.silent } as any);
       throw error;
     }
   }
+
   static async put<T>(
     url: string,
     data?: any,
     config?: AxiosRequestConfig,
-    loadingOptions?: LoadingOptions
+    loadingOptions?: LoadingOptions & { silent?: boolean }
   ): Promise<T> {
+    const finalConfig = { ...config, silent: loadingOptions?.silent } as any;
     try {
       await this.handleLoading(true, loadingOptions);
-      const response = await AXIOS.put<T>(url, data, config);
-      console.info(`PUT ${url} => `, response.data);
+      const response = await AXIOS.put<T>(url, data, finalConfig);
       if (this.shouldRefreshBullet(url)) {
         await this.refreshBullet();
       }
       await this.handleLoading(false, {
         delay: loadingOptions?.delay || this.defaultDelay,
-      });
+        silent: loadingOptions?.silent,
+      } as any);
       return response.data;
     } catch (error) {
-      await this.handleLoading(false);
+      if (this.shouldRefreshBullet(url)) {
+        await this.refreshBullet();
+      }
+      await this.handleLoading(false, { silent: loadingOptions?.silent } as any);
       throw error;
     }
   }
@@ -117,21 +138,25 @@ export class Api {
     url: string,
     data?: any,
     config?: AxiosRequestConfig,
-    loadingOptions?: LoadingOptions
+    loadingOptions?: LoadingOptions & { silent?: boolean }
   ): Promise<T> {
+    const finalConfig = { ...config, silent: loadingOptions?.silent } as any;
     try {
       await this.handleLoading(true, loadingOptions);
-      const response = await AXIOS.patch<T>(url, data, config);
-      console.info(`PATCH ${url} => `, response.data);
+      const response = await AXIOS.patch<T>(url, data, finalConfig);
       if (this.shouldRefreshBullet(url)) {
         await this.refreshBullet();
       }
       await this.handleLoading(false, {
         delay: loadingOptions?.delay || this.defaultDelay,
-      });
+        silent: loadingOptions?.silent,
+      } as any);
       return response.data;
     } catch (error) {
-      await this.handleLoading(false);
+      if (this.shouldRefreshBullet(url)) {
+        await this.refreshBullet();
+      }
+      await this.handleLoading(false, { silent: loadingOptions?.silent } as any);
       throw error;
     }
   }
@@ -139,21 +164,25 @@ export class Api {
   static async delete<T>(
     url: string,
     config?: AxiosRequestConfig,
-    loadingOptions?: LoadingOptions
+    loadingOptions?: LoadingOptions & { silent?: boolean }
   ): Promise<T> {
+    const finalConfig = { ...config, silent: loadingOptions?.silent } as any;
     try {
       await this.handleLoading(true, loadingOptions);
-      const response = await AXIOS.delete<T>(url, config);
-      console.info(`DELETE ${url} => `, response.data);
+      const response = await AXIOS.delete<T>(url, finalConfig);
       if (this.shouldRefreshBullet(url)) {
         await this.refreshBullet();
       }
       await this.handleLoading(false, {
         delay: loadingOptions?.delay || this.defaultDelay,
-      });
+        silent: loadingOptions?.silent,
+      } as any);
       return response.data;
     } catch (error) {
-      await this.handleLoading(false);
+      if (this.shouldRefreshBullet(url)) {
+        await this.refreshBullet();
+      }
+      await this.handleLoading(false, { silent: loadingOptions?.silent } as any);
       throw error;
     }
   }

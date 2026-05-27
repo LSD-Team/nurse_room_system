@@ -147,6 +147,26 @@ export class EmailService {
   }
 
   /**
+   * ดึงชื่อพนักงานจาก ID
+   */
+  private async getEmployeeNameById(
+    employeeId: string | number,
+  ): Promise<string> {
+    if (!employeeId) return '';
+    const query = `SELECT eng_name FROM view_employee_all WHERE CAST(ID AS nvarchar(100)) = @param0`;
+    try {
+      const results = await this.databaseService.query<{ eng_name: string }>(
+        this.DATABASE_NAME,
+        query,
+        [String(employeeId)],
+      );
+      return results[0]?.eng_name || String(employeeId);
+    } catch (error) {
+      return String(employeeId);
+    }
+  }
+
+  /**
    * โหลด template จากไฟล์
    */
   private loadTemplate(templateFile: string): string {
@@ -225,6 +245,12 @@ export class EmailService {
       case ENotifyType.BORROW_COMPLETED:
         suffix = 'Approved - Borrow';
         break;
+      case ENotifyType.PO_REJECTED:
+        suffix = 'Rejected - PO';
+        break;
+      case ENotifyType.BORROW_REJECTED:
+        suffix = 'Rejected - Borrow';
+        break;
       case ENotifyType.APPROVAL_PHYSICAL_COUNT:
         suffix = 'Waiting for Approval - Physical Count';
         break;
@@ -252,6 +278,8 @@ export class EmailService {
       [ENotifyType.BORROW_REWORK]: 'rework-borrow.template.html',
       [ENotifyType.PO_COMPLETED]: 'completed-po.template.html',
       [ENotifyType.BORROW_COMPLETED]: 'completed-borrow.template.html',
+      [ENotifyType.PO_REJECTED]: 'rejected-po.template.html',
+      [ENotifyType.BORROW_REJECTED]: 'rejected-borrow.template.html',
       [ENotifyType.APPROVAL_PHYSICAL_COUNT]:
         'approval-physical-count.template.html',
       [ENotifyType.PHYSICAL_COUNT_APPROVED]:
@@ -284,10 +312,28 @@ export class EmailService {
         return;
       }
 
-      // Get CC emails
+      // CC emails
       const ccEmails = payload.ccEmployeeIds
         ? await this.getEmailsByEmployeeIds(payload.ccEmployeeIds)
         : [];
+
+      // Resolve names if they are IDs
+      let approvedByName = payload.approvedByName || '';
+      let rejectedByName = payload.rejectedByName || '';
+
+      if (payload.approvedByEmployeeId && !approvedByName) {
+        approvedByName = await this.getEmployeeNameById(payload.approvedByEmployeeId);
+      } else if (approvedByName && !isNaN(Number(approvedByName))) {
+        // If it's a numeric string, try to resolve it as an ID
+        approvedByName = await this.getEmployeeNameById(approvedByName);
+      }
+
+      if (payload.rejectedByEmployeeId && !rejectedByName) {
+        rejectedByName = await this.getEmployeeNameById(payload.rejectedByEmployeeId);
+      } else if (rejectedByName && !isNaN(Number(rejectedByName))) {
+        // If it's a numeric string, try to resolve it as an ID
+        rejectedByName = await this.getEmployeeNameById(rejectedByName);
+      }
 
       // Load template
       const templateFile = this.getTemplateFileByNotifyType(payload.notifyType);
@@ -299,9 +345,15 @@ export class EmailService {
         document_type: payload.documentType,
         document_title: payload.documentTitle || '',
         document_description: payload.documentDescription || '',
-        approved_by_name: payload.approvedByName || '',
-        rejected_by_name: payload.rejectedByName || '',
+        approved_by_name: approvedByName,
+        rejected_by_name: rejectedByName,
+        actioned_by_name: rejectedByName || approvedByName || '',
         additional_message: payload.additionalMessage || '',
+        approval_url: this.configService.get<string>('FRONTEND_URL') + '/#/pages/approve-purchase',
+        action_url: this.configService.get<string>('FRONTEND_URL') + '/#/pages/borrow-medicines',
+        action_url_po: this.configService.get<string>('FRONTEND_URL') + '/#/pages/purchase-orders',
+        approval_url_pc: this.configService.get<string>('FRONTEND_URL') + '/#/pages/stock-count-approval',
+        action_url_pc: this.configService.get<string>('FRONTEND_URL') + '/#/pages/stock-monthly-record',
         sent_at: new Date().toLocaleString('en-GB', {
           timeZone: 'Asia/Bangkok',
         }),
@@ -425,6 +477,11 @@ export class EmailService {
       const templateFile = this.getTemplateFileByNotifyType(notifyType);
       const template = this.loadTemplate(templateFile);
 
+      // Resolve sender name
+      const actionedByName = sentByEmployeeId 
+        ? await this.getEmployeeNameById(sentByEmployeeId) 
+        : '';
+
       // Render template
       const variables = {
         document_no: documentNo,
@@ -433,7 +490,13 @@ export class EmailService {
         document_description: documentDescription,
         approved_by_name: '',
         rejected_by_name: '',
+        actioned_by_name: actionedByName,
         additional_message: '',
+        approval_url: this.configService.get<string>('FRONTEND_URL') + '/#/pages/approve-purchase',
+        action_url: this.configService.get<string>('FRONTEND_URL') + '/#/pages/borrow-medicines',
+        action_url_po: this.configService.get<string>('FRONTEND_URL') + '/#/pages/purchase-orders',
+        approval_url_pc: this.configService.get<string>('FRONTEND_URL') + '/#/pages/stock-count-approval',
+        action_url_pc: this.configService.get<string>('FRONTEND_URL') + '/#/pages/stock-monthly-record',
         sent_at: new Date().toLocaleString('en-GB', {
           timeZone: 'Asia/Bangkok',
         }),

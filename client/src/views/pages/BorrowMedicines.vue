@@ -14,7 +14,10 @@
     ISupplierItemPrice,
     IBorrowLineForm,
   } from '@/interfaces/borrow.interfaces';
-  import type { IBorrowApprovalLog } from '@/interfaces/approval.interfaces';
+  import type {
+    IBorrowApprovalLog,
+    IApprovalHistory,
+  } from '@/interfaces/approval.interfaces';
   import {
     formatDate,
     formatNumber,
@@ -43,6 +46,7 @@
   const detailBorrow = ref<IBorrowHeader | null>(null);
   const detailLines = ref<IBorrowLine[]>([]);
   const detailLogs = ref<IBorrowApprovalLog[]>([]);
+  const detailApprovals = ref<IApprovalHistory[]>([]);
   const detailLoading = ref(false);
   const showDetailTimeline = ref(false);
 
@@ -443,8 +447,8 @@
   async function saveBorrow() {
     if (!selectedSupplierId.value || formLines.value.length === 0) {
       await Swal.fire(
-        '\u0E41\u0E08\u0E49\u0E07\u0E40\u0E15\u0E37\u0E2D\u0E19',
-        '\u0E01\u0E23\u0E38\u0E13\u0E32\u0E40\u0E25\u0E37\u0E2D\u0E01 Supplier \u0E41\u0E25\u0E30\u0E40\u0E1E\u0E34\u0E48\u0E21\u0E23\u0E32\u0E22\u0E01\u0E32\u0E23\u0E22\u0E32\u0E2D\u0E22\u0E48\u0E32\u0E07\u0E19\u0E49\u0E2D\u0E22 1 \u0E23\u0E32\u0E22\u0E01\u0E32\u0E23',
+        'Warning',
+        'Please select a Supplier and add at least one item',
         'warning'
       );
       return;
@@ -463,8 +467,8 @@
         showFormDialog.value = false;
         await loadBorrowHeaders();
         await Swal.fire(
-          '\u0E2A\u0E33\u0E40\u0E23\u0E47\u0E08',
-          '\u0E41\u0E01\u0E49\u0E44\u0E02\u0E43\u0E1A\u0E22\u0E37\u0E21\u0E40\u0E23\u0E35\u0E22\u0E1A\u0E23\u0E49\u0E2D\u0E22',
+          'Success',
+          'Borrowing document updated successfully',
           'success'
         );
 
@@ -480,8 +484,8 @@
         showFormDialog.value = false;
         await loadBorrowHeaders();
         await Swal.fire(
-          '\u0E2A\u0E33\u0E40\u0E23\u0E47\u0E08',
-          '\u0E2A\u0E23\u0E49\u0E32\u0E07\u0E43\u0E1A\u0E22\u0E37\u0E21\u0E40\u0E23\u0E35\u0E22\u0E1A\u0E23\u0E49\u0E2D\u0E22',
+          'Success',
+          'Borrowing document created successfully',
           'success'
         );
 
@@ -516,37 +520,105 @@
 
   function logActionLabel(action: string): string {
     const map: Record<string, string> = {
-      SUBMIT: '\u0E2A\u0E48\u0E07\u0E2D\u0E19\u0E38\u0E21\u0E31\u0E15\u0E34',
-      APPROVE: '\u0E2D\u0E19\u0E38\u0E21\u0E31\u0E15\u0E34',
-      REJECT: '\u0E1B\u0E0F\u0E34\u0E40\u0E2A\u0E18',
-      REWORK:
-        '\u0E2A\u0E48\u0E07\u0E01\u0E25\u0E31\u0E1A\u0E41\u0E01\u0E49\u0E44\u0E02',
+      SUBMIT: 'Submitted',
+      APPROVE: 'Approved',
+      REJECT: 'Rejected',
+      REWORK: 'Rework Required',
     };
     return map[action] || action;
+  }
+
+  function formatRole(role: string): string {
+    const map: Record<string, string> = {
+      GROUP_LEAD: 'Group Leader',
+      MANAGER: 'Manager',
+      DEPARTMENT: 'Department Head',
+    };
+    return map[role] || role;
+  }
+
+  function getStepStatusLabel(item: IApprovalHistory, borrowStatus: string): string {
+    if (item.status === 'APPROVE') return 'Approved';
+    if (item.status === 'REJECT') return 'Rejected';
+    if (item.status === 'REWORK') return 'Rework Required';
+    if (item.status === 'CANCELLED') return 'Cancelled';
+
+    const currentLevelMap: Record<string, number> = {
+      PENDING_APPROVAL: 1,
+      APPROVED_L1: 2,
+      APPROVED_L2: 3,
+    };
+    const currentLevel = currentLevelMap[borrowStatus] || 0;
+
+    if (item.approval_level === currentLevel) return 'Waiting for Approval';
+    if (item.approval_level > currentLevel) return 'Upcoming Step';
+
+    return 'Pending';
+  }
+
+  function getStepSeverity(item: IApprovalHistory, borrowStatus: string): string {
+    if (item.status === 'APPROVE') return 'success';
+    if (item.status === 'REJECT') return 'danger';
+    if (item.status === 'REWORK' || item.status === 'CANCELLED') return 'secondary';
+
+    const currentLevelMap: Record<string, number> = {
+      PENDING_APPROVAL: 1,
+      APPROVED_L1: 2,
+      APPROVED_L2: 3,
+    };
+    const currentLevel = currentLevelMap[borrowStatus] || 0;
+
+    if (item.approval_level === currentLevel) return 'warn';
+    return 'secondary';
+  }
+
+  function getStepIcon(item: IApprovalHistory, borrowStatus: string): string {
+    if (item.status === 'APPROVE') return 'pi pi-check';
+    if (item.status === 'REJECT') return 'pi pi-times';
+    if (item.status === 'CANCELLED') return 'pi pi-ban';
+
+    const currentLevelMap: Record<string, number> = {
+      PENDING_APPROVAL: 1,
+      APPROVED_L1: 2,
+      APPROVED_L2: 3,
+    };
+    const currentLevel = currentLevelMap[borrowStatus] || 0;
+
+    if (item.approval_level === currentLevel) return 'pi pi-clock';
+    if (item.approval_level > currentLevel) return 'pi pi-calendar-plus';
+
+    return 'pi pi-circle';
   }
 
   async function viewDetail(row: IBorrowHeader) {
     detailBorrow.value = row;
     detailLoading.value = true;
-    detailLogs.value = [];
+    detailLines.value = [];
+    detailApprovals.value = [];
     showDetailTimeline.value = false;
-    // Auto-show timeline for REWORK status so user sees comments immediately
+    
+    // Auto-show timeline for REWORK status
     if (row.approval_status === 'REWORK') {
       showDetailTimeline.value = true;
     }
+    
     showDetailDialog.value = true;
+    
     try {
-      const promises: Promise<any>[] = [
-        BorrowService.getBorrowLines(row.borrow_id),
-      ];
-      // Always fetch approval logs for timeline visibility (all statuses)
-      promises.push(ApprovalService.getBorrowApprovalLogs(row.borrow_id));
-      const results = await Promise.all(promises);
-      detailLines.value = results[0];
-      if (results[1]) detailLogs.value = results[1];
+      // 1. Load Lines (Crucial)
+      const lines = await BorrowService.getBorrowLines(row.borrow_id);
+      detailLines.value = lines || [];
+      
+      // 2. Load Approval History (Secondary, don't crash if fails)
+      try {
+        const history = await ApprovalService.getBorrowApprovalHistory(row.borrow_id);
+        detailApprovals.value = history || [];
+      } catch (historyErr) {
+        console.warn('Failed to load borrow approval history:', historyErr);
+      }
     } catch (err: any) {
-      errorMsg.value =
-        err?.response?.data?.message || err?.message || String(err);
+      errorMsg.value = getErrorMessage(err);
+      console.error('Error loading borrow detail:', err);
     } finally {
       detailLoading.value = false;
     }
@@ -568,8 +640,8 @@
     try {
       await BorrowService.submitBorrow(row.borrow_id);
       await Swal.fire(
-        '\u0E2A\u0E33\u0E40\u0E23\u0E47\u0E08',
-        '\u0E2A\u0E48\u0E07\u0E2D\u0E19\u0E38\u0E21\u0E31\u0E15\u0E34\u0E40\u0E23\u0E35\u0E22\u0E1A\u0E23\u0E49\u0E2D\u0E22',
+        'Success',
+        'Submitted for approval successfully',
         'success'
       );
       await loadBorrowHeaders();
@@ -603,7 +675,7 @@
       showReceiveDialog.value = false;
       receiveConfirmBorrow.value = null;
       receiveConfirmLines.value = [];
-      await Swal.fire('สำเร็จ', 'รับยาเข้าคลังสำเร็จ', 'success');
+      await Swal.fire('Success', 'Medicines received successfully', 'success');
       await loadBorrowHeaders();
 
       // Refresh badge
@@ -616,13 +688,13 @@
 
   async function cancelBorrow(row: IBorrowHeader) {
     const { value, isConfirmed } = await Swal.fire({
-      title: 'ยกเลิกใบยืม ' + row.borrow_no + '?',
+      title: 'Cancel Borrowing ' + row.borrow_no + '?',
       input: 'textarea',
-      inputLabel: 'เหตุผล (ถ้ามี)',
+      inputLabel: 'Reason (if any)',
       showCancelButton: true,
-      confirmButtonText: 'ยกเลิกใบยืม',
+      confirmButtonText: 'Cancel Document',
       confirmButtonColor: '#dc3545',
-      cancelButtonText: 'ยกเลิก',
+      cancelButtonText: 'Cancel',
     });
     if (!isConfirmed) return;
 
@@ -631,8 +703,8 @@
         Reason: value || undefined,
       });
       await Swal.fire(
-        'สำเร็จ',
-        'ยกเลิกใบยืม ' + row.borrow_no + ' สำเร็จ',
+        'Success',
+        'Borrowing document ' + row.borrow_no + ' cancelled successfully',
         'success'
       );
       await loadBorrowHeaders();
@@ -647,14 +719,14 @@
     <div class="flex items-center justify-between mb-4">
       <div>
         <h2 class="text-2xl font-bold text-surface-900 dark:text-surface-0">
-          {{ 'ยืมยา/เวชภัณฑ์' }}
+          {{ 'Borrow Medicines' }}
         </h2>
         <p class="text-surface-500 mt-1">
-          {{ 'รายละเอียดการยืมยา/เวชภัณฑ์' }}
+          {{ 'Details of Borrowed Medicines/Supplies' }}
         </p>
       </div>
       <Button
-        :label="'สร้างใบยืม'"
+        :label="'Create Borrow'"
         icon="pi pi-plus"
         @click="openCreateDialog"
       />
@@ -662,7 +734,7 @@
 
     <Message v-if="errorMsg" severity="error" class="mb-4">
       <span class="font-semibold">
-        {{ 'ข้อผิดพลาด: ' }}
+        {{ 'Error: ' }}
       </span>
       {{ errorMsg }}
     </Message>
@@ -775,17 +847,17 @@
             <InputIcon class="pi pi-search" />
             <InputText
               v-model="filters['global'].value"
-              :placeholder="'ค้นหา...'"
+              :placeholder="'Search...'"
             />
           </IconField>
         </div>
       </template>
 
       <template #empty>
-        {{ 'ไม่พบข้อมูล' }}
+        {{ 'No data found' }}
       </template>
       <template #loading>
-        {{ 'กำลังโหลดข้อมูล...' }}
+        {{ 'Loading data...' }}
       </template>
 
       <Column
@@ -797,7 +869,7 @@
       />
       <Column
         field="borrow_no"
-        :header="'เลขที่ใบยืม'"
+        :header="'Borrow No.'"
         sortable
         style="min-width: 150px"
         frozen
@@ -813,7 +885,7 @@
       </Column>
       <Column
         field="borrow_date"
-        :header="'วันที่ยืม'"
+        :header="'Borrow Date'"
         sortable
         style="min-width: 120px"
       >
@@ -827,7 +899,7 @@
       />
       <Column
         field="borrow_status"
-        :header="'สถานะใบยืม'"
+        :header="'Borrow Status'"
         sortable
         style="min-width: 140px"
       >
@@ -840,7 +912,7 @@
       </Column>
       <Column
         field="approval_role"
-        :header="'บทบาทผู้อนุมัติ'"
+        :header="'Approval Role'"
         style="min-width: 130px"
       >
         <template #body="{ data }">
@@ -849,7 +921,7 @@
       </Column>
       <Column
         field="approval_status"
-        :header="'สถานะการอนุมัติ'"
+        :header="'Approval Status'"
         style="min-width: 130px"
       >
         <template #body="{ data }">
@@ -858,7 +930,7 @@
       </Column>
       <Column
         field="created_by_eng_name"
-        :header="'ผู้สร้าง'"
+        :header="'Created By'"
         style="min-width: 130px"
       >
         <template #body="{ data }">
@@ -866,7 +938,7 @@
         </template>
       </Column>
       <Column
-        :header="'จัดการ'"
+        :header="'Actions'"
         style="min-width: 200px"
         frozen
         alignFrozen="right"
@@ -875,7 +947,7 @@
           <div class="flex gap-1 flex-wrap">
             <template v-if="data.borrow_status === 'DRAFT'">
               <Button
-                :label="'แก้ไข'"
+                :label="'Edit'"
                 icon="pi pi-pencil"
                 severity="info"
                 size="small"
@@ -883,7 +955,7 @@
                 @click="openEditDialog(data)"
               />
               <Button
-                :label="'ส่งอนุมัติ'"
+                :label="'Submit for Approval'"
                 icon="pi pi-send"
                 severity="success"
                 size="small"
@@ -891,7 +963,7 @@
                 @click="submitBorrow(data)"
               />
               <Button
-                :label="'ยกเลิก'"
+                :label="'Cancel'"
                 icon="pi pi-times"
                 severity="danger"
                 size="small"
@@ -901,7 +973,7 @@
             </template>
             <template v-else-if="data.borrow_status === 'APPROVED'">
               <Button
-                :label="'รับยาเข้าคลัง'"
+                :label="'Receive Medicine'"
                 icon="pi pi-download"
                 severity="success"
                 size="small"
@@ -910,7 +982,7 @@
               />
             </template>
             <template v-else-if="data.borrow_status === 'PENDING_APPROVAL'">
-              <Badge value="รอการอนุมัติ" severity="warn" />
+              <Badge value="Pending Approval" severity="warn" />
             </template>
             <template
               v-else-if="
@@ -919,7 +991,7 @@
                 )
               "
             >
-              <Badge value="สำเร็จ" severity="success" />
+              <Badge value="Success" severity="success" />
             </template>
           </div>
         </template>
@@ -928,7 +1000,7 @@
 
     <Dialog
       v-model:visible="showFormDialog"
-      :header="isEditing ? 'แก้ไข' : 'สร้างรายการยืมยา'"
+      :header="isEditing ? 'Edit' : 'Create Borrow Record'"
       modal
       :style="{ width: '1000px' }"
       :closable="true"
@@ -941,7 +1013,7 @@
             :options="suppliers"
             optionLabel="supplier_name"
             optionValue="supplier_id"
-            :placeholder="'เลือก Supplier'"
+            :placeholder="'Select Supplier'"
             :disabled="isEditing"
             filter
             @change="onSupplierChange"
@@ -949,7 +1021,7 @@
         </div>
 
         <div class="flex flex-col gap-2">
-          <label class="font-semibold">หมายเหตุ (optional)</label>
+          <label class="font-semibold">Note (optional)</label>
           <Textarea v-model="formNote" rows="2" />
         </div>
 
@@ -965,7 +1037,7 @@
               :options="availableItems"
               optionLabel="item_name_th"
               optionValue="item_id"
-              :placeholder="'เลือกรายการยา'"
+              :placeholder="'Select Medicine'"
               filter
               :filterFields="['item_name_th', 'item_name_en']"
               class="flex-1"
@@ -987,7 +1059,7 @@
                     {{ selectedItemInfo.unit_name_th }}
                   </span>
                   <span v-else class="text-xs text-red-500 font-semibold">
-                    Onhand: {{ 'ไม่มีข้อมูล' }}
+                    Onhand: {{ 'No Data' }}
                   </span>
                 </div>
                 <span v-else class="text-surface-400">{{ placeholder }}</span>
@@ -1018,7 +1090,7 @@
         >
           <Column
             field="item_name_th"
-            :header="'ชื่อยา'"
+            :header="'Medicine Name'"
             style="min-width: 250px"
           >
             <template #body="{ data }">
@@ -1030,7 +1102,7 @@
           </Column>
           <Column
             field="qty"
-            :header="'จำนวนยืม'"
+            :header="'Quantity Borrowed'"
             style="min-width: 60px"
             bodyClass="text-right"
           >
@@ -1047,11 +1119,11 @@
           </Column>
           <Column
             field="unit_name_th"
-            :header="'หน่วย'"
+            :header="'Unit'"
             style="min-width: 100px"
           />
           <Column
-            :header="'คงเหลือ'"
+            :header="'Onhand Qty'"
             style="min-width: 100px"
             bodyClass="text-right font-semibold text-blue-600"
           >
@@ -1068,7 +1140,7 @@
           </Column>
           <Column
             field="unit_price"
-            :header="'ราคา/หน่วย'"
+            :header="'Price/Unit'"
             style="min-width: 110px"
             bodyClass="text-right"
           >
@@ -1078,7 +1150,7 @@
           </Column>
           <Column
             field="total_price"
-            :header="'รวม'"
+            :header="'Total'"
             style="min-width: 110px"
             bodyClass="text-right"
           >
@@ -1104,21 +1176,21 @@
           class="flex justify-end text-lg font-bold"
         >
           {{
-            '&#xe23;&#xe27;&#xe21;&#xe17;&#xe31;&#xe49;&#xe07;&#xe2b;&#xe21;&#xe14;: '
+            'Total Amount: '
           }}฿{{ formatNumber(formTotalAmount) }}
         </div>
       </div>
 
       <template #footer>
         <Button
-          :label="'ยกเลิก'"
+          :label="'Cancel'"
           icon="pi pi-times"
           severity="secondary"
           text
           @click="showFormDialog = false"
         />
         <Button
-          :label="isEditing ? 'บันทึก' : 'สร้างใหม่'"
+          :label="isEditing ? 'Save' : 'Create New'"
           icon="pi pi-check"
           @click="saveBorrow"
         />
@@ -1133,10 +1205,10 @@
     >
       <template #header>
         <div class="flex justify-between items-center w-full">
-          <span>รายละเอียดการยืมยา</span>
+          <span>Borrow Details</span>
           <div class="flex gap-2 mr-8">
             <Button
-              v-if="uniqueDetailLogs.length > 0"
+              v-if="detailApprovals.length > 0"
               :icon="
                 showDetailTimeline ? 'pi pi-chevron-up' : 'pi pi-chevron-down'
               "
@@ -1168,13 +1240,13 @@
         <div class="grid grid-cols-2 gap-4">
           <div>
             <span class="font-semibold text-surface-500">
-              {{ 'เลขที่เอกสาร:' }}
+              {{ 'Document No:' }}
             </span>
             <span class="ml-2">{{ detailBorrow.borrow_no }}</span>
           </div>
           <div>
             <span class="font-semibold text-surface-500">
-              {{ 'วันที่ยืม:' }}
+              {{ 'Borrow Date:' }}
             </span>
             <span class="ml-2">{{ formatDate(detailBorrow.borrow_date) }}</span>
           </div>
@@ -1184,7 +1256,7 @@
           </div>
           <div>
             <span class="font-semibold text-surface-500">
-              {{ 'สถานะใบยืม:' }}
+              {{ 'Status:' }}
             </span>
             <Tag
               class="ml-2"
@@ -1194,7 +1266,7 @@
           </div>
           <div v-if="detailBorrow.approval_role">
             <span class="font-semibold text-surface-500">
-              {{ 'บทบาทผู้อนุมัติ:' }}
+              {{ 'Approval Role:' }}
             </span>
             <span class="ml-2">
               {{ detailBorrow.approval_role }} (L{{
@@ -1204,7 +1276,7 @@
           </div>
           <div v-if="detailBorrow.remark">
             <span class="font-semibold text-surface-500">
-              {{ 'หมายเหตุ:' }}
+              {{ 'Remark:' }}
             </span>
             <span class="ml-2">{{ detailBorrow.remark }}</span>
           </div>
@@ -1217,19 +1289,19 @@
           class="p-datatable-sm"
         >
           <template #empty>
-            {{ 'ไม่พบข้อมูล' }}
+            {{ 'No data found' }}
           </template>
           <Column header="#" style="min-width: 50px">
             <template #body="{ index }">{{ index + 1 }}</template>
           </Column>
           <Column
             field="item_code"
-            :header="'รหัสยา'"
+            :header="'Item Code'"
             style="min-width: 100px"
           />
           <Column
             field="item_name_th"
-            :header="'ชื่อยา'"
+            :header="'Item Name'"
             style="min-width: 250px"
           >
             <template #body="{ data }">
@@ -1241,18 +1313,18 @@
           </Column>
           <Column
             field="qty_borrow"
-            :header="'จำนวน'"
+            :header="'Quantity'"
             style="min-width: 80px"
             bodyClass="text-right"
           />
           <Column
             field="purchase_unit_name_th"
-            :header="'หน่วยซื้อ'"
+            :header="'Purchase Unit '"
             style="min-width: 100px"
           />
           <Column
             field="unit_price"
-            :header="'ราคา/หน่วย'"
+            :header="'Unit Price'"
             style="min-width: 110px"
             bodyClass="text-right"
           >
@@ -1262,7 +1334,7 @@
           </Column>
           <Column
             field="total_price"
-            :header="'รวม'"
+            :header="'Total Price'"
             style="min-width: 110px"
             bodyClass="text-right"
           >
@@ -1274,24 +1346,70 @@
 
         <!-- Approval Timeline -->
         <div
-          v-if="uniqueDetailLogs.length > 0 && showDetailTimeline"
+          v-if="detailApprovals.length > 0 && showDetailTimeline"
           class="mt-4 border-t pt-4"
         >
           <div class="font-semibold text-surface-500 mb-2">
-            Timeline การอนุมัติ
+            Approval Timeline
           </div>
-          <Timeline :value="uniqueDetailLogs" align="left" class="pl-2">
+          <Timeline :value="detailApprovals" align="left" class="pl-2">
             <template #marker="{ item }">
               <span
                 class="flex items-center justify-center rounded-full border-2 w-8 h-8"
                 :style="{
-                  borderColor: logActionColor(item.action),
-                  backgroundColor: logActionColor(item.action) + '1A',
+                  borderColor:
+                    getStepSeverity(item, detailBorrow?.borrow_status || '') ===
+                    'success'
+                      ? '#22C55E'
+                      : getStepSeverity(
+                            item,
+                            detailBorrow?.borrow_status || ''
+                          ) === 'danger'
+                        ? '#EF4444'
+                        : getStepSeverity(
+                              item,
+                              detailBorrow?.borrow_status || ''
+                            ) === 'warn'
+                          ? '#F59E0B'
+                          : '#6B7280',
+                  backgroundColor:
+                    (getStepSeverity(item, detailBorrow?.borrow_status || '') ===
+                    'success'
+                      ? '#22C55E'
+                      : getStepSeverity(
+                            item,
+                            detailBorrow?.borrow_status || ''
+                          ) === 'danger'
+                        ? '#EF4444'
+                        : getStepSeverity(
+                              item,
+                              detailBorrow?.borrow_status || ''
+                            ) === 'warn'
+                          ? '#F59E0B'
+                          : '#6B7280') + '1A',
                 }"
               >
                 <i
-                  :class="logActionIcon(item.action)"
-                  :style="{ color: logActionColor(item.action) }"
+                  :class="getStepIcon(item, detailBorrow?.borrow_status || '')"
+                  :style="{
+                    color:
+                      getStepSeverity(
+                        item,
+                        detailBorrow?.borrow_status || ''
+                      ) === 'success'
+                        ? '#22C55E'
+                        : getStepSeverity(
+                              item,
+                              detailBorrow?.borrow_status || ''
+                            ) === 'danger'
+                          ? '#EF4444'
+                          : getStepSeverity(
+                                item,
+                                detailBorrow?.borrow_status || ''
+                              ) === 'warn'
+                            ? '#F59E0B'
+                            : '#6B7280',
+                  }"
                 />
               </span>
             </template>
@@ -1299,20 +1417,19 @@
               <div class="mb-3">
                 <div class="flex items-center gap-2 mb-1">
                   <Tag
-                    :value="logActionLabel(item.action)"
-                    :style="{
-                      backgroundColor: logActionColor(item.action),
-                      color: '#fff',
-                    }"
+                    :value="
+                      getStepStatusLabel(item, detailBorrow?.borrow_status || '')
+                    "
+                    :severity="
+                      getStepSeverity(item, detailBorrow?.borrow_status || '')
+                    "
                   />
-                  <span
-                    v-if="item.approval_role !== 'SUBMITTER'"
-                    class="text-sm text-surface-500"
-                  >
-                    {{ item.approval_role }}
+                  <span class="text-sm text-surface-500">
+                    {{ formatRole(item.approval_role) }}
+                    (L{{ item.approval_level }})
                   </span>
                 </div>
-                <div class="text-sm">
+                <div v-if="item.actioned_by" class="text-sm">
                   <span class="font-medium">
                     {{ item.actioned_by_name || item.actioned_by }}
                   </span>
@@ -1337,12 +1454,12 @@
       modal
       :style="{ width: '900px' }"
       :closable="true"
-      header="ยืนยันการรับยาเข้าคลัง"
+      header="Confirm Receive Medicines"
     >
       <div v-if="receiveConfirmBorrow" class="flex flex-col gap-4">
         <div class="grid grid-cols-2 gap-4">
           <div>
-            <span class="font-semibold text-surface-500">เลขที่ใบยืม:</span>
+            <span class="font-semibold text-surface-500">Borrow No:</span>
             <span class="ml-2">{{ receiveConfirmBorrow.borrow_no }}</span>
           </div>
           <div>
@@ -1351,19 +1468,19 @@
           </div>
         </div>
 
-        <div class="font-semibold mb-2">รายการยาที่จะรับเข้าคลัง</div>
+        <div class="font-semibold mb-2">Items to Receive</div>
         <DataTable :value="receiveConfirmLines" size="small" stripedRows>
           <Column header="#" style="min-width: 50px">
             <template #body="{ index }">{{ index + 1 }}</template>
           </Column>
           <Column
             field="item_code"
-            :header="'รหัสยา'"
+            :header="'Item Code'"
             style="min-width: 100px"
           />
           <Column
             field="item_name_th"
-            :header="'ชื่อยา'"
+            :header="'Item Name'"
             style="min-width: 250px"
           >
             <template #body="{ data }">
@@ -1375,19 +1492,19 @@
           </Column>
           <Column
             field="qty_borrow"
-            :header="'จำนวนที่สั่งซื้อ'"
+            :header="'Quantity Ordered'"
             style="min-width: 100px"
             bodyClass="text-center"
           />
           <Column
             field="purchase_unit_name_th"
-            :header="'หน่วยซื้อ'"
+            :header="'Purchase Unit'"
             style="min-width: 100px"
             bodyClass="text-center"
           />
           <Column
             field="conversion_factor"
-            :header="'ตัวแปลง'"
+            :header="'Conversion Factor'"
             style="min-width: 80px"
             bodyClass="text-center"
           >
@@ -1396,7 +1513,7 @@
             </template>
           </Column>
           <Column
-            :header="'จำนวนที่รับจริง'"
+            :header="'Quantity Received'"
             style="min-width: 120px"
             bodyClass="text-center font-semibold"
           >
@@ -1408,7 +1525,7 @@
           </Column>
           <Column
             field="usage_unit_name_th"
-            :header="'หน่วยรับ'"
+            :header="'Usage Unit'"
             style="min-width: 100px"
             bodyClass="text-center"
           />
@@ -1416,13 +1533,13 @@
 
         <div class="border-t pt-4 flex gap-2 justify-end">
           <Button
-            :label="'ยกเลิก'"
+            :label="'Cancel '"
             icon="pi pi-times"
             severity="secondary"
             @click="showReceiveDialog = false"
           />
           <Button
-            :label="'ยืนยันรับยาเข้าคลัง'"
+            :label="'Confirm Receive'"
             icon="pi pi-check"
             severity="success"
             @click="confirmReceiveBorrow"

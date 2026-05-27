@@ -1,5 +1,8 @@
 import { Api } from '@/services/api.service';
-import type { IStockMovement } from '@/interfaces/stock.interfaces';
+import type {
+  IStockMovement,
+  IStockMonthlyReport,
+} from '@/interfaces/stock.interfaces';
 
 export interface IStockOnHand {
   item_id: number;
@@ -19,5 +22,17 @@ export class StockService {
 
   static async getMovementRecords(): Promise<IStockMovement[]> {
     return Api.get<IStockMovement[]>('/stock/movements');
+  }
+
+  static async getReportPeriods(): Promise<{ period_code: string }[]> {
+    return Api.get<{ period_code: string }[]>('/stock/monthly-report/periods');
+  }
+
+  static async getStockMonthlyReport(
+    periodCode: string,
+  ): Promise<IStockMonthlyReport[]> {
+    return Api.get<IStockMonthlyReport[]>(
+      `/stock/monthly-report/${periodCode}`,
+    );
   }
 }

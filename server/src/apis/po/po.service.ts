@@ -443,22 +443,44 @@ export class PoService {
     // Get PO info before approval
     const poHeader = await this.getPoHeaderById(parseInt(poId, 10));
 
-    // Call stored procedure
-    const result = await this.databaseService.executeStoredProcedure(
-      this.DATABASE_NAME,
-      'sp_PO_04_ApprovePO',
-      {
-        PoId: poId,
-        Action: action,
-        ActionedBy: actionedBy,
-        Remark: remark,
-      },
-    );
+    let result;
+    // If Reject, use sp_POCancel to fully cancel and free borrows
+    if (action === 'REJECT' || action === 'REJECTED') {
+      result = await this.cancelPo(poId, actionedBy, remark);
+    } else {
+      // Call standard approval procedure
+      result = await this.databaseService.executeStoredProcedure(
+        this.DATABASE_NAME,
+        'sp_PO_04_ApprovePO',
+        {
+          PoId: poId,
+          Action: action,
+          ActionedBy: actionedBy,
+          Remark: remark,
+        },
+      );
+    }
 
     // Send email based on action
     if (poHeader) {
-      // Both REJECT and REWORK trigger rework notification
-      if (action === 'REJECT' || action === 'REJECTED' || action === 'REWORK') {
+      if (action === 'REJECT' || action === 'REJECTED') {
+        // Send rejection notification
+        try {
+          await this.emailService.sendApprovalEmail({
+            notifyType: ENotifyType.PO_REJECTED,
+            documentId: poHeader.po_id,
+            documentNo: poHeader.po_no,
+            documentType: 'PO',
+            toEmployeeIds: [poHeader.created_by],
+            rejectedByName: actionedBy,
+            additionalMessage: remark || 'Your PO has been rejected',
+            sentByEmployeeId: actionedBy,
+          });
+          this.logger.log(`✅ [PoService] Rejection notification sent for PO: ${poHeader.po_no}`);
+        } catch (error: any) {
+          this.logger.error(`❌ [PoService] Failed to send rejection email: ${error.message}`);
+        }
+      } else if (action === 'REWORK') {
         // Send rework notification to PO creator
         try {
           await this.emailService.sendApprovalEmail({
@@ -481,8 +503,7 @@ export class PoService {
             error.stack,
           );
         }
-      } else if (action === 'APPROVE' || action === 'APPROVED') {
-        // Check if there are more pending approvals
+      } else if (action === 'APPROVE' || action === 'APPROVED') {        // Check if there are more pending approvals
         try {
           const pendingApprovals = await this.getPendingApprovals(
             poHeader.po_id,

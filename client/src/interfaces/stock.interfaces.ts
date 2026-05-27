@@ -29,3 +29,24 @@ export interface IEmployee {
   cost_center_id: string;
   cost_center_th: string;
 }
+
+// ===== Stock Monthly Report =====
+export interface IStockMonthlyReport {
+  snapshot_id: number;
+  period_code: string;
+  item_id: number;
+  item_code: string;
+  item_name_th: string;
+  item_name_en: string;
+  opening_qty: number;
+  receipts: number;
+  issues: number;
+  adjustments: number;
+  net_movement: number;
+  expected_closing: number;
+  actual_closing: number;
+  diff_qty: number;
+  status: string;
+  created_at: string;
+  created_by: string;
+}

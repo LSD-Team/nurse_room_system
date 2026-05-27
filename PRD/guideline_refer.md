@@ -488,29 +488,29 @@ async function saveFollowup() {
 ## 8. Checklist เมื่อสร้าง Tracking Module ใหม่
 
 ### Phase 0 — Database (ทำใน SSMS)
-- [ ] สร้าง `xxx_cases` table (header: case_id, visit_id, xxx_no, type_id, status, opened_at, closed_at, is_deleted, audit fields)
-- [ ] สร้าง `xxx_followups` table (detail: followup_id, case_id, followup_no, outcome, followup_note, **treatment_cost**, is_deleted, audit fields)
-- [ ] สร้าง `sp_Xxx_01_CreateCase` (auto-number case_no, return new case_id)
-- [ ] สร้าง `sp_Xxx_02_CreateFollowup` (auto-number followup_no, auto-close case เมื่อ terminal outcome, รับ `@TreatmentCost DECIMAL(10,2) = NULL`)
-- [ ] สร้าง views ถ้าจำเป็น
-- [ ] ⚠️ เมื่อเพิ่มคอลัมน์ใหม่ภายหลัง: `ALTER TABLE` ก่อน แล้วค่อย re-run SP
+- [x] สร้าง `xxx_cases` table (header: case_id, visit_id, xxx_no, type_id, status, opened_at, closed_at, is_deleted, audit fields)
+- [x] สร้าง `xxx_followups` table (detail: followup_id, case_id, followup_no, outcome, followup_note, **treatment_cost**, is_deleted, audit fields)
+- [x] สร้าง `sp_Xxx_01_CreateCase` (auto-number case_no, return new case_id)
+- [x] สร้าง `sp_Xxx_02_CreateFollowup` (auto-number followup_no, auto-close case เมื่อ terminal outcome, รับ `@TreatmentCost DECIMAL(10,2) = NULL`)
+- [x] สร้าง views ถ้าจำเป็น
+- [x] ⚠️ เมื่อเพิ่มคอลัมน์ใหม่ภายหลัง: `ALTER TABLE` ก่อน แล้วค่อย re-run SP
 
 ### Phase 1 — Server (NestJS)
-- [ ] `refer.interface.ts` — ICreate/IPatch bodies + IResponse shapes
-- [ ] `refer.service.ts` — getByPatient (UNION implicit), getCasesByVisit, create/patch/delete case/followup
-- [ ] `refer.controller.ts` — REST endpoints + Swagger `@Api*` decorators + `currentUser`
-- [ ] `refer.module.ts` — Module class + register ใน `app.module.ts`
-- [ ] `pnpm build` ผ่าน
+- [x] `refer.interface.ts` — ICreate/IPatch bodies + IResponse shapes
+- [x] `refer.service.ts` — getByPatient (UNION implicit), getCasesByVisit, create/patch/delete case/followup
+- [x] `refer.controller.ts` — REST endpoints + Swagger `@Api*` decorators + `currentUser`
+- [x] `refer.module.ts` — Module class + register ใน `app.module.ts`
+- [x] `pnpm build` ผ่าน
 
 ### Phase 2 — Client (Vue)
-- [ ] `treatment.interfaces.ts` — `IXxxCase` (case_id: number | null), `IXxxFollowup` (รวม `treatment_cost: number | null`)
-- [ ] `services/xxx.service.ts` — 8 static methods (getCasesByPatient, createCase, patchCase, deleteCase, getFollowupsByCase, createFollowup, patchFollowup, deleteFollowup) พร้อม `treatment_cost?: number`
-- [ ] `TreatmentRecord.vue` — State block (xxxCases, xxxFilter, **xxxTypeFilter**, **xxxTypeFilterOpts**, filteredXxxCases, expandedCaseId, followupsByCaseId, dialogs)
-- [ ] Functions: loadXxxCases (**reset xxxTypeFilter**), toggleFollowups, beginTrackingCase, openCaseDialog, saveCase, confirmDeleteCase, openFollowupDialog, saveFollowup, confirmDeleteFollowup
-- [ ] Tab template: header (type Select dropdown + status SelectButton + เพิ่ม button), case cards (implicit CTA), Timeline followups (**แสดง treatment_cost**), dialogs (**InputNumber สำหรับ treatment_cost**)
-- [ ] Clear state ใน `resetForm()` และ `loadPatientProfile()`
-- [ ] Watch(activeTab) lazy-load ที่ tab index ที่ถูกต้อง
-- [ ] `pnpm build` ผ่าน
+- [x] `treatment.interfaces.ts` — `IXxxCase` (case_id: number | null), `IXxxFollowup` (รวม `treatment_cost: number | null`)
+- [x] `services/xxx.service.ts` — 8 static methods (getCasesByPatient, createCase, patchCase, deleteCase, getFollowupsByCase, createFollowup, patchFollowup, deleteFollowup) พร้อม `treatment_cost?: number`
+- [x] `TreatmentRecord.vue` — State block (xxxCases, xxxFilter, **xxxTypeFilter**, **xxxTypeFilterOpts**, filteredXxxCases, expandedCaseId, followupsByCaseId, dialogs)
+- [x] Functions: loadXxxCases (**reset xxxTypeFilter**), toggleFollowups, beginTrackingCase, openCaseDialog, saveCase, confirmDeleteCase, openFollowupDialog, saveFollowup, confirmDeleteFollowup
+- [x] Tab template: header (type Select dropdown + status SelectButton + เพิ่ม button), case cards (implicit CTA), Timeline followups (**แสดง treatment_cost**), dialogs (**InputNumber สำหรับ treatment_cost**)
+- [x] Clear state ใน `resetForm()` และ `loadPatientProfile()`
+- [x] Watch(activeTab) lazy-load ที่ tab index ที่ถูกต้อง
+- [x] `pnpm build` ผ่าน
 
 ---
 

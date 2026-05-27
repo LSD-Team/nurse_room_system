@@ -209,7 +209,7 @@ const routes: RouteRecordRaw[] = [
       {
         path: 'employee-holiday-update',
         name: 'employeeHolidayUpdate',
-        component: () => import('@/views/pages/Empty.vue'),
+        component: () => import('@/views/pages/HolidayWorkManagement.vue'),
       },
       {
         path: 'social-security-update',
@@ -226,7 +226,7 @@ const routes: RouteRecordRaw[] = [
       {
         path: 'special-medicine-request',
         name: 'specialMedicineRequest',
-        component: () => import('@/views/pages/Empty.vue'),
+        component: () => import('@/views/pages/SpecialDrugClaim.vue'),
       },
 
       // ===== รายงาน =====
@@ -298,7 +298,7 @@ const routes: RouteRecordRaw[] = [
       {
         path: 'report-stock-monthly',
         name: 'reportStockMonthly',
-        component: () => import('@/views/pages/Empty.vue'),
+        component: () => import('@/views/pages/ReportStockMonthly.vue'),
       },
       {
         path: 'report-usage-daily',

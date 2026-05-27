@@ -77,6 +77,9 @@ export interface ISupplierItemPrice {
   conversion_factor: number;
   effective_date: string;
   expire_date: string | null;
+  item_min?: number | null;
+  item_max?: number | null;
+  usage_unit_name_th?: string | null;
 }
 
 // ===== SP Request DTOs =====

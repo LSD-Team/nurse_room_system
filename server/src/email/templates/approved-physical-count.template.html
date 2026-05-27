@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="th">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>อนุมัติสำเร็จ - การนับ Stock</title>
+  <title>Approval Complete - Stock Count</title>
   <style>
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -99,53 +99,50 @@
 <body>
   <div class="container">
     <div class="header">
-      <h1>✅ การนับ Stock ได้รับการอนุมัติ</h1>
+      <h1>✅ Stock Count Approved</h1>
     </div>
 
     <div class="content">
-      <p>สวัสดี,</p>
-      <p>ยินดีด้วย! ผลการนับ Stock ของคุณได้รับการอนุมัติเรียบร้อยแล้ว ระบบได้ทำการปรับยอด Stock ให้อัตโนมัติ</p>
+      <p>Congratulations! Your stock count results have been successfully approved. The system has automatically adjusted the stock levels.</p>
 
       <div class="section">
-        <div class="section-title">📦 รายละเอียดการนับ Stock</div>
+        <div class="section-title">📦 Stock Count Details</div>
         <div class="detail-row">
-          <div class="label">รอบบัญชี:</div>
+          <div class="label">Period Code:</div>
           <div class="value"><strong>{{document_no}}</strong></div>
         </div>
         <div class="detail-row">
-          <div class="label">ชื่อเอกสาร:</div>
+          <div class="label">Title:</div>
           <div class="value">{{document_title}}</div>
         </div>
       </div>
 
       <div class="success">
-        <strong>✅ สถานะ: อนุมัติสำเร็จ (APPROVED)</strong>
+        <strong>✅ Status: Approved Successfully (APPROVED)</strong>
       </div>
 
-      {{#if approved_by_name}}
       <div class="message">
-        <strong>👤 อนุมัติโดย:</strong>
-        <p>{{approved_by_name}}</p>
+        <strong>👤 Actioned By:</strong>
+        <p>{{actioned_by_name}}</p>
       </div>
-      {{/if}}
 
       {{#if additional_message}}
       <div class="message">
-        <strong>💬 รายละเอียด:</strong>
+        <strong>💬 Details:</strong>
         <p>{{additional_message}}</p>
       </div>
       {{/if}}
 
-      <a href="#" class="action-button">ดูรายละเอียดเพิ่มเติม →</a>
+      <a href="{{action_url_pc}}" class="action-button">View Details in System →</a>
 
       <div class="section" style="margin-top: 30px;">
-        <p><small>ข้อความนี้เป็นการแจ้งอัตโนมัติจากระบบ Nurse Room System</small></p>
+        <p><small>This is an automated notification from the Nurse Room System.</small></p>
       </div>
     </div>
 
     <div class="footer">
       <p>Nurse Room System - Shindengen Medical Supply Management</p>
-      <p class="timestamp">ส่งเวลา: {{sent_at}}</p>
+      <p class="timestamp">Sent at: {{sent_at}} (ICT)</p>
     </div>
   </div>
 </body>

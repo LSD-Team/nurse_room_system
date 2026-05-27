@@ -37,21 +37,26 @@ export class ApprovalService {
         ph.note,
         ph.created_by,
         ve_creator.eng_name AS created_by_name,
-        ar.role_code AS current_approval_role,
-        ar.approver_id AS current_approver_id,
-        ve_approver.eng_name AS current_approver_name
+        curr.approval_level AS current_approval_level,
+        curr.role_code AS current_approval_role,
+        curr.approver_id AS current_approver_id,
+        curr.approver_name AS current_approver_name
       FROM po_headers ph
       JOIN suppliers s ON ph.supplier_id = s.supplier_id
       LEFT JOIN view_email ve_creator ON ph.created_by = ve_creator.employee_id
-      JOIN po_approvals pa ON pa.po_id = ph.po_id AND pa.status = 'PENDING'
-      JOIN approval_roles ar ON ar.role_code = pa.approval_role AND ar.is_active = 1
-      LEFT JOIN view_email ve_approver ON ar.approver_id = ve_approver.employee_id
+      CROSS APPLY (
+        SELECT TOP 1 
+          pa.approval_level,
+          ar.role_code,
+          ar.approver_id,
+          ve_approver.eng_name AS approver_name
+        FROM po_approvals pa
+        JOIN approval_roles ar ON ar.role_code = pa.approval_role AND ar.is_active = 1
+        LEFT JOIN view_email ve_approver ON ar.approver_id = ve_approver.employee_id
+        WHERE pa.po_id = ph.po_id AND pa.status = 'PENDING'
+        ORDER BY pa.approval_level ASC, ar.role_id ASC
+      ) curr
       WHERE ph.status IN ('PENDING_APPROVAL', 'APPROVED_L1', 'APPROVED_L2')
-        AND pa.approval_level = (
-          SELECT MIN(pa2.approval_level)
-          FROM po_approvals pa2
-          WHERE pa2.po_id = ph.po_id AND pa2.status = 'PENDING'
-        )
 
       UNION ALL
 
@@ -66,21 +71,26 @@ export class ApprovalService {
         bh.note,
         bh.created_by,
         ve_creator.eng_name AS created_by_name,
-        ar.role_code AS current_approval_role,
-        ar.approver_id AS current_approver_id,
-        ve_approver.eng_name AS current_approver_name
+        curr.approval_level AS current_approval_level,
+        curr.role_code AS current_approval_role,
+        curr.approver_id AS current_approver_id,
+        curr.approver_name AS current_approver_name
       FROM borrow_headers bh
       JOIN suppliers s ON bh.supplier_id = s.supplier_id
       LEFT JOIN view_email ve_creator ON bh.created_by = ve_creator.employee_id
-      JOIN borrow_approvals ba ON ba.borrow_id = bh.borrow_id AND ba.status = 'PENDING'
-      JOIN approval_roles ar ON ar.role_code = ba.approval_role AND ar.is_active = 1
-      LEFT JOIN view_email ve_approver ON ar.approver_id = ve_approver.employee_id
+      CROSS APPLY (
+        SELECT TOP 1 
+          ba.approval_level,
+          ar.role_code,
+          ar.approver_id,
+          ve_approver.eng_name AS approver_name
+        FROM borrow_approvals ba
+        JOIN approval_roles ar ON ar.role_code = ba.approval_role AND ar.is_active = 1
+        LEFT JOIN view_email ve_approver ON ar.approver_id = ve_approver.employee_id
+        WHERE ba.borrow_id = bh.borrow_id AND ba.status = 'PENDING'
+        ORDER BY ba.approval_level ASC, ar.role_id ASC
+      ) curr
       WHERE bh.status IN ('PENDING_APPROVAL', 'APPROVED_L1', 'APPROVED_L2')
-        AND ba.approval_level = (
-          SELECT MIN(ba2.approval_level)
-          FROM borrow_approvals ba2
-          WHERE ba2.borrow_id = bh.borrow_id AND ba2.status = 'PENDING'
-        )
 
       ORDER BY doc_date DESC, doc_no DESC
     `;
@@ -104,15 +114,25 @@ export class ApprovalService {
         ph.note,
         ph.created_by,
         ve_creator.eng_name AS created_by_name,
-        ISNULL(ar.role_code, NULL) AS current_approval_role,
-        ISNULL(ar.approver_id, NULL) AS current_approver_id,
-        ISNULL(ve_approver.eng_name, NULL) AS current_approver_name
+        curr.approval_level AS current_approval_level,
+        curr.role_code AS current_approval_role,
+        curr.approver_id AS current_approver_id,
+        curr.approver_name AS current_approver_name
       FROM po_headers ph
       JOIN suppliers s ON ph.supplier_id = s.supplier_id
       LEFT JOIN view_email ve_creator ON ph.created_by = ve_creator.employee_id
-      LEFT JOIN po_approvals pa ON pa.po_id = ph.po_id AND pa.status = 'PENDING'
-      LEFT JOIN approval_roles ar ON ar.role_code = pa.approval_role AND ar.is_active = 1
-      LEFT JOIN view_email ve_approver ON ar.approver_id = ve_approver.employee_id
+      OUTER APPLY (
+        SELECT TOP 1 
+          pa.approval_level,
+          ar.role_code,
+          ar.approver_id,
+          ve_approver.eng_name AS approver_name
+        FROM po_approvals pa
+        JOIN approval_roles ar ON ar.role_code = pa.approval_role AND ar.is_active = 1
+        LEFT JOIN view_email ve_approver ON ar.approver_id = ve_approver.employee_id
+        WHERE pa.po_id = ph.po_id AND pa.status = 'PENDING'
+        ORDER BY pa.approval_level ASC, ar.role_id ASC
+      ) curr
 
       UNION ALL
 
@@ -127,15 +147,25 @@ export class ApprovalService {
         bh.note,
         bh.created_by,
         ve_creator.eng_name AS created_by_name,
-        ISNULL(ar.role_code, NULL) AS current_approval_role,
-        ISNULL(ar.approver_id, NULL) AS current_approver_id,
-        ISNULL(ve_approver.eng_name, NULL) AS current_approver_name
+        curr.approval_level AS current_approval_level,
+        curr.role_code AS current_approval_role,
+        curr.approver_id AS current_approver_id,
+        curr.approver_name AS current_approver_name
       FROM borrow_headers bh
       JOIN suppliers s ON bh.supplier_id = s.supplier_id
       LEFT JOIN view_email ve_creator ON bh.created_by = ve_creator.employee_id
-      LEFT JOIN borrow_approvals ba ON ba.borrow_id = bh.borrow_id AND ba.status = 'PENDING'
-      LEFT JOIN approval_roles ar ON ar.role_code = ba.approval_role AND ar.is_active = 1
-      LEFT JOIN view_email ve_approver ON ar.approver_id = ve_approver.employee_id
+      OUTER APPLY (
+        SELECT TOP 1 
+          ba.approval_level,
+          ar.role_code,
+          ar.approver_id,
+          ve_approver.eng_name AS approver_name
+        FROM borrow_approvals ba
+        JOIN approval_roles ar ON ar.role_code = ba.approval_role AND ar.is_active = 1
+        LEFT JOIN view_email ve_approver ON ar.approver_id = ve_approver.employee_id
+        WHERE ba.borrow_id = bh.borrow_id AND ba.status = 'PENDING'
+        ORDER BY ba.approval_level ASC, ar.role_id ASC
+      ) curr
 
       ORDER BY doc_date DESC, doc_no DESC
     `;

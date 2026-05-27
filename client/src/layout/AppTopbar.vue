@@ -2,6 +2,7 @@
   import { useLayout } from '@/layout/composables/layout';
   import { onMounted } from 'vue';
   import AppConfigurator from './AppConfigurator.vue';
+  import HolidayWorkNotification from '@/components/dashboard/HolidayWorkNotification.vue';
   import { employeeImageUrl } from '@/utils/employee-image.utils';
   import { useMainStore } from '@/stores/main.store';
 
@@ -39,6 +40,7 @@
 
     <div class="layout-topbar-actions">
       <div class="layout-config-menu">
+        <HolidayWorkNotification />
         <button
           type="button"
           class="layout-topbar-action"
@@ -48,7 +50,7 @@
             :class="['pi', { 'pi-moon': isDarkTheme, 'pi-sun': !isDarkTheme }]"
           ></i>
         </button>
-        <div class="relative">
+        <!-- <div class="relative">
           <button
             v-styleclass="{
               selector: '@next',
@@ -64,7 +66,7 @@
             <i class="pi pi-palette"></i>
           </button>
           <AppConfigurator />
-        </div>
+        </div> -->
       </div>
 
       <button
@@ -83,19 +85,8 @@
 
       <div class="layout-topbar-menu hidden lg:block">
         <div class="layout-topbar-menu-content">
-          <button type="button" class="layout-topbar-action">
-            <i class="pi pi-calendar"></i>
-            <span>Calendar</span>
-          </button>
-          <button type="button" class="layout-topbar-action">
-            <i class="pi pi-inbox"></i>
-            <span>Messages</span>
-          </button>
           <!-- User Profile Section -->
-          <div
-            class="flex align-items-center gap-2 mr-4"
-            v-tooltip.top="JSON.stringify(mainStore._userInfo)"
-          >
+          <div class="flex align-items-center gap-2 mr-4">
             <img
               :src="employeeImageUrl(mainStore._userInfo.cardcode)"
               alt="user profile"

@@ -286,7 +286,7 @@
           {{ displayItemName(data) }}
         </template>
       </Column>
-      <Column header="Unit" style="width: 14rem">
+      <Column header="Unit (Order)" style="width: 14rem">
         <template #body="{ data }">
           <div class="flex flex-col gap-1">
             <Select
@@ -301,25 +301,6 @@
             />
             <small v-if="rowError(data, 'unit_id')" class="text-red-500">
               {{ rowError(data, 'unit_id') }}
-            </small>
-          </div>
-        </template>
-      </Column>
-      <Column header="Unit Price" style="width: 10rem">
-        <template #body="{ data }">
-          <div class="flex flex-col gap-1">
-            <InputNumber
-              v-model="data.unit_price_input"
-              :min="0"
-              :minFractionDigits="2"
-              :maxFractionDigits="4"
-              mode="decimal"
-              :useGrouping="false"
-              :disabled="!data.selected"
-              :invalid="!!rowError(data, 'unit_price')"
-            />
-            <small v-if="rowError(data, 'unit_price')" class="text-red-500">
-              {{ rowError(data, 'unit_price') }}
             </small>
           </div>
         </template>
@@ -342,6 +323,18 @@
               class="text-red-500"
             >
               {{ rowError(data, 'conversion_factor') }}
+            </small>
+          </div>
+        </template>
+      </Column>
+      <Column header="Usage Unit" style="width: 8rem">
+        <template #body="{ data }">
+          <div class="flex flex-col whitespace-nowrap">
+            <span class="font-medium text-surface-700">
+              {{ data.usage_unit_name_th }}
+            </span>
+            <small class="text-surface-500" v-if="data.usage_unit_name_en">
+              {{ data.usage_unit_name_en }}
             </small>
           </div>
         </template>

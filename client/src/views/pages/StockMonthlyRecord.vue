@@ -33,8 +33,8 @@
       periods.value = await PhysicalCountService.getAvailablePeriods();
     } catch (error: any) {
       Swal.fire(
-        'ข้อผิดพลาด',
-        error.message || 'ไม่สามารถโหลดข้อมูลได้',
+        'Error',
+        error.message || 'Unable to load data',
         'error'
       );
     } finally {
@@ -44,7 +44,7 @@
 
   async function handleCreatePeriod() {
     if (!newPeriodEnd.value) {
-      Swal.fire('ข้อผิดพลาด', 'กรุณาเลือกวันที่สิ้นสุด Period', 'warning');
+      Swal.fire('Error', 'Please select the Period end date', 'warning');
       return;
     }
     try {
@@ -52,8 +52,8 @@
       await PhysicalCountService.createPeriod(toDateString(newPeriodEnd.value));
       showCreateDialog.value = false;
       await Swal.fire({
-        title: 'สำเร็จ',
-        text: 'สร้าง Period สำเร็จ',
+        title: 'Success',
+        text: 'Period created successfully',
         icon: 'success',
         timer: 1500,
         showConfirmButton: false,
@@ -61,8 +61,8 @@
       await loadPeriods();
     } catch (error: any) {
       Swal.fire(
-        'ข้อผิดพลาด',
-        error.message || 'สร้าง Period ไม่สำเร็จ',
+        'Error',
+        error.message || 'Failed to create Period',
         'error'
       );
     } finally {
@@ -73,15 +73,15 @@
   // ─── Count Actions ───
   async function handleStartCount(period: IStockPeriod) {
     const confirm = await Swal.fire({
-      title: 'เริ่มนับ Stock',
-      html: `เริ่มการนับ stock สำหรับ Period <strong>${period.period_code}</strong> ใช่หรือไม่?<br>
-             <small class="text-gray-500">ระบบจะแช่แข็งยอด stock ปัจจุบันเป็น baseline</small>`,
+      title: 'Start Stock Count',
+      html: `Start stock count for Period <strong>${period.period_code}</strong>?<br>
+             <small class="text-gray-500">The system will freeze the current stock levels as a baseline.</small>`,
       icon: 'question',
       showCancelButton: true,
       confirmButtonColor: '#3b82f6',
       cancelButtonColor: '#6b7280',
-      confirmButtonText: 'เริ่มนับ',
-      cancelButtonText: 'ยกเลิก',
+      confirmButtonText: 'Start Count',
+      cancelButtonText: 'Cancel',
     });
     if (!confirm.isConfirmed) return;
 
@@ -96,11 +96,11 @@
           params: { countId: result.CountId },
         });
       } else {
-        Swal.fire('ข้อผิดพลาด', result.Message, 'error');
+        Swal.fire('Error', result.Message, 'error');
         await loadPeriods();
       }
     } catch (error: any) {
-      Swal.fire('ข้อผิดพลาด', error.message || 'เริ่มนับไม่สำเร็จ', 'error');
+      Swal.fire('Error', error.message || 'Failed to start count', 'error');
     } finally {
       actionLoadingCode.value = null;
     }
@@ -120,7 +120,7 @@
 
   async function handleEditPeriod() {
     if (!editingPeriodEnd.value) {
-      Swal.fire('ข้อผิดพลาด', 'กรุณาเลือกวันที่สิ้นสุดใหม่', 'warning');
+      Swal.fire('Error', 'Please select a new end date', 'warning');
       return;
     }
     try {
@@ -132,7 +132,7 @@
       if (result.result.Status === 'Success') {
         showEditDialog.value = false;
         await Swal.fire({
-          title: 'สำเร็จ',
+          title: 'Success',
           text: result.result.Message,
           icon: 'success',
           timer: 1500,
@@ -140,10 +140,10 @@
         });
         await loadPeriods();
       } else {
-        Swal.fire('ข้อผิดพลาด', result.result.Message, 'error');
+        Swal.fire('Error', result.result.Message, 'error');
       }
     } catch (error: any) {
-      Swal.fire('ข้อผิดพลาด', error.message || 'แก้ไขไม่สำเร็จ', 'error');
+      Swal.fire('Error', error.message || 'Failed to update', 'error');
     } finally {
       loading.value = false;
     }
@@ -151,15 +151,15 @@
 
   async function handleDeletePeriod(period: any) {
     const confirm = await Swal.fire({
-      title: 'ยืนยันการลบ',
-      html: `ต้องการลบ Period <strong>${period.period_code}</strong> ใช่หรือไม่?<br>
-             <small class="text-gray-500">(ลบได้เฉพาะสถานะ OPEN เท่านั้น)</small>`,
+      title: 'Confirm Deletion',
+      html: `Are you sure you want to delete Period <strong>${period.period_code}</strong>?<br>
+             <small class="text-gray-500">(Only periods with status OPEN can be deleted)</small>`,
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#ef4444',
       cancelButtonColor: '#6b7280',
-      confirmButtonText: 'ลบ',
-      cancelButtonText: 'ยกเลิก',
+      confirmButtonText: 'Delete',
+      cancelButtonText: 'Cancel',
     });
     if (!confirm.isConfirmed) return;
 
@@ -170,7 +170,7 @@
       );
       if (result.Status === 'Success') {
         await Swal.fire({
-          title: 'สำเร็จ',
+          title: 'Success',
           text: result.Message,
           icon: 'success',
           timer: 1500,
@@ -178,10 +178,10 @@
         });
         await loadPeriods();
       } else {
-        Swal.fire('ข้อผิดพลาด', result.Message, 'error');
+        Swal.fire('Error', result.Message, 'error');
       }
     } catch (error: any) {
-      Swal.fire('ข้อผิดพลาด', error.message || 'ลบไม่สำเร็จ', 'error');
+      Swal.fire('Error', error.message || 'Failed to delete', 'error');
     } finally {
       loading.value = false;
     }
@@ -196,7 +196,7 @@
   }
 
   const statusOptions = [
-    { label: 'ทั้งหมด', value: null },
+    { label: 'All', value: null },
     { label: 'OPEN', value: 'OPEN' },
     { label: 'COUNTING', value: 'COUNTING' },
     { label: 'PENDING_APPROVAL', value: 'PENDING_APPROVAL' },
@@ -237,11 +237,11 @@
               class="pi pi-calendar text-amber-400"
               style="font-size: 1.8rem"
             ></i>
-            <span class="text-2xl font-bold">บันทึก Stock ประจำเดือน</span>
+            <span class="text-2xl font-bold">Monthly Stock Record</span>
           </div>
           <Button
             icon="pi pi-plus"
-            label="สร้าง Period ใหม่"
+            label="Create New Period"
             class="p-button-success mx-2"
             @click="
               showCreateDialog = true;
@@ -252,12 +252,12 @@
 
         <!-- Status Filter -->
         <div class="flex align-items-center gap-2 mb-4">
-          <span class="text-sm font-semibold text-gray-600">กรองตามสถานะ:</span>
+          <span class="text-sm font-semibold text-gray-600">Filter by Status:</span>
           <div class="flex gap-2 flex-wrap">
             <Button
               v-for="opt in statusOptions"
               :key="String(opt.value)"
-              :label="opt.value ?? 'ทั้งหมด'"
+              :label="opt.value ?? 'All '"
               size="small"
               :outlined="statusFilter !== opt.value"
               :severity="
@@ -283,7 +283,7 @@
           <template #empty>
             <div class="text-center py-5">
               <i class="pi pi-inbox text-gray-400" style="font-size: 3rem"></i>
-              <p class="mt-3 text-gray-500">ไม่พบข้อมูล Stock Period</p>
+              <p class="mt-3 text-gray-500">No Stock Period data found</p>
             </div>
           </template>
 
@@ -295,7 +295,7 @@
           />
           <Column
             field="period_start"
-            header="วันเริ่มต้น"
+            header="Start Date"
             :sortable="true"
             style="min-width: 11rem"
           >
@@ -305,7 +305,7 @@
           </Column>
           <Column
             field="period_end"
-            header="วันสิ้นสุด"
+            header="End Date"
             :sortable="true"
             style="min-width: 11rem"
           >
@@ -315,7 +315,7 @@
           </Column>
           <Column
             field="period_status"
-            header="สถานะ"
+            header="Status"
             :sortable="true"
             style="min-width: 14rem"
           >
@@ -328,39 +328,39 @@
           </Column>
           <Column
             field="created_by"
-            header="สร้างโดย"
+            header="Created By"
             style="min-width: 10rem"
           />
           <Column
             field="created_at"
-            header="สร้างเมื่อ"
+            header="Created At"
             style="min-width: 13rem"
           >
             <template #body="{ data }">
               {{ formatSysdatetimeoffset(data.created_at as string) }}
             </template>
           </Column>
-          <Column header="การกระทำ" style="min-width: 18rem">
+          <Column header="Actions" style="min-width: 18rem">
             <template #body="{ data }">
               <!-- Period management: Edit / Delete (OPEN only) -->
               <template v-if="data.period_status === 'OPEN'">
                 <Button
                   icon="pi pi-pencil"
-                  label="แก้ไข"
+                  label="Edit"
                   size="small"
                   class="p-button-info mr-1"
                   @click="openEditDialog(data)"
                 />
                 <Button
                   icon="pi pi-trash"
-                  label="ลบ"
+                  label="Delete"
                   size="small"
                   class="p-button-danger mr-1"
                   @click="handleDeletePeriod(data)"
                 />
                 <Button
                   icon="pi pi-list-check"
-                  label="เริ่มนับ"
+                  label="Start Count"
                   size="small"
                   class="p-button-primary"
                   :loading="actionLoadingCode === data.period_code"
@@ -372,14 +372,14 @@
               <template v-else-if="data.period_status === 'COUNTING'">
                 <Button
                   icon="pi pi-pencil"
-                  label="แก้ไข"
+                  label="Edit"
                   size="small"
                   class="p-button-info mr-1"
                   @click="openEditDialog(data)"
                 />
                 <Button
                   icon="pi pi-trash"
-                  label="ลบ"
+                  label="Delete"
                   size="small"
                   class="p-button-danger mr-1"
                   @click="handleDeletePeriod(data)"
@@ -389,7 +389,7 @@
                     data.active_count_id && data.active_count_status === 'DRAFT'
                   "
                   icon="pi pi-pencil-square"
-                  label="กำลังนับ"
+                  label="Counting"
                   size="small"
                   class="p-button-warning mr-1"
                   @click="navigateToCount(data.active_count_id)"
@@ -397,7 +397,7 @@
                 <Button
                   v-else
                   icon="pi pi-list-check"
-                  label="เริ่มนับใหม่"
+                  label="Start New Count"
                   size="small"
                   class="p-button-primary mr-1"
                   :loading="actionLoadingCode === data.period_code"
@@ -410,7 +410,7 @@
                     data.active_count_status === 'REJECTED'
                   "
                   icon="pi pi-eye"
-                  label="ดูที่ถูกปฏิเสธ"
+                  label="View Rejected"
                   size="small"
                   class="p-button-danger p-button-outlined"
                   @click="navigateToCount(data.active_count_id)"
@@ -424,7 +424,7 @@
                   data.active_count_id
                 "
                 icon="pi pi-eye"
-                label="ดูรายการ"
+                label="View Submitted"
                 size="small"
                 class="p-button-secondary"
                 @click="navigateToCount(data.active_count_id)"
@@ -438,7 +438,7 @@
                   data.active_count_id
                 "
                 icon="pi pi-eye"
-                label="ดูรายละเอียด"
+                label="View Details"
                 size="small"
                 class="p-button-secondary"
                 @click="navigateToCount(data.active_count_id)"
@@ -451,42 +451,42 @@
       </div>
     </div>
 
-    <!-- ══════════════════════ Dialog: สร้าง Period ══════════════════════ -->
+    <!-- ══════════════════════ Dialog: Create Period ══════════════════════ -->
     <Dialog
       v-model:visible="showCreateDialog"
-      header="สร้าง Stock Period ใหม่"
+      header="Create New Stock Period"
       :modal="true"
       :style="{ width: '420px' }"
     >
       <div class="flex flex-column gap-3 pt-2">
         <p class="text-sm text-gray-500 m-0">
-          ระบบจะคำนวณ
-          <strong>วันเริ่มต้น</strong>
-          จาก Period ก่อนหน้าให้อัตโนมัติ
+          The system will automatically calculate the
+          <strong>start date</strong>
+          from the previous period.
         </p>
         <div>
           <label class="block text-sm font-semibold mb-2">
-            วันที่สิ้นสุด Period
+            End Date of Period
             <span class="text-red-500">*</span>
           </label>
           <Calendar
             v-model="newPeriodEnd"
             dateFormat="dd/mm/yy"
             :showIcon="true"
-            placeholder="เลือกวันที่สิ้นสุด"
+            placeholder="Select End Date"
             class="w-full"
           />
         </div>
       </div>
       <template #footer>
         <Button
-          label="ยกเลิก"
+          label="Cancel"
           icon="pi pi-times"
           class="p-button-text"
           @click="showCreateDialog = false"
         />
         <Button
-          label="สร้าง Period"
+          label="Create Period"
           icon="pi pi-check"
           class="p-button-success"
           :loading="loading"
@@ -495,10 +495,10 @@
       </template>
     </Dialog>
 
-    <!-- ══════════════════════ Dialog: แก้ไข Period ══════════════════════ -->
+    <!-- ══════════════════════ Dialog: Edit Period ══════════════════════ -->
     <Dialog
       v-model:visible="showEditDialog"
-      header="แก้ไขวันสิ้นสุด Period"
+      header="Edit Period End Date"
       :modal="true"
       :style="{ width: '420px' }"
     >
@@ -508,33 +508,34 @@
           <span class="font-bold">{{ editingPeriodCode }}</span>
         </div>
         <p class="text-sm text-amber-600 m-0">
-          ⚠️ แก้ไขได้เฉพาะ Period ที่มีสถานะ
+          ⚠️ Only periods with status
+
           <strong>OPEN</strong>
-          เท่านั้น
+          are editable.
         </p>
         <div>
           <label class="block text-sm font-semibold mb-2">
-            วันที่สิ้นสุดใหม่
+            New End Date
             <span class="text-red-500">*</span>
           </label>
           <Calendar
             v-model="editingPeriodEnd"
             dateFormat="dd/mm/yy"
             :showIcon="true"
-            placeholder="เลือกวันที่สิ้นสุดใหม่"
+            placeholder="Select New End Date"
             class="w-full"
           />
         </div>
       </div>
       <template #footer>
         <Button
-          label="ยกเลิก"
+          label="Cancel"
           icon="pi pi-times"
           class="p-button-text"
           @click="showEditDialog = false"
         />
         <Button
-          label="บันทึก"
+          label="Save"
           icon="pi pi-check"
           class="p-button-warning"
           :loading="loading"

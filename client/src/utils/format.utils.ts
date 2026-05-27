@@ -185,21 +185,21 @@ export function formatPhoneNumber(phone: string): string {
 }
 
 /**
- * Format status text to human-readable Thai text
+ * Format status text to human-readable English text
  * @param status Status code (e.g., "PENDING_APPROVAL")
- * @returns Formatted status text in Thai
+ * @returns Formatted status text in English
  */
 export function formatStatusText(status: string): string {
   const statusMap: Record<string, string> = {
-    DRAFT: 'ร่าง',
-    PENDING_APPROVAL: 'รอการอนุมัติ',
-    APPROVED: 'อนุมัติแล้ว',
-    APPROVED_L1: 'อนุมัติ L1',
-    APPROVED_L2: 'อนุมัติ L2',
-    RECEIVED: 'รับสินค้าแล้ว',
-    SETTLED: 'จ่ายชำระแล้ว',
-    CANCELLED: 'ยกเลิก',
-    SUBMITTED: 'ส่งแล้ว',
+    DRAFT: 'Draft',
+    PENDING_APPROVAL: 'Waiting for Approval',
+    APPROVED: 'Approved',
+    APPROVED_L1: 'Approved L1',
+    APPROVED_L2: 'Approved L2',
+    RECEIVED: 'Received',
+    SETTLED: 'Settled',
+    CANCELLED: 'Cancelled',
+    SUBMITTED: 'Submitted',
   };
   return statusMap[status] || status;
 }
@@ -207,14 +207,14 @@ export function formatStatusText(status: string): string {
 /**
  * Format action description for approval logs
  * @param action Action type (SUBMIT, APPROVE, REJECT, REWORK)
- * @returns Formatted action text in Thai
+ * @returns Formatted action text in English
  */
 export function formatActionText(action: string): string {
   const actionMap: Record<string, string> = {
-    SUBMIT: 'ส่งอนุมัติ',
-    APPROVE: 'อนุมัติ',
-    REJECT: 'ปฏิเสธ',
-    REWORK: 'ส่งกลับแก้ไข',
+    SUBMIT: 'Submitted',
+    APPROVE: 'Approved',
+    REJECT: 'Rejected',
+    REWORK: 'Rework Required',
   };
   return actionMap[action] || action;
 }

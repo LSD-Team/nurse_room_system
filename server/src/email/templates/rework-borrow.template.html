@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="th">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ต้องแก้ไข - เอกสารยืมของ</title>
+  <title>Rework Required - Borrowing Document</title>
   <style>
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -51,7 +51,7 @@
     }
     .label {
       font-weight: 600;
-      width: 120px;
+      width: 140px;
       color: #d35400;
     }
     .value {
@@ -99,50 +99,54 @@
 <body>
   <div class="container">
     <div class="header">
-      <h1>⚠️ ต้องแก้ไขเอกสารยืมของ</h1>
+      <h1>⚠️ Rework Required: Borrowing</h1>
     </div>
     
     <div class="content">
-      <p>สวัสดี,</p>
-      <p>เอกสารยืมของของคุณต้องมีการแก้ไขบางส่วนตามความเห็นของผู้อนุมัติ</p>
+      <p>Your borrowing document for <strong>Medicine/Medical Supplies</strong> requires some modifications based on the approver's feedback.</p>
       
       <div class="section">
-        <div class="section-title">📄 รายละเอียดเอกสาร</div>
+        <div class="section-title">📄 Document Details</div>
         <div class="detail-row">
-          <div class="label">เลขที่เอกสาร:</div>
+          <div class="label">Document No:</div>
           <div class="value"><strong>{{document_no}}</strong></div>
         </div>
         <div class="detail-row">
-          <div class="label">ประเภท:</div>
-          <div class="value">{{document_type}} (เอกสารยืมของ)</div>
+          <div class="label">Type:</div>
+          <div class="value">{{document_type}} (Medicine/Medical Supplies Borrowing)</div>
         </div>
       </div>
 
       <div class="warning">
-        <strong>⚠️ สถานะ: ต้องแก้ไข (Rework)</strong>
+        <strong>⚠️ Status: Rework Required</strong>
+      </div>
+
+      <div class="message">
+        <strong>👤 Actioned By:</strong>
+        <p>{{actioned_by_name}}</p>
       </div>
 
       {{#if additional_message}}
       <div class="message">
-        <strong>💬 ความเห็นของผู้อนุมัติ:</strong>
+        <strong>💬 Approver's Comments:</strong>
         <p>{{additional_message}}</p>
       </div>
       {{/if}}
 
       <div class="message">
-        <strong>ℹ️ กรุณาแก้ไขตามความเห็นและส่งอีกครั้งเพื่อการอนุมัติต่อ</strong>
+        <strong>ℹ️ Please update the document as requested and resubmit it for approval.</strong>
       </div>
 
-      <a href="#" class="action-button">ไปยังระบบเพื่อแก้ไข →</a>
+      <a href="{{action_url}}" class="action-button">Go to System to Modify →</a>
 
       <div class="section" style="margin-top: 30px;">
-        <p><small>ข้อความนี้เป็นการแจ้งอัตโนมัติจากระบบ Nurse Room System</small></p>
+        <p><small>This is an automated notification from the Nurse Room System.</small></p>
       </div>
     </div>
 
     <div class="footer">
       <p>Nurse Room System - Shindengen Medical Supply Management</p>
-      <p class="timestamp">ส่งเวลา: {{sent_at}}</p>
+      <p class="timestamp">Sent at: {{sent_at}} (ICT)</p>
     </div>
   </div>
 </body>

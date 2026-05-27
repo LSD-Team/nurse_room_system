@@ -79,9 +79,9 @@
   }
 
   function getDiffStatus(diff: number): string {
-    if (diff > 0) return 'เกิน';
-    if (diff < 0) return 'ขาด';
-    return 'ตรง';
+    if (diff > 0) return 'Surplus';
+    if (diff < 0) return 'Shortage';
+    return 'Exact';
   }
 
   function getDiffSeverity(diff: number): string {
@@ -91,10 +91,10 @@
   }
 
   const countStatusLabel: Record<string, string> = {
-    DRAFT: 'กำลังนับ',
-    SUBMITTED: 'รออนุมัติ',
-    APPROVED: 'อนุมัติแล้ว',
-    REJECTED: 'ถูกปฏิเสธ',
+    DRAFT: 'Counting',
+    SUBMITTED: 'Pending Approval',
+    APPROVED: 'Approved',
+    REJECTED: 'Rejected',
   };
 
   const countStatusSeverity: Record<string, string> = {
@@ -105,7 +105,7 @@
   };
 
   const printDate = computed(() =>
-    new Date().toLocaleDateString('th-TH', {
+    new Date().toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
@@ -143,8 +143,8 @@
       }));
     } catch (error: any) {
       Swal.fire(
-        'ข้อผิดพลาด',
-        error.message || 'ไม่สามารถโหลดข้อมูลได้',
+        'Error',
+        error.message || 'Unable to load data',
         'error'
       );
     } finally {
@@ -169,12 +169,12 @@
         .map(l => `• ${l.item_code} ${l.item_name_th}`)
         .join('<br>');
       const more =
-        missing.length > 5 ? `<br>และอีก ${missing.length - 5} รายการ` : '';
+        missing.length > 5 ? `<br>and ${missing.length - 5} more items` : '';
       Swal.fire({
-        title: 'กรุณาใส่หมายเหตุ',
-        html: `มี <strong>${missing.length} รายการ</strong> ที่มีผลต่างแต่ยังไม่ได้ใส่หมายเหตุ<br><br>${itemList}${more}`,
+        title: 'Please enter a note',
+        html: `There are <strong>${missing.length} items</strong> with discrepancies that do not have a note.<br><br>${itemList}${more}`,
         icon: 'warning',
-        confirmButtonText: 'รับทราบ',
+        confirmButtonText: 'OK',
       });
       return false;
     }
@@ -196,17 +196,17 @@
       );
       if (result.Status === 1) {
         Swal.fire({
-          title: 'บันทึกสำเร็จ',
-          text: `บันทึกยอดนับ ${result.UpdatedRows ?? 0} รายการแล้ว`,
+          title: 'Saved Successfully',
+          text: `Recorded count for ${result.UpdatedRows ?? 0} items.`,
           icon: 'success',
           timer: 1500,
           showConfirmButton: false,
         });
       } else {
-        Swal.fire('ข้อผิดพลาด', result.Message, 'error');
+        Swal.fire('Error', result.Message, 'error');
       }
     } catch (error: any) {
-      Swal.fire('ข้อผิดพลาด', error.message || 'บันทึกไม่สำเร็จ', 'error');
+      Swal.fire('Error', error.message || 'Save failed', 'error');
     } finally {
       saving.value = false;
     }
@@ -216,8 +216,8 @@
     const hasCounted = editableLines.value.some(l => l.editQtyCounted > 0);
     if (!hasCounted) {
       Swal.fire(
-        'แจ้งเตือน',
-        'ยังไม่มีการบันทึกยอดนับ กรุณาบันทึกยอดก่อนส่งอนุมัติ',
+        'Warning',
+        'No count recorded. Please save the count before submitting for approval.',
         'warning'
       );
       return;
@@ -226,15 +226,15 @@
     if (!validateNotesForDiffLines()) return;
 
     const confirm = await Swal.fire({
-      title: 'ยืนยันส่งขออนุมัติ',
-      html: `ส่งการนับ stock สำหรับ Period <strong>${header.value?.period_code}</strong> ให้ GROUP_LEAD อนุมัติใช่หรือไม่?<br>
-             <small class="text-amber-600">⚠️ หลังส่งแล้วจะไม่สามารถแก้ไขได้</small>`,
+      title: 'Confirm Submission',
+      html: `Submit stock count for Period <strong>${header.value?.period_code}</strong> to GROUP_LEAD for approval?<br>
+             <small class="text-amber-600">⚠️ Once submitted, it cannot be edited.</small>`,
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#3b82f6',
       cancelButtonColor: '#6b7280',
-      confirmButtonText: 'ส่งขออนุมัติ',
-      cancelButtonText: 'ยกเลิก',
+      confirmButtonText: 'Submit for Approval',
+      cancelButtonText: 'Cancel',
     });
     if (!confirm.isConfirmed) return;
 
@@ -243,33 +243,33 @@
       const result = await PhysicalCountService.submitCount(countId.value);
       if (result.Status === 1) {
         await Swal.fire({
-          title: 'ส่งสำเร็จ',
-          text: 'ส่งขออนุมัติสำเร็จ ระบบส่ง Email แจ้ง GROUP_LEAD แล้ว',
+          title: 'Submitted Successfully',
+          text: 'Approval request submitted. Email notification sent to GROUP_LEAD.',
           icon: 'success',
           timer: 2000,
           showConfirmButton: false,
         });
         router.push(backRoute.value);
       } else {
-        Swal.fire('ข้อผิดพลาด', result.Message, 'error');
+        Swal.fire('Error', result.Message, 'error');
       }
     } catch (error: any) {
-      Swal.fire('ข้อผิดพลาด', error.message || 'ส่งอนุมัติไม่สำเร็จ', 'error');
+      Swal.fire('Error', error.message || 'Submission failed', 'error');
     } finally {
       submitting.value = false;
     }
   }
   async function handleApprove() {
     const confirm = await Swal.fire({
-      title: 'ยืนยันการอนุมัติ',
-      html: `อนุมัติการนับ stock Period <strong>${header.value?.period_code}</strong> ใช่หรือไม่?<br>
-             <small class="text-gray-500">ระบบจะปรับยอด stock และสร้าง Snapshot ทันที</small>`,
+      title: 'Confirm Approval',
+      html: `Approve stock count for Period <strong>${header.value?.period_code}</strong>?<br>
+             <small class="text-gray-500">The system will adjust stock levels and create a Snapshot immediately.</small>`,
       icon: 'question',
       showCancelButton: true,
       confirmButtonColor: '#16a34a',
       cancelButtonColor: '#6b7280',
-      confirmButtonText: 'อนุมัติ',
-      cancelButtonText: 'ยกเลิก',
+      confirmButtonText: 'Approve',
+      cancelButtonText: 'Cancel',
     });
     if (!confirm.isConfirmed) return;
 
@@ -278,8 +278,8 @@
       const result = await PhysicalCountService.approveCount(countId.value);
       if (result.Status === 1) {
         await Swal.fire({
-          title: 'อนุมัติสำเร็จ',
-          text: 'ปรับยอด stock และสร้าง Snapshot เรียบร้อยแล้ว ระบบส่ง Email แจ้งผู้ส่งแล้ว',
+          title: 'Approved Successfully',
+          text: 'Stock adjusted and Snapshot created. Email notification sent to requester.',
           icon: 'success',
           timer: 2500,
           showConfirmButton: false,
@@ -288,11 +288,11 @@
       } else {
         // Refresh to get latest status (concurrent approval edge case)
         await loadData();
-        Swal.fire('ข้อผิดพลาด', result.Message, 'error');
+        Swal.fire('Error', result.Message, 'error');
       }
     } catch (error: any) {
       await loadData();
-      Swal.fire('ข้อผิดพลาด', error.message || 'อนุมัติไม่สำเร็จ', 'error');
+      Swal.fire('Error', error.message || 'Approval failed', 'error');
     } finally {
       approving.value = false;
     }
@@ -305,7 +305,7 @@
 
   async function handleReject() {
     if (!rejectReason.value.trim()) {
-      Swal.fire('แจ้งเตือน', 'กรุณาระบุเหตุผลที่ปฏิเสธ', 'warning');
+      Swal.fire('Warning', 'Please provide a reason for rejection.', 'warning');
       return;
     }
 
@@ -318,8 +318,8 @@
       if (result.Status === 1) {
         showRejectDialog.value = false;
         await Swal.fire({
-          title: 'ปฏิเสธสำเร็จ',
-          text: 'ระบบส่ง Email แจ้งผู้ส่งพร้อมเหตุผลแล้ว',
+          title: 'Rejected Successfully',
+          text: 'Email notification with reason sent to requester.',
           icon: 'info',
           timer: 2000,
           showConfirmButton: false,
@@ -329,12 +329,12 @@
         // Refresh to get latest status
         await loadData();
         showRejectDialog.value = false;
-        Swal.fire('ข้อผิดพลาด', result.Message, 'error');
+        Swal.fire('Error', result.Message, 'error');
       }
     } catch (error: any) {
       await loadData();
       showRejectDialog.value = false;
-      Swal.fire('ข้อผิดพลาด', error.message || 'ปฏิเสธไม่สำเร็จ', 'error');
+      Swal.fire('Error', error.message || 'Rejection failed', 'error');
     } finally {
       rejecting.value = false;
     }
@@ -355,7 +355,7 @@
     <div class="col-12">
       <Button
         icon="pi pi-arrow-left"
-        label="กลับ"
+        label="Back"
         class="p-button-text p-button-plain mb-3"
         @click="router.push(backRoute)"
       />
@@ -373,7 +373,7 @@
                 class="pi pi-calendar text-amber-400"
                 style="font-size: 1.6rem"
               ></i>
-              <span class="text-2xl font-bold">บันทึกการนับ Stock</span>
+              <span class="text-2xl font-bold">Stock Count Record</span>
               <Tag
                 :value="
                   countStatusLabel[header.count_status] || header.count_status
@@ -389,26 +389,26 @@
                 {{ header.period_code }}
               </span>
               <span>
-                <strong>ช่วงเวลา:</strong>
+                <strong>Period:</strong>
                 {{ formatDate(header.period_start) }} –
                 {{ formatDate(header.period_end) }}
               </span>
               <span>
-                <strong>สร้างโดย:</strong>
+                <strong>Created By:</strong>
                 {{ header.created_by_name || header.created_by }}
               </span>
               <span>
-                <strong>สร้างเมื่อ:</strong>
+                <strong>Created At:</strong>
                 {{ formatSysdatetimeoffset(header.created_at) }}
               </span>
               <span v-if="header.submitted_by">
-                <strong>ส่งโดย:</strong>
-                {{ header.submitted_by_name || header.submitted_by }} เมื่อ
+                <strong>Submitted By:</strong>
+                {{ header.submitted_by_name || header.submitted_by }} on
                 {{ formatSysdatetimeoffset(header.submitted_at!) }}
               </span>
               <span v-if="header.approved_by">
-                <strong>อนุมัติโดย:</strong>
-                {{ header.approved_by_name || header.approved_by }} เมื่อ
+                <strong>Approved By:</strong>
+                {{ header.approved_by_name || header.approved_by }} on
                 {{ formatSysdatetimeoffset(header.approved_at!) }}
               </span>
             </div>
@@ -420,7 +420,7 @@
               class="mt-2 p-2 border-round border-1 border-red-300 bg-red-50 text-red-700 text-sm"
             >
               <i class="pi pi-times-circle mr-2"></i>
-              <strong>เหตุผลที่ถูกปฏิเสธ:</strong>
+              <strong>Rejection Reason:</strong>
               {{ header.rejected_reason }}
             </div>
           </div>
@@ -429,14 +429,14 @@
           <div v-if="isEditable" class="flex gap-2">
             <Button
               icon="pi pi-save"
-              label="บันทึกยอดนับ"
+              label="Save Count"
               class="p-button-success"
               :loading="saving"
               @click="handleSave"
             />
             <Button
               icon="pi pi-send"
-              label="ส่งขออนุมัติ"
+              label="Submit for Approval"
               class="p-button-primary"
               :loading="submitting"
               @click="handleSubmit"
@@ -447,7 +447,7 @@
           <div v-if="header.count_status === 'REJECTED'" class="flex gap-2">
             <Button
               icon="pi pi-list-check"
-              label="สร้างการนับใหม่"
+              label="Create New Count"
               class="p-button-primary"
               @click="router.push({ name: 'stockMonthlyRecord' })"
             />
@@ -457,7 +457,7 @@
           <div v-if="isSubmitted" class="flex gap-2">
             <Button
               icon="pi pi-check"
-              label="อนุมัติ"
+              label="Approve"
               class="p-button-success"
               :loading="approving"
               :disabled="rejecting"
@@ -465,7 +465,7 @@
             />
             <Button
               icon="pi pi-times"
-              label="ปฏิเสธ"
+              label="Reject"
               class="p-button-danger p-button-outlined"
               :loading="rejecting"
               :disabled="approving"
@@ -484,24 +484,24 @@
           class="flex align-items-center justify-content-between flex-wrap gap-3 mb-4"
         >
           <span class="text-lg font-bold">
-            รายการยา / วัสดุ ({{ filteredLines.length }} รายการ)
+            Items / Supplies ({{ filteredLines.length }} items)
           </span>
           <div class="flex align-items-center gap-3 flex-wrap">
             <Button
               icon="pi pi-print"
-              label="พิมพ์ใบนับ"
+              label="Print Count Sheet"
               class="p-button-outlined p-button-info"
               size="small"
-              v-tooltip.top="'พิมพ์ใบนับ stock สำหรับนำไปนับหน้างาน'"
+              v-tooltip.top="'Print stock count sheet for manual counting'"
               @click="handlePrint"
             />
             <Button
               v-if="isEditable"
               icon="pi pi-copy"
-              label="ยอดนับจริงอัตโนมัติ"
+              label="Auto-fill System Qty"
               class="p-button-outlined p-button-secondary"
               size="small"
-              v-tooltip.top="'คัดลอกยอดในระบบมาใส่ยอดนับจริงทุกรายการ'"
+              v-tooltip.top="'Copy system quantity to actual count for all items'"
               @click="handleAutoFill"
             />
             <div class="flex align-items-center gap-2">
@@ -511,14 +511,14 @@
                 inputId="showDiff"
               />
               <label for="showDiff" class="text-sm cursor-pointer">
-                แสดงเฉพาะรายการที่มีผลต่าง
+                Show only discrepancies
               </label>
             </div>
             <IconField iconPosition="left">
               <InputIcon class="pi pi-search" />
               <InputText
                 v-model="searchQuery"
-                placeholder="ค้นหารหัส / ชื่อยา..."
+                placeholder="Search code / item name..."
                 size="small"
               />
             </IconField>
@@ -534,19 +534,19 @@
           scrollHeight="60vh"
         >
           <template #empty>
-            <div class="text-center py-5 text-gray-400">ไม่พบรายการ</div>
+            <div class="text-center py-5 text-gray-400">No items found</div>
           </template>
 
           <Column
             field="item_code"
-            header="รหัส"
+            header="Code"
             :sortable="true"
             frozen
             style="min-width: 8rem; background: white"
           />
           <Column
             field="item_name_th"
-            header="ชื่อรายการ"
+            header="Item Name"
             :sortable="true"
             frozen
             style="min-width: 20rem; background: white"
@@ -563,7 +563,7 @@
               </div>
             </template>
           </Column>
-          <Column field="unit_name_th" header="หน่วย" style="min-width: 6rem">
+          <Column field="unit_name_th" header="Unit" style="min-width: 6rem">
             <template #body="{ data }">{{ data.unit_name_th || '-' }}</template>
           </Column>
           <Column
@@ -578,7 +578,7 @@
           </Column>
           <Column
             field="snapshot_prev_qty"
-            header="บันทึกสต๊อกก่อนหน้า"
+            header="Prev. Snapshot"
             :sortable="true"
             style="min-width: 10rem; text-align: right"
           >
@@ -590,7 +590,7 @@
           </Column>
           <Column
             field="received_qty"
-            header="รับเข้า (period)"
+            header="Received"
             :sortable="true"
             style="min-width: 9rem; text-align: right"
           >
@@ -602,7 +602,7 @@
           </Column>
           <Column
             field="issued_qty"
-            header="ใช้ออก (period)"
+            header="Issued"
             :sortable="true"
             style="min-width: 9rem; text-align: right"
           >
@@ -614,7 +614,7 @@
           </Column>
           <Column
             field="qty_system"
-            header="ยอดระบบ"
+            header="System Qty"
             :sortable="true"
             style="min-width: 9rem; text-align: right"
           >
@@ -622,7 +622,7 @@
               <span class="font-mono">{{ data.qty_system.toFixed(2) }}</span>
             </template>
           </Column>
-          <Column header="ยอดนับจริง *" style="min-width: 11rem">
+          <Column header="Actual Count *" style="min-width: 11rem">
             <template #body="{ data }">
               <InputNumber
                 v-if="isEditable"
@@ -640,7 +640,7 @@
               </span>
             </template>
           </Column>
-          <Column header="ผลต่าง" style="min-width: 9rem; text-align: right">
+          <Column header="Diff" style="min-width: 9rem; text-align: right">
             <template #body="{ data }">
               <Tag
                 :value="`${getDiffQty(data) > 0 ? '+' : ''}${getDiffQty(data).toFixed(2)} ${getDiffStatus(getDiffQty(data))}`"
@@ -649,12 +649,12 @@
               />
             </template>
           </Column>
-          <Column header="หมายเหตุ" style="min-width: 14rem">
+          <Column header="Note" style="min-width: 14rem">
             <template #body="{ data }">
               <InputText
                 v-if="isEditable"
                 v-model="data.editNote"
-                placeholder="หมายเหตุ..."
+                placeholder="Note..."
                 size="small"
                 class="w-full"
                 :class="{
@@ -675,14 +675,14 @@
         >
           <Button
             icon="pi pi-save"
-            label="บันทึกยอดนับ"
+            label="Save Count"
             class="p-button-success"
             :loading="saving"
             @click="handleSave"
           />
           <Button
             icon="pi pi-send"
-            label="ส่งขออนุมัติ"
+            label="Submit for Approval"
             class="p-button-primary"
             :loading="submitting"
             @click="handleSubmit"
@@ -695,21 +695,21 @@
   <!-- ════════════ REJECT DIALOG ════════════ -->
   <Dialog
     v-model:visible="showRejectDialog"
-    header="ระบุเหตุผลที่ปฏิเสธ"
+    header="Specify Rejection Reason"
     :modal="true"
     :draggable="false"
     style="width: 480px"
   >
     <div class="flex flex-column gap-3 pt-2">
       <p class="text-gray-600 text-sm m-0">
-        กรุณาระบุเหตุผลที่ปฏิเสธการนับ stock Period
+        Please specify the reason for rejecting stock count Period
         <strong>{{ header?.period_code }}</strong>
-        เพื่อแจ้งให้พนักงานทราบ
+        to inform the staff.
       </p>
       <Textarea
         v-model="rejectReason"
         rows="4"
-        placeholder="เหตุผลที่ปฏิเสธ..."
+        placeholder="Rejection reason..."
         class="w-full"
         :disabled="rejecting"
         autofocus
@@ -717,14 +717,14 @@
     </div>
     <template #footer>
       <Button
-        label="ยกเลิก"
+        label="Cancel"
         icon="pi pi-times"
         class="p-button-text"
         :disabled="rejecting"
         @click="showRejectDialog = false"
       />
       <Button
-        label="ยืนยันปฏิเสธ"
+        label="Confirm Rejection"
         icon="pi pi-check"
         class="p-button-danger"
         :loading="rejecting"
@@ -738,28 +738,28 @@
   <div class="print-section" v-if="header">
     <!-- Print Header -->
     <div class="ps-header">
-      <div class="ps-title">ใบนับสต็อกประจำเดือน (Physical Count Sheet)</div>
+      <div class="ps-title">Monthly Stock Count Sheet (Physical Count Sheet)</div>
       <table class="ps-info">
         <tr>
           <td><strong>Period:</strong></td>
           <td>{{ header.period_code }}</td>
-          <td><strong>ช่วงเวลา:</strong></td>
+          <td><strong>Period:</strong></td>
           <td>
             {{ formatDate(header.period_start) }} –
             {{ formatDate(header.period_end) }}
           </td>
-          <td><strong>สถานะ:</strong></td>
+          <td><strong>Status:</strong></td>
           <td>
             {{ countStatusLabel[header.count_status] || header.count_status }}
           </td>
         </tr>
         <tr>
-          <td><strong>สร้างโดย:</strong></td>
+          <td><strong>Created By:</strong></td>
           <td>{{ header.created_by_name || header.created_by }}</td>
-          <td><strong>วันที่พิมพ์:</strong></td>
+          <td><strong>Print Date:</strong></td>
           <td>{{ printDate }}</td>
-          <td><strong>จำนวนรายการ:</strong></td>
-          <td>{{ editableLines.length }} รายการ</td>
+          <td><strong>Item Count:</strong></td>
+          <td>{{ editableLines.length }} items</td>
         </tr>
       </table>
     </div>
@@ -768,14 +768,14 @@
     <table class="ps-table">
       <thead>
         <tr>
-          <th style="width: 4%">ที่</th>
-          <th style="width: 9%">รหัส</th>
-          <th style="width: 27%">ชื่อรายการ</th>
-          <th style="width: 6%">หน่วย</th>
+          <th style="width: 4%">No.</th>
+          <th style="width: 9%">Code</th>
+          <th style="width: 27%">Item Name</th>
+          <th style="width: 6%">Unit</th>
           <th style="width: 7%">Min/Max</th>
-          <th style="width: 8%">ยอดระบบ</th>
-          <th style="width: 16%">ยอดนับจริง</th>
-          <th style="width: 23%">หมายเหตุ</th>
+          <th style="width: 8%">System Qty</th>
+          <th style="width: 16%">Actual Count</th>
+          <th style="width: 23%">Note</th>
         </tr>
       </thead>
       <tbody>
@@ -802,25 +802,25 @@
     <!-- Signature Section -->
     <div class="ps-footer">
       <div class="ps-sig-block">
-        <div>ผู้นับ ...............................................</div>
+        <div>Counter ...............................................</div>
         <div class="ps-sig-sub">
           ( ......................................... )
         </div>
-        <div>วันที่นับ .............. / .............. / ..............</div>
+        <div>Date .............. / .............. / ..............</div>
       </div>
       <div class="ps-sig-block">
-        <div>ผู้ตรวจสอบ ..........................................</div>
+        <div>Verifier ..........................................</div>
         <div class="ps-sig-sub">
           ( ......................................... )
         </div>
-        <div>วันที่ตรวจ .............. / .............. / ..............</div>
+        <div>Date .............. / .............. / ..............</div>
       </div>
       <div class="ps-sig-block">
-        <div>ผู้อนุมัติ ............................................</div>
+        <div>Approver ............................................</div>
         <div class="ps-sig-sub">
           ( ......................................... )
         </div>
-        <div>วันที่อนุมัติ ........... / .............. / ..............</div>
+        <div>Date ........... / .............. / ..............</div>
       </div>
     </div>
   </div>

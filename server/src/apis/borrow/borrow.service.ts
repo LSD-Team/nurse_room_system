@@ -194,8 +194,24 @@ export class BorrowService {
 
     // Send email based on action
     if (borrowHeader) {
-      // Both REJECT and REWORK trigger rework notification
-      if (action === 'REJECT' || action === 'REJECTED' || action === 'REWORK') {
+      if (action === 'REJECT' || action === 'REJECTED') {
+        // Send rejection notification to creator
+        try {
+          await this.emailService.sendApprovalEmail({
+            notifyType: ENotifyType.BORROW_REJECTED,
+            documentId: borrowHeader.borrow_id,
+            documentNo: borrowHeader.borrow_no,
+            documentType: 'BORROW',
+            toEmployeeIds: [borrowHeader.created_by],
+            rejectedByName: actionedBy,
+            additionalMessage: remark || 'Your borrow request has been rejected',
+            sentByEmployeeId: actionedBy,
+          });
+          this.logger.log(`✅ [BorrowService] Rejection notification sent for Borrow: ${borrowHeader.borrow_no}`);
+        } catch (error: any) {
+          this.logger.error(`❌ [BorrowService] Failed to send rejection email: ${error.message}`);
+        }
+      } else if (action === 'REWORK') {
         // Send rework notification to Borrow creator
         try {
           await this.emailService.sendApprovalEmail({
@@ -211,11 +227,11 @@ export class BorrowService {
           });
 
           this.logger.log(
-            `โœ… [BorrowService] Rework notification sent for Borrow: ${borrowHeader.borrow_no}`,
+            `✅ [BorrowService] Rework notification sent for Borrow: ${borrowHeader.borrow_no}`,
           );
         } catch (error: any) {
           this.logger.error(
-            `โŒ [BorrowService] Failed to send rework email: ${error.message}`,
+            `❌ [BorrowService] Failed to send rework email: ${error.message}`,
             error.stack,
           );
         }

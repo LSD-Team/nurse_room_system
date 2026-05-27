@@ -4,7 +4,7 @@ import axios from 'axios';
 import Swal, { type SweetAlertIcon } from 'sweetalert2';
 
 //  Pinia Store for show / hide Loading Overlay
-import { useMainStore } from '@/stores/main.store';
+// import { useMainStore } from '@/stores/main.store';
 /*  ------ ➕ Imports ➕ ------ */
 
 // Create a custom Axios instance with a specific base URL
@@ -29,9 +29,7 @@ API.interceptors.request.use(
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
-      //  Loading Overlay
-      const mainStore = useMainStore();
-      await mainStore.setLoading(true);
+      
       return config;
     } catch (error) {
       return Promise.reject(error);
@@ -45,32 +43,17 @@ API.interceptors.request.use(
 // Axios After response
 API.interceptors.response.use(
   async response => {
-    try {
-      //  Loading Overlay
-      const mainStore = useMainStore();
-      setTimeout(async () => {
-        await mainStore.setLoading(false);
-      }, 800);
-      return response;
-    } catch (error) {
-      return Promise.reject(error);
-    }
+    return response;
   },
   async error => {
     try {
-      //  Loading Overlay
-      const mainStore = useMainStore();
-      setTimeout(async () => {
-        await mainStore.setLoading(false);
-      }, 800);
-
       const response = { ...error }.response;
 
       // Network error or server down — no response at all
       if (!response) {
         await Swal.fire(
-          'ข้อผิดพลาด',
-          'ไม่สามารถเชื่อมต่อกับ server ได้',
+          'Error',
+          'Unable to connect to the server',
           'error'
         );
         return Promise.reject(error);
@@ -84,17 +67,21 @@ API.interceptors.response.use(
       } else {
         message = errorData.message;
       }
-      // message = message+ apiroute
+      
       console.error(
         'Interceptors Error:',
         { ...error }.response.config.url,
         { ...error }.response
       );
-      const title = errorData.statusCode === 500 ? 'Server Error' : 'Error';
-      const html = message;
-      const icon: SweetAlertIcon =
-        errorData.statusCode === 500 ? 'error' : 'warning';
-      await Swal.fire(title, html, icon);
+      
+      // Only show error dialog if not a silent request
+      if (!(error.config && (error.config as any).silent)) {
+        const title = errorData.statusCode === 500 ? 'Server Error' : 'Error';
+        const html = message;
+        const icon: SweetAlertIcon =
+          errorData.statusCode === 500 ? 'error' : 'warning';
+        void Swal.fire(title, html, icon);
+      }
 
       // get current href url
       const currentUrl = window.location.href;

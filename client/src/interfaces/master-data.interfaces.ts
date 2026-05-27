@@ -36,6 +36,9 @@ export interface ISupplierPriceListItemRow {
   item_code: string;
   item_name_th: string;
   item_name_en: string | null;
+  usage_unit_id: number;
+  usage_unit_name_th: string | null;
+  usage_unit_name_en: string | null;
   selected: boolean;
   price_id: number | null;
   unit_id: number | null;

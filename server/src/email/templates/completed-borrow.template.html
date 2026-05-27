@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="th">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>อนุมัติสำเร็จ - เอกสารยืมของ</title>
+  <title>Approval Complete - Borrowing Request</title>
   <style>
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -51,7 +51,7 @@
     }
     .label {
       font-weight: 600;
-      width: 120px;
+      width: 140px;
       color: #16a085;
     }
     .value {
@@ -99,61 +99,58 @@
 <body>
   <div class="container">
     <div class="header">
-      <h1>✅ เอกสารยืมของได้รับการอนุมัติ</h1>
+      <h1>✅ Borrowing Request Approved</h1>
     </div>
     
     <div class="content">
-      <p>สวัสดี,</p>
-      <p>ยินดีด้วย! เอกสารยืมของของคุณได้รับการอนุมัติสำเร็จจากทั้งระดับการอนุมัติ</p>
+      <p>Congratulations! Your borrowing request for <strong>Medicine/Medical Supplies</strong> has been successfully approved by all required levels.</p>
       
       <div class="section">
-        <div class="section-title">📄 รายละเอียดเอกสาร</div>
+        <div class="section-title">📄 Document Details</div>
         <div class="detail-row">
-          <div class="label">เลขที่เอกสาร:</div>
+          <div class="label">Document No:</div>
           <div class="value"><strong>{{document_no}}</strong></div>
         </div>
         <div class="detail-row">
-          <div class="label">ประเภท:</div>
-          <div class="value">{{document_type}} (เอกสารยืมของ)</div>
+          <div class="label">Type:</div>
+          <div class="value">{{document_type}} (Medicine/Medical Supplies Borrowing)</div>
         </div>
         <div class="detail-row">
-          <div class="label">ชื่อเอกสาร:</div>
+          <div class="label">Title:</div>
           <div class="value">{{document_title}}</div>
         </div>
       </div>
 
       <div class="success">
-        <strong>✅ สถานะ: อนุมัติสำเร็จ</strong>
+        <strong>✅ Status: Approved Successfully</strong>
       </div>
 
-      {{#if approved_by_name}}
       <div class="message">
-        <strong>👤 อนุมัติโดย:</strong>
-        <p>{{approved_by_name}}</p>
+        <strong>👤 Actioned By:</strong>
+        <p>{{actioned_by_name}}</p>
       </div>
-      {{/if}}
 
       {{#if additional_message}}
       <div class="message">
-        <strong>💬 หมายเหตุ:</strong>
+        <strong>💬 Comments:</strong>
         <p>{{additional_message}}</p>
       </div>
       {{/if}}
 
       <div class="message">
-        <strong>ℹ️ สามารถดำเนินการยืมของได้แล้ว</strong>
+        <strong>ℹ️ You may now proceed with the borrowing process.</strong>
       </div>
 
-      <a href="#" class="action-button">ดูรายละเอียดเพิ่มเติม →</a>
+      <a href="{{action_url}}" class="action-button">View Details in System →</a>
 
       <div class="section" style="margin-top: 30px;">
-        <p><small>ข้อความนี้เป็นการแจ้งอัตโนมัติจากระบบ Nurse Room System</small></p>
+        <p><small>This is an automated notification from the Nurse Room System.</small></p>
       </div>
     </div>
 
     <div class="footer">
       <p>Nurse Room System - Shindengen Medical Supply Management</p>
-      <p class="timestamp">ส่งเวลา: {{sent_at}}</p>
+      <p class="timestamp">Sent at: {{sent_at}} (ICT)</p>
     </div>
   </div>
 </body>

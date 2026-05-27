@@ -116,7 +116,7 @@
 
 <template>
   <div class="card">
-    <div class="font-semibold text-xl mb-4">ประวัติการเคลื่อนไหวสต็อก</div>
+    <div class="font-semibold text-xl mb-4">Stock Movement Records</div>
 
     <DataTable
       :value="filteredMovements"
@@ -142,7 +142,7 @@
       <template #header>
         <div class="flex flex-wrap justify-between items-center gap-3">
           <div class="flex flex-wrap gap-2 items-center">
-            <label class="text-sm font-medium">ประเภทเคลื่อนไหว:</label>
+            <label class="text-sm font-medium">Movement Type:</label>
             <Select
               v-model="selectedMovementType"
               :options="movementTypeOptions"
@@ -154,26 +154,26 @@
                 {{ slotProps.value ? slotProps.value : 'All' }}
               </template>
             </Select>
-            <label class="text-sm font-medium ml-2">ตั้งแต่:</label>
+            <label class="text-sm font-medium ml-2">From:</label>
             <DatePicker
               v-model="filterDateFrom"
               dateFormat="dd/mm/yy"
-              placeholder="วันที่เริ่มต้น"
+              placeholder="Start Date"
               class="w-36"
               showClear
             />
-            <label class="text-sm font-medium">ถึง:</label>
+            <label class="text-sm font-medium">To:</label>
             <DatePicker
               v-model="filterDateTo"
               dateFormat="dd/mm/yy"
-              placeholder="วันที่สิ้นสุด"
+              placeholder="End Date"
               class="w-36"
               showClear
             />
             <Button
               v-if="filterDateFrom || filterDateTo"
               icon="pi pi-times"
-              label="เคลียร์วันที่"
+              label="Clear Dates"
               severity="secondary"
               outlined
               size="small"
@@ -198,13 +198,13 @@
               rounded
               text
               @click="loadMovements"
-              v-tooltip="'โหลดใหม่'"
+              v-tooltip="'Reload'"
             />
             <IconField>
               <InputIcon class="pi pi-search" />
               <InputText
                 v-model="filters['global'].value"
-                placeholder="ค้นหา..."
+                placeholder="Search..."
               />
             </IconField>
           </div>
@@ -212,12 +212,12 @@
       </template>
 
       <template #empty>
-        <div class="text-center py-6 text-surface-500">ไม่มีข้อมูล</div>
+        <div class="text-center py-6 text-surface-500">No data found</div>
       </template>
 
       <Column
         field="created_at"
-        :header="'วันที่'"
+        :header="'Date/Time'"
         style="min-width: 160px"
         sortable
       >
@@ -228,7 +228,7 @@
 
       <Column
         field="created_by_name"
-        :header="'ผู้สร้าง'"
+        :header="'Created By'"
         style="min-width: 150px"
         sortable
       >
@@ -239,7 +239,7 @@
 
       <Column
         field="movement_type"
-        :header="'ประเภทเคลื่อนไหว'"
+        :header="'Movement Type'"
         style="min-width: 140px"
         sortable
       >
@@ -253,7 +253,7 @@
 
       <Column
         field="item_name_th"
-        :header="'รายการยา/เวชภัณฑ์'"
+        :header="'Item Name (TH)'"
         style="min-width: 240px"
         sortable
       >
@@ -267,7 +267,7 @@
 
       <Column
         field="qty_base"
-        :header="'จำนวน'"
+        :header="'Quantity'"
         style="min-width: 80px"
         align="right"
         sortable
@@ -277,7 +277,7 @@
         </template>
       </Column>
 
-      <Column field="unit_name_th" :header="'หน่วย'" style="min-width: 80px">
+      <Column field="unit_name_th" :header="'Unit'" style="min-width: 80px">
         <template #body="{ data }">
           <span class="text-color-secondary">
             {{ data.unit_name_th || '-' }}
@@ -287,7 +287,7 @@
 
       <Column
         field="reason"
-        :header="'เหตุผล'"
+        :header="'Reason'"
         style="min-width: 200px"
         sortable
       >

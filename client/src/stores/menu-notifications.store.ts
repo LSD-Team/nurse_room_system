@@ -21,9 +21,9 @@ export const useMenuNotificationsStore = defineStore(
     const approvalPendingCount = ref(0);
 
     // ─── Methods ───
-    async function loadAllCounts() {
+    async function loadAllCounts(silent = false) {
       try {
-        const counts = await MenuNotificationsService.getAllCounts();
+        const counts = await MenuNotificationsService.getAllCounts(silent);
         po.value = counts.po;
         rec.value = counts.rec;
         borrow.value = counts.borrow;

@@ -10,6 +10,7 @@ export interface IPendingApprovalItem {
   note: string | null;
   created_by: string;
   created_by_name: string | null;
+  current_approval_level: number | null;
   current_approval_role: string;
   current_approver_id: string;
   current_approver_name: string | null;

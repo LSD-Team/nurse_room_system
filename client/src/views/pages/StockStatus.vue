@@ -64,9 +64,9 @@
     <div class="flex items-center justify-between mb-4">
       <div>
         <h2 class="text-2xl font-bold text-surface-900 dark:text-surface-0">
-          สถานะสต็อก
+          Stock Status
         </h2>
-        <p class="text-surface-500 mt-1">ข้อมูลยอดคงเหลือยา/เวชภัณฑ์ทั้งหมด</p>
+        <p class="text-surface-500 mt-1">All drug/medical supply stock information</p>
       </div>
       <Button
         label="Export Excel"
@@ -78,7 +78,7 @@
     </div>
 
     <Message v-if="errorMsg" severity="error" class="mb-4">
-      <span class="font-semibold">เกิดข้อผิดพลาด:</span>
+      <span class="font-semibold">Error:</span>
       {{ errorMsg }}
     </Message>
 
@@ -117,8 +117,8 @@
         </div>
       </template>
 
-      <template #empty>ไม่พบข้อมูล</template>
-      <template #loading>กำลังโหลดข้อมูล...</template>
+      <template #empty>No data found</template>
+      <template #loading>Loading data...</template>
 
       <Column
         field="rowNo"

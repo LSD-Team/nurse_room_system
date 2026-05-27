@@ -32,8 +32,8 @@
       allPeriods.value = await PhysicalCountService.getAvailablePeriods();
     } catch (error: any) {
       Swal.fire(
-        'ข้อผิดพลาด',
-        error.message || 'ไม่สามารถโหลดข้อมูลได้',
+        'Error',
+        error.message || 'Unable to load data',
         'error'
       );
     } finally {
@@ -63,11 +63,11 @@
               class="pi pi-check-circle text-teal-500"
               style="font-size: 1.8rem"
             ></i>
-            <span class="text-2xl font-bold">อนุมัติการนับ Stock</span>
+            <span class="text-2xl font-bold">Stock Count Approval</span>
           </div>
           <Button
             icon="pi pi-refresh"
-            label="รีเฟรช"
+            label="Refresh"
             class="p-button-outlined p-button-secondary"
             size="small"
             :loading="loading"
@@ -90,8 +90,8 @@
           class="flex flex-column align-items-center justify-content-center py-8 text-gray-400"
         >
           <i class="pi pi-inbox mb-3" style="font-size: 3rem"></i>
-          <span class="text-lg">ไม่มีรายการรออนุมัติ</span>
-          <span class="text-sm mt-1">เมื่อมีการส่งขออนุมัติจะปรากฎที่นี่</span>
+          <span class="text-lg">No items pending approval</span>
+          <span class="text-sm mt-1">When a request is submitted for approval, it will appear here</span>
         </div>
 
         <!-- Approval list -->
@@ -108,12 +108,12 @@
                   style="font-size: 1.2rem"
                 ></i>
                 <span class="text-xl font-bold">{{ period.period_code }}</span>
-                <Tag value="รออนุมัติ" severity="info" />
+                <Tag value="Pending Approval" severity="info" />
               </div>
               <div class="flex flex-wrap gap-4 text-sm text-gray-600">
                 <span>
                   <i class="pi pi-clock mr-1 text-xs"></i>
-                  <strong>ช่วงเวลา:</strong>
+                  <strong>Period:</strong>
                   {{ formatDate(period.period_start) }} –
                   {{ formatDate(period.period_end) }}
                 </span>
@@ -127,7 +127,7 @@
 
             <Button
               icon="pi pi-eye"
-              label="ตรวจสอบและอนุมัติ"
+              label="View and Approve"
               class="p-button-primary"
               @click="handleViewDetail(period)"
             />

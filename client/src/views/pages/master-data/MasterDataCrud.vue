@@ -443,7 +443,7 @@
     }
 
     if (props.kind === 'hospitals') {
-      if (!hospitalForm.value.hospital_code?.trim()) {
+      if (isEditing.value && !hospitalForm.value.hospital_code?.trim()) {
         void Swal.fire({
           icon: 'warning',
           title: 'Please enter hospital code (กรุณาระบุรหัสสถานพยาบาล)',
@@ -472,7 +472,7 @@
       return true;
     }
 
-    if (!itemForm.value.item_code?.trim()) {
+    if (isEditing.value && !itemForm.value.item_code?.trim()) {
       void Swal.fire({
         icon: 'warning',
         title: 'Please enter item code (กรุณาระบุรหัสรายการยา/เวชภัณฑ์)',
@@ -614,15 +614,15 @@
       await Swal.fire({
         icon: 'success',
         title: isEditing.value
-          ? 'Updated successfully (แก้ไขสำเร็จ)'
-          : 'Saved successfully (บันทึกสำเร็จ)',
+          ? 'Updated successfully'
+          : 'Saved successfully',
         timer: 1400,
         showConfirmButton: false,
       });
     } catch (error: unknown) {
       await Swal.fire({
         icon: 'error',
-        title: 'Operation failed (ดำเนินการไม่สำเร็จ)',
+        title: 'Operation failed',
         text: getErrorMessage(error),
       });
     } finally {
@@ -633,11 +633,11 @@
   async function confirmDelete(row: MasterDataRow): Promise<void> {
     const result = await Swal.fire({
       icon: 'warning',
-      title: 'Confirm disable record? (ยืนยันปิดการใช้งานรายการนี้?)',
-      text: 'The record will be inactive (ข้อมูลจะถูกปิดการใช้งาน)',
+      title: 'Confirm disable record?',
+      text: 'The record will be set to inactive',
       showCancelButton: true,
-      confirmButtonText: 'Disable (ปิดการใช้งาน)',
-      cancelButtonText: 'Cancel (ยกเลิก)',
+      confirmButtonText: 'Disable',
+      cancelButtonText: 'Cancel',
       confirmButtonColor: '#ef4444',
     });
     if (!result.isConfirmed) return;
@@ -668,14 +668,14 @@
       await loadRows();
       await Swal.fire({
         icon: 'success',
-        title: 'Disabled successfully (ปิดการใช้งานสำเร็จ)',
+        title: 'Disabled successfully',
         timer: 1400,
         showConfirmButton: false,
       });
     } catch (error: unknown) {
       await Swal.fire({
         icon: 'error',
-        title: 'Cannot disable record (ไม่สามารถปิดการใช้งานได้)',
+        title: 'Cannot disable record',
         text: getErrorMessage(error),
       });
     }
@@ -831,7 +831,7 @@
         <Column header="Usage Unit (หน่วยใช้งาน)" style="width: 12rem">
           <template #body="{ data }">
             <span>
-              {{ data.usage_unit_name_en || data.usage_unit_name_th || '-' }}
+              {{ data.usage_unit_name_th || data.usage_unit_name_en || '-' }}
             </span>
           </template>
         </Column>
@@ -988,9 +988,13 @@
         <div class="flex flex-col gap-1">
           <label class="text-sm">
             Hospital Code (รหัสสถานพยาบาล)
-            <span class="text-red-500">*</span>
+            <span class="text-blue-500">(System Managed)</span>
           </label>
-          <InputText v-model="hospitalForm.hospital_code" />
+          <InputText
+            v-model="hospitalForm.hospital_code"
+            :disabled="true"
+            :placeholder="isEditing ? '' : 'System will generate HXXXX'"
+          />
         </div>
         <div class="flex flex-col gap-1">
           <label class="text-sm">Hospital Type (ประเภทสถานพยาบาล)</label>
@@ -1049,9 +1053,13 @@
         <div class="flex flex-col gap-1">
           <label class="text-sm">
             Item Code (รหัสรายการ)
-            <span class="text-red-500">*</span>
+            <span class="text-blue-500">(System Managed)</span>
           </label>
-          <InputText v-model="itemForm.item_code" />
+          <InputText
+            v-model="itemForm.item_code"
+            :disabled="true"
+            :placeholder="isEditing ? '' : 'System will generate DR/MDXXXX'"
+          />
         </div>
         <div class="flex flex-col gap-1">
           <label class="text-sm">

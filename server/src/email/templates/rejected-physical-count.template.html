@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="th">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ปฏิเสธ - การนับ Stock</title>
+  <title>Rejected - Stock Count</title>
   <style>
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -100,57 +100,56 @@
 <body>
   <div class="container">
     <div class="header">
-      <h1>❌ การนับ Stock ถูกปฏิเสธ</h1>
+      <h1>❌ Stock Count Rejected</h1>
     </div>
 
     <div class="content">
-      <p>สวัสดี,</p>
-      <p>ผลการนับ Stock ของคุณถูกปฏิเสธโดยผู้อนุมัติ กรุณาตรวจสอบเหตุผลและทำการนับใหม่อีกครั้ง</p>
+      <p>Your stock count results have been rejected by the approver. Please review the comments and perform the count again if necessary.</p>
 
       <div class="section">
-        <div class="section-title">📦 รายละเอียดการนับ Stock</div>
+        <div class="section-title">📦 Stock Count Details</div>
         <div class="detail-row">
-          <div class="label">รอบบัญชี:</div>
+          <div class="label">Period Code:</div>
           <div class="value"><strong>{{document_no}}</strong></div>
         </div>
         <div class="detail-row">
-          <div class="label">ชื่อเอกสาร:</div>
+          <div class="label">Title:</div>
           <div class="value">{{document_title}}</div>
         </div>
       </div>
 
       <div class="rejected">
-        <strong>❌ สถานะ: ถูกปฏิเสธ (REJECTED)</strong>
+        <strong>❌ Status: REJECTED</strong>
       </div>
 
       {{#if rejected_by_name}}
       <div class="reason">
-        <strong>👤 ปฏิเสธโดย:</strong>
+        <strong>👤 Rejected By:</strong>
         <p>{{rejected_by_name}}</p>
       </div>
       {{/if}}
 
       {{#if additional_message}}
       <div class="reason">
-        <strong>💬 เหตุผลการปฏิเสธ:</strong>
+        <strong>💬 Rejection Reason:</strong>
         <p>{{additional_message}}</p>
       </div>
       {{/if}}
 
       <div class="rejected">
-        <strong>ℹ️ กรุณาทำการนับ Stock ใหม่และส่งขออนุมัติอีกครั้ง</strong>
+        <strong>ℹ️ Please perform a new stock count and resubmit for approval.</strong>
       </div>
 
-      <a href="#" class="action-button">ไปยังระบบเพื่อนับใหม่ →</a>
+      <a href="{{action_url_pc}}" class="action-button">Go to System to Recount →</a>
 
       <div class="section" style="margin-top: 30px;">
-        <p><small>ข้อความนี้เป็นการแจ้งอัตโนมัติจากระบบ Nurse Room System</small></p>
+        <p><small>This is an automated notification from the Nurse Room System.</small></p>
       </div>
     </div>
 
     <div class="footer">
       <p>Nurse Room System - Shindengen Medical Supply Management</p>
-      <p class="timestamp">ส่งเวลา: {{sent_at}}</p>
+      <p class="timestamp">Sent at: {{sent_at}} (ICT)</p>
     </div>
   </div>
 </body>

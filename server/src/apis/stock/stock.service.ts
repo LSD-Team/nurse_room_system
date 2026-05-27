@@ -29,6 +29,26 @@ export interface IStockMovement {
   reason: string | null;
 }
 
+export interface IStockMonthlyReport {
+  snapshot_id: number;
+  period_code: string;
+  item_id: number;
+  item_code: string;
+  item_name_th: string;
+  item_name_en: string;
+  opening_qty: number;
+  receipts: number;
+  issues: number;
+  adjustments: number;
+  net_movement: number;
+  expected_closing: number;
+  actual_closing: number;
+  diff_qty: number;
+  status: string;
+  created_at: string;
+  created_by: string;
+}
+
 @Injectable()
 export class StockService {
   constructor(private readonly databaseService: DatabaseService) {}
@@ -79,6 +99,34 @@ export class StockService {
     return this.databaseService.query<IStockMovement>(
       this.DATABASE_NAME,
       query,
+    );
+  }
+
+  async getAvailablePeriods(): Promise<{ period_code: string }[]> {
+    const query = `
+      SELECT DISTINCT period_code
+      FROM vw_report_stock_monthly
+      ORDER BY period_code DESC;
+    `;
+    return this.databaseService.query<{ period_code: string }>(
+      this.DATABASE_NAME,
+      query,
+    );
+  }
+
+  async getStockMonthlyReport(
+    periodCode: string,
+  ): Promise<IStockMonthlyReport[]> {
+    const query = `
+      SELECT *
+      FROM vw_report_stock_monthly
+      WHERE period_code = @param0
+      ORDER BY item_code;
+    `;
+    return this.databaseService.query<IStockMonthlyReport>(
+      this.DATABASE_NAME,
+      query,
+      [periodCode],
     );
   }
 }

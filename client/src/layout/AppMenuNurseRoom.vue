@@ -20,21 +20,29 @@ interface MenuItem {
 
 const menuNotificationsStore = useMenuNotificationsStore();
 const rawMenus = ref<any[]>([]);
-const menuTree = ref<MenuItem[]>([]);
 
 onMounted(async () => {
   await menuNotificationsStore.loadAllCounts();
   try {
     const menus = await Api.get<any[]>('/menus');
     rawMenus.value = menus || [];
-    menuTree.value = buildTree(rawMenus.value);
   } catch (error) {
     console.error('[Menu] Failed to load menus:', error);
   }
 });
 
 const model = computed(() => {
-  return menuTree.value;
+  // Access store values to establish a reactive dependency
+  const trigger = 
+    menuNotificationsStore.po + 
+    menuNotificationsStore.rec + 
+    menuNotificationsStore.borrow + 
+    menuNotificationsStore.apv + 
+    menuNotificationsStore.all + 
+    menuNotificationsStore.stockCountApv;
+  
+  if (rawMenus.value.length === 0) return [];
+  return buildTree(rawMenus.value);
 });
 
 function buildTree(items: any[]): MenuItem[] {
@@ -119,6 +127,11 @@ function resolveColor(node: any): string | undefined {
 }
 
 function computeBadge(node: any): number | undefined {
+  // Show total count (all) for Purchase & Borrow Group (menus.id = 3)
+  if (Number(node.id) === 3) {
+    return menuNotificationsStore.all > 0 ? menuNotificationsStore.all : undefined;
+  }
+
   if (!node.route) return undefined;
   const route = node.route;
   if (route === '/purchase-orders')

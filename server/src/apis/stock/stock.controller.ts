@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Param } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { StockService } from './stock.service';
 
@@ -22,5 +22,25 @@ export class StockController {
   })
   async getMovementRecords() {
     return this.stockService.getMovementRecords();
+  }
+
+  @Get('monthly-report/periods')
+  @ApiOperation({ summary: 'Get available periods for monthly report' })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns all distinct period codes',
+  })
+  async getAvailablePeriods() {
+    return this.stockService.getAvailablePeriods();
+  }
+
+  @Get('monthly-report/:periodCode')
+  @ApiOperation({ summary: 'Get stock monthly report for a specific period' })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns stock snapshot for the period',
+  })
+  async getStockMonthlyReport(@Param('periodCode') periodCode: string) {
+    return this.stockService.getStockMonthlyReport(periodCode);
   }
 }

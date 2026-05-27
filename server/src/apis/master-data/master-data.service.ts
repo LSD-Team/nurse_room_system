@@ -379,6 +379,9 @@ export class MasterDataService {
               i.item_code,
               i.item_name_th,
               i.item_name_en,
+              i.usage_unit_id,
+              u.unit_name_th AS usage_unit_name_th,
+              u.unit_name_en AS usage_unit_name_en,
               CASE WHEN ap.price_id IS NULL THEN 0 ELSE 1 END AS selected_raw,
               ap.price_id,
               COALESCE(ap.unit_id, lp.unit_id) AS unit_id,
@@ -388,6 +391,7 @@ export class MasterDataService {
               COALESCE(ap.expire_date, lp.expire_date) AS expire_date,
               ap.is_active
            FROM items i
+           LEFT JOIN units u ON i.usage_unit_id = u.unit_id
            OUTER APPLY (
              SELECT TOP 1
                spl.price_id,
@@ -435,6 +439,9 @@ export class MasterDataService {
           item_code: row.item_code,
           item_name_th: row.item_name_th,
           item_name_en: row.item_name_en,
+          usage_unit_id: row.usage_unit_id,
+          usage_unit_name_th: row.usage_unit_name_th,
+          usage_unit_name_en: row.usage_unit_name_en,
           selected: row.selected_raw === 1,
           price_id: row.price_id,
           unit_id: row.unit_id,
@@ -1692,10 +1699,6 @@ export class MasterDataService {
   async createHospital(
     body: ICreateHospitalBody,
   ): Promise<IHospitalMasterData> {
-    const hospitalCode = this.normalizeRequiredText(
-      body.hospital_code,
-      'hospital_code',
-    );
     const hospitalNameTh = this.normalizeRequiredText(
       body.hospital_name_th,
       'hospital_name_th',
@@ -1704,15 +1707,22 @@ export class MasterDataService {
       body.hospital_type,
     );
     try {
-      await this.ensureUniqueHospitalCode(hospitalCode);
       const insertRows = await this.db.query<{ hospital_id: number }>(
         this.DATABASE_NAME,
         `BEGIN TRY
             BEGIN TRANSACTION;
+            
+            -- Auto-generate hospital_code
+            DECLARE @next_no INT;
+            DECLARE @generated_code NVARCHAR(20);
+            
+            SELECT @next_no = COUNT(1) + 1 FROM hospitals;
+            SET @generated_code = 'H' + RIGHT('0000' + CAST(@next_no AS NVARCHAR(10)), 4);
+
             INSERT INTO hospitals (
               hospital_code, hospital_name_th, hospital_name_en, hospital_type, address, phone, is_active, created_at
             ) VALUES (
-              @hospital_code, @hospital_name_th, @hospital_name_en, @hospital_type, @address, @phone, 1, GETDATE()
+              @generated_code, @hospital_name_th, @hospital_name_en, @hospital_type, @address, @phone, 1, GETDATE()
             );
             SELECT CAST(SCOPE_IDENTITY() AS int) AS hospital_id;
             COMMIT TRANSACTION;
@@ -1722,7 +1732,6 @@ export class MasterDataService {
             THROW;
           END CATCH`,
         {
-          hospital_code: hospitalCode,
           hospital_name_th: hospitalNameTh,
           hospital_name_en: this.normalizeOptionalText(body.hospital_name_en),
           hospital_type: hospitalType,
@@ -2151,7 +2160,6 @@ export class MasterDataService {
     body: ICreateItemBody,
     currentUser: string,
   ): Promise<IItemMasterData> {
-    const itemCode = this.normalizeRequiredText(body.item_code, 'item_code');
     const itemNameTh = this.normalizeRequiredText(
       body.item_name_th,
       'item_name_th',
@@ -2180,17 +2188,26 @@ export class MasterDataService {
     }
 
     try {
-      await this.ensureUniqueItemCode(itemCode);
       await this.validateItemForeignKeys(itemTypeId, usageUnitId);
 
       const insertRows = await this.db.query<{ item_id: number }>(
         this.DATABASE_NAME,
         `BEGIN TRY
             BEGIN TRANSACTION;
+            
+            -- Auto-generate item_code based on type
+            DECLARE @prefix NVARCHAR(2);
+            DECLARE @next_no INT;
+            DECLARE @generated_code NVARCHAR(20);
+            
+            SET @prefix = CASE WHEN @item_type_id = 2 THEN 'MD' ELSE 'DR' END;
+            SELECT @next_no = COUNT(1) + 1 FROM items WHERE item_type_id = @item_type_id;
+            SET @generated_code = @prefix + RIGHT('0000' + CAST(@next_no AS NVARCHAR(10)), 4);
+
             INSERT INTO items (
               item_code, item_name_en, usage_unit_id, is_active, created_at, item_name_th, item_min, item_max, update_at, item_type_id
             ) VALUES (
-              @item_code, @item_name_en, @usage_unit_id, 1, GETDATE(), @item_name_th, @item_min, @item_max, GETDATE(), @item_type_id
+              @generated_code, @item_name_en, @usage_unit_id, 1, GETDATE(), @item_name_th, @item_min, @item_max, GETDATE(), @item_type_id
             );
             SELECT CAST(SCOPE_IDENTITY() AS int) AS item_id;
             COMMIT TRANSACTION;
@@ -2200,7 +2217,6 @@ export class MasterDataService {
             THROW;
           END CATCH`,
         {
-          item_code: itemCode,
           item_name_en: itemNameEn,
           usage_unit_id: usageUnitId,
           item_name_th: itemNameTh,
