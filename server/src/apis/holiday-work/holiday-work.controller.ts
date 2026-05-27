@@ -1,5 +1,20 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Put,
+  Query,
+} from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiQuery,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { JwtPayloadData } from '@/shared/lsd-system-center/auth.interface';
 import { HolidayWorkService } from './holiday-work.service';
 import type {
@@ -19,15 +34,25 @@ export class HolidayWorkController {
   }
 
   @Get('active')
-  @ApiOperation({ summary: 'Get active holiday work announcements (Today & Tomorrow)' })
-  @ApiResponse({ status: 200, description: 'Returns list of active announcements' })
+  @ApiOperation({
+    summary: 'Get active holiday work announcements (Today & Tomorrow)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns list of active announcements',
+  })
   async getActive() {
     return this.holidayWorkService.getActive();
   }
 
   @Get('all')
-  @ApiOperation({ summary: 'Get all holiday work announcements (For Management)' })
-  @ApiResponse({ status: 200, description: 'Returns list of all announcements' })
+  @ApiOperation({
+    summary: 'Get all holiday work announcements (For Management)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns list of all announcements',
+  })
   async getAll() {
     return this.holidayWorkService.getAll();
   }
@@ -35,7 +60,10 @@ export class HolidayWorkController {
   @Get('by-date')
   @ApiOperation({ summary: 'Get holiday work announcement by specific date' })
   @ApiQuery({ name: 'date', description: 'Date in YYYY-MM-DD format' })
-  @ApiResponse({ status: 200, description: 'Returns the announcement for the date' })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns the announcement for the date',
+  })
   async getByDate(@Query('date') date: string) {
     return this.holidayWorkService.getByDate(date);
   }
@@ -54,7 +82,11 @@ export class HolidayWorkController {
     @Param('date') date: string,
     @Body() body: IUpdateHolidayWorkDto,
   ) {
-    return this.holidayWorkService.update(date, body, this.currentUserId.toString());
+    return this.holidayWorkService.update(
+      date,
+      body,
+      this.currentUserId.toString(),
+    );
   }
 
   @Delete(':date')

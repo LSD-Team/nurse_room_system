@@ -66,7 +66,9 @@
         <h2 class="text-2xl font-bold text-surface-900 dark:text-surface-0">
           Stock Status
         </h2>
-        <p class="text-surface-500 mt-1">All drug/medical supply stock information</p>
+        <p class="text-surface-500 mt-1">
+          All drug/medical supply stock information
+        </p>
       </div>
       <Button
         label="Export Excel"

@@ -32,11 +32,7 @@
       loading.value = true;
       periods.value = await PhysicalCountService.getAvailablePeriods();
     } catch (error: any) {
-      Swal.fire(
-        'Error',
-        error.message || 'Unable to load data',
-        'error'
-      );
+      Swal.fire('Error', error.message || 'Unable to load data', 'error');
     } finally {
       loading.value = false;
     }
@@ -60,11 +56,7 @@
       });
       await loadPeriods();
     } catch (error: any) {
-      Swal.fire(
-        'Error',
-        error.message || 'Failed to create Period',
-        'error'
-      );
+      Swal.fire('Error', error.message || 'Failed to create Period', 'error');
     } finally {
       loading.value = false;
     }
@@ -252,7 +244,9 @@
 
         <!-- Status Filter -->
         <div class="flex align-items-center gap-2 mb-4">
-          <span class="text-sm font-semibold text-gray-600">Filter by Status:</span>
+          <span class="text-sm font-semibold text-gray-600">
+            Filter by Status:
+          </span>
           <div class="flex gap-2 flex-wrap">
             <Button
               v-for="opt in statusOptions"

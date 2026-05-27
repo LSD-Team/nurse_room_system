@@ -142,11 +142,7 @@
         editNote: l.note ?? '',
       }));
     } catch (error: any) {
-      Swal.fire(
-        'Error',
-        error.message || 'Unable to load data',
-        'error'
-      );
+      Swal.fire('Error', error.message || 'Unable to load data', 'error');
     } finally {
       loading.value = false;
     }
@@ -501,7 +497,9 @@
               label="Auto-fill System Qty"
               class="p-button-outlined p-button-secondary"
               size="small"
-              v-tooltip.top="'Copy system quantity to actual count for all items'"
+              v-tooltip.top="
+                'Copy system quantity to actual count for all items'
+              "
               @click="handleAutoFill"
             />
             <div class="flex align-items-center gap-2">
@@ -738,7 +736,9 @@
   <div class="print-section" v-if="header">
     <!-- Print Header -->
     <div class="ps-header">
-      <div class="ps-title">Monthly Stock Count Sheet (Physical Count Sheet)</div>
+      <div class="ps-title">
+        Monthly Stock Count Sheet (Physical Count Sheet)
+      </div>
       <table class="ps-info">
         <tr>
           <td><strong>Period:</strong></td>

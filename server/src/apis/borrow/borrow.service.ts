@@ -204,12 +204,17 @@ export class BorrowService {
             documentType: 'BORROW',
             toEmployeeIds: [borrowHeader.created_by],
             rejectedByName: actionedBy,
-            additionalMessage: remark || 'Your borrow request has been rejected',
+            additionalMessage:
+              remark || 'Your borrow request has been rejected',
             sentByEmployeeId: actionedBy,
           });
-          this.logger.log(`✅ [BorrowService] Rejection notification sent for Borrow: ${borrowHeader.borrow_no}`);
+          this.logger.log(
+            `✅ [BorrowService] Rejection notification sent for Borrow: ${borrowHeader.borrow_no}`,
+          );
         } catch (error: any) {
-          this.logger.error(`❌ [BorrowService] Failed to send rejection email: ${error.message}`);
+          this.logger.error(
+            `❌ [BorrowService] Failed to send rejection email: ${error.message}`,
+          );
         }
       } else if (action === 'REWORK') {
         // Send rework notification to Borrow creator

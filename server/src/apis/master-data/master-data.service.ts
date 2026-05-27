@@ -99,7 +99,10 @@ export class MasterDataService {
     return Number(value);
   }
 
-  private normalizeRequiredDate(value: string | null | undefined, fieldName: string): string {
+  private normalizeRequiredDate(
+    value: string | null | undefined,
+    fieldName: string,
+  ): string {
     const text = value?.trim();
     if (!text) {
       throw new BadRequestException(`${fieldName} is required`);
@@ -434,7 +437,7 @@ export class MasterDataService {
 
       return {
         ...supplierRows[0],
-        items: items.map(row => ({
+        items: items.map((row) => ({
           item_id: row.item_id,
           item_code: row.item_code,
           item_name_th: row.item_name_th,
@@ -701,7 +704,9 @@ export class MasterDataService {
       }
 
       if (error?.number === 2601 || error?.number === 2627) {
-        throw new ConflictException('Duplicate price key (item/unit/effective date).');
+        throw new ConflictException(
+          'Duplicate price key (item/unit/effective date).',
+        );
       }
 
       if (error?.number >= 50000 && typeof error?.message === 'string') {
@@ -712,7 +717,9 @@ export class MasterDataService {
         `Failed to save supplier price list for supplier ${supplierId}`,
         error,
       );
-      throw new InternalServerErrorException('Failed to save supplier price list');
+      throw new InternalServerErrorException(
+        'Failed to save supplier price list',
+      );
     }
   }
 

@@ -33,10 +33,10 @@ import { AppController } from '@/src/app.controller';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath:
-        process.env.NODE_ENV === 'production'
-          ? '.env.production'
-          : '.env.development',
+      // envFilePath:
+      //   process.env.NODE_ENV === 'production'
+      //     ? '.env.production'
+      //     : '.env.development',
     }),
     AuthModule,
     DatabaseModule,

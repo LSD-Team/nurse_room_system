@@ -289,7 +289,11 @@
         });
       }
       selectedItem.value = null;
-      await Swal.fire('Success', actionLabel[action] + ' processed successfully', 'success');
+      await Swal.fire(
+        'Success',
+        actionLabel[action] + ' processed successfully',
+        'success'
+      );
 
       try {
         await loadPendingApprovals();
@@ -530,7 +534,9 @@
           <Column :header="'Type'" style="min-width: 80px">
             <template #body="{ data }">
               <Tag
-                :value="data.line_type === 'BORROW' ? 'Borrow' : 'Purchase Order'"
+                :value="
+                  data.line_type === 'BORROW' ? 'Borrow' : 'Purchase Order'
+                "
                 :severity="data.line_type === 'BORROW' ? 'warning' : 'info'"
               />
             </template>
@@ -604,7 +610,9 @@
           <Column :header="'Type'" style="min-width: 80px">
             <template #body="{ data }">
               <Tag
-                :value="data.line_type === 'ORDER' ? 'Purchase Order' : 'Borrow'"
+                :value="
+                  data.line_type === 'ORDER' ? 'Purchase Order' : 'Borrow'
+                "
                 :severity="data.line_type === 'ORDER' ? 'info' : 'warning'"
               />
             </template>
@@ -829,9 +837,9 @@
                 />
                 <span class="text-sm font-semibold text-surface-700">
                   {{ formatRole(item.approval_role) }}
-                  <small class="text-surface-500 ml-1"
-                    >(Level {{ item.approval_level }})</small
-                  >
+                  <small class="text-surface-500 ml-1">
+                    (Level {{ item.approval_level }})
+                  </small>
                 </span>
               </div>
               <div v-if="item.actioned_by" class="text-sm">

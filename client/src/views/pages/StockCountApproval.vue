@@ -31,11 +31,7 @@
       loading.value = true;
       allPeriods.value = await PhysicalCountService.getAvailablePeriods();
     } catch (error: any) {
-      Swal.fire(
-        'Error',
-        error.message || 'Unable to load data',
-        'error'
-      );
+      Swal.fire('Error', error.message || 'Unable to load data', 'error');
     } finally {
       loading.value = false;
     }
@@ -91,7 +87,9 @@
         >
           <i class="pi pi-inbox mb-3" style="font-size: 3rem"></i>
           <span class="text-lg">No items pending approval</span>
-          <span class="text-sm mt-1">When a request is submitted for approval, it will appear here</span>
+          <span class="text-sm mt-1">
+            When a request is submitted for approval, it will appear here
+          </span>
         </div>
 
         <!-- Approval list -->

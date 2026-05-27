@@ -29,7 +29,7 @@ API.interceptors.request.use(
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
-      
+
       return config;
     } catch (error) {
       return Promise.reject(error);
@@ -51,11 +51,7 @@ API.interceptors.response.use(
 
       // Network error or server down — no response at all
       if (!response) {
-        await Swal.fire(
-          'Error',
-          'Unable to connect to the server',
-          'error'
-        );
+        await Swal.fire('Error', 'Unable to connect to the server', 'error');
         return Promise.reject(error);
       }
 
@@ -67,13 +63,13 @@ API.interceptors.response.use(
       } else {
         message = errorData.message;
       }
-      
+
       console.error(
         'Interceptors Error:',
         { ...error }.response.config.url,
         { ...error }.response
       );
-      
+
       // Only show error dialog if not a silent request
       if (!(error.config && (error.config as any).silent)) {
         const title = errorData.statusCode === 500 ? 'Server Error' : 'Error';

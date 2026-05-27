@@ -1,5 +1,11 @@
 import { Body, Controller, Get, Param, Post, Put } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiParam,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { JwtPayloadData } from '@/shared/lsd-system-center/auth.interface';
 import { SpecialDrugClaimService } from './special-drug-claim.service';
 import type {
@@ -30,7 +36,10 @@ export class SpecialDrugClaimController {
   @Get(':claimId')
   @ApiOperation({ summary: 'Get special drug claim detail by claim id' })
   @ApiParam({ name: 'claimId', type: Number })
-  @ApiResponse({ status: 200, description: 'Returns claim header, items, movement summary' })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns claim header, items, movement summary',
+  })
   async getClaimById(@Param('claimId') claimId: string) {
     return this.specialDrugClaimService.getClaimById(Number(claimId));
   }
@@ -61,8 +70,13 @@ export class SpecialDrugClaimController {
   }
 
   @Post('return')
-  @ApiOperation({ summary: 'Return special drug by claim item (sp_SC_02_Return)' })
-  @ApiResponse({ status: 200, description: 'Return completed and stock updated' })
+  @ApiOperation({
+    summary: 'Return special drug by claim item (sp_SC_02_Return)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Return completed and stock updated',
+  })
   async returnClaimItem(@Body() body: IReturnSpecialDrugBody) {
     return this.specialDrugClaimService.returnClaimItem(body, this.currentUser);
   }
@@ -72,6 +86,9 @@ export class SpecialDrugClaimController {
   @ApiParam({ name: 'claimId', type: Number })
   @ApiResponse({ status: 200, description: 'Claim closed' })
   async closeClaim(@Param('claimId') claimId: string) {
-    return this.specialDrugClaimService.closeClaim(Number(claimId), this.currentUser);
+    return this.specialDrugClaimService.closeClaim(
+      Number(claimId),
+      this.currentUser,
+    );
   }
 }

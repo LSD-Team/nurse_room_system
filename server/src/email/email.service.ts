@@ -322,14 +322,18 @@ export class EmailService {
       let rejectedByName = payload.rejectedByName || '';
 
       if (payload.approvedByEmployeeId && !approvedByName) {
-        approvedByName = await this.getEmployeeNameById(payload.approvedByEmployeeId);
+        approvedByName = await this.getEmployeeNameById(
+          payload.approvedByEmployeeId,
+        );
       } else if (approvedByName && !isNaN(Number(approvedByName))) {
         // If it's a numeric string, try to resolve it as an ID
         approvedByName = await this.getEmployeeNameById(approvedByName);
       }
 
       if (payload.rejectedByEmployeeId && !rejectedByName) {
-        rejectedByName = await this.getEmployeeNameById(payload.rejectedByEmployeeId);
+        rejectedByName = await this.getEmployeeNameById(
+          payload.rejectedByEmployeeId,
+        );
       } else if (rejectedByName && !isNaN(Number(rejectedByName))) {
         // If it's a numeric string, try to resolve it as an ID
         rejectedByName = await this.getEmployeeNameById(rejectedByName);
@@ -349,11 +353,21 @@ export class EmailService {
         rejected_by_name: rejectedByName,
         actioned_by_name: rejectedByName || approvedByName || '',
         additional_message: payload.additionalMessage || '',
-        approval_url: this.configService.get<string>('FRONTEND_URL') + '/#/pages/approve-purchase',
-        action_url: this.configService.get<string>('FRONTEND_URL') + '/#/pages/borrow-medicines',
-        action_url_po: this.configService.get<string>('FRONTEND_URL') + '/#/pages/purchase-orders',
-        approval_url_pc: this.configService.get<string>('FRONTEND_URL') + '/#/pages/stock-count-approval',
-        action_url_pc: this.configService.get<string>('FRONTEND_URL') + '/#/pages/stock-monthly-record',
+        approval_url:
+          this.configService.get<string>('FRONTEND_URL') +
+          '/#/pages/approve-purchase',
+        action_url:
+          this.configService.get<string>('FRONTEND_URL') +
+          '/#/pages/borrow-medicines',
+        action_url_po:
+          this.configService.get<string>('FRONTEND_URL') +
+          '/#/pages/purchase-orders',
+        approval_url_pc:
+          this.configService.get<string>('FRONTEND_URL') +
+          '/#/pages/stock-count-approval',
+        action_url_pc:
+          this.configService.get<string>('FRONTEND_URL') +
+          '/#/pages/stock-monthly-record',
         sent_at: new Date().toLocaleString('en-GB', {
           timeZone: 'Asia/Bangkok',
         }),
@@ -478,8 +492,8 @@ export class EmailService {
       const template = this.loadTemplate(templateFile);
 
       // Resolve sender name
-      const actionedByName = sentByEmployeeId 
-        ? await this.getEmployeeNameById(sentByEmployeeId) 
+      const actionedByName = sentByEmployeeId
+        ? await this.getEmployeeNameById(sentByEmployeeId)
         : '';
 
       // Render template
@@ -492,11 +506,21 @@ export class EmailService {
         rejected_by_name: '',
         actioned_by_name: actionedByName,
         additional_message: '',
-        approval_url: this.configService.get<string>('FRONTEND_URL') + '/#/pages/approve-purchase',
-        action_url: this.configService.get<string>('FRONTEND_URL') + '/#/pages/borrow-medicines',
-        action_url_po: this.configService.get<string>('FRONTEND_URL') + '/#/pages/purchase-orders',
-        approval_url_pc: this.configService.get<string>('FRONTEND_URL') + '/#/pages/stock-count-approval',
-        action_url_pc: this.configService.get<string>('FRONTEND_URL') + '/#/pages/stock-monthly-record',
+        approval_url:
+          this.configService.get<string>('FRONTEND_URL') +
+          '/#/pages/approve-purchase',
+        action_url:
+          this.configService.get<string>('FRONTEND_URL') +
+          '/#/pages/borrow-medicines',
+        action_url_po:
+          this.configService.get<string>('FRONTEND_URL') +
+          '/#/pages/purchase-orders',
+        approval_url_pc:
+          this.configService.get<string>('FRONTEND_URL') +
+          '/#/pages/stock-count-approval',
+        action_url_pc:
+          this.configService.get<string>('FRONTEND_URL') +
+          '/#/pages/stock-monthly-record',
         sent_at: new Date().toLocaleString('en-GB', {
           timeZone: 'Asia/Bangkok',
         }),
