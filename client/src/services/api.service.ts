@@ -40,16 +40,20 @@ export class Api {
       '/approval',
       '/physical-count',
       '/stock',
-      '/treatment'
+      '/treatment',
     ];
-    const shouldRefresh = bulletRelatedPaths.some(path => cleanUrl.startsWith(path));
+    const shouldRefresh = bulletRelatedPaths.some(path =>
+      cleanUrl.startsWith(path)
+    );
     return shouldRefresh;
   }
 
   private static async refreshBullet(): Promise<void> {
     try {
       // Use dynamic import to break circular dependency: Api -> Store -> Service -> Api
-      const { useMenuNotificationsStore } = await import('@/stores/menu-notifications.store');
+      const { useMenuNotificationsStore } = await import(
+        '@/stores/menu-notifications.store'
+      );
       const notificationsStore = useMenuNotificationsStore();
       await notificationsStore.loadAllCounts(true); // Always silent when refreshing in background
     } catch (error) {
@@ -75,7 +79,9 @@ export class Api {
       } as any);
       return response.data;
     } catch (error) {
-      await this.handleLoading(false, { silent: loadingOptions?.silent } as any);
+      await this.handleLoading(false, {
+        silent: loadingOptions?.silent,
+      } as any);
       throw error;
     }
   }
@@ -102,7 +108,9 @@ export class Api {
       if (this.shouldRefreshBullet(url)) {
         await this.refreshBullet();
       }
-      await this.handleLoading(false, { silent: loadingOptions?.silent } as any);
+      await this.handleLoading(false, {
+        silent: loadingOptions?.silent,
+      } as any);
       throw error;
     }
   }
@@ -129,7 +137,9 @@ export class Api {
       if (this.shouldRefreshBullet(url)) {
         await this.refreshBullet();
       }
-      await this.handleLoading(false, { silent: loadingOptions?.silent } as any);
+      await this.handleLoading(false, {
+        silent: loadingOptions?.silent,
+      } as any);
       throw error;
     }
   }
@@ -156,7 +166,9 @@ export class Api {
       if (this.shouldRefreshBullet(url)) {
         await this.refreshBullet();
       }
-      await this.handleLoading(false, { silent: loadingOptions?.silent } as any);
+      await this.handleLoading(false, {
+        silent: loadingOptions?.silent,
+      } as any);
       throw error;
     }
   }
@@ -182,7 +194,9 @@ export class Api {
       if (this.shouldRefreshBullet(url)) {
         await this.refreshBullet();
       }
-      await this.handleLoading(false, { silent: loadingOptions?.silent } as any);
+      await this.handleLoading(false, {
+        silent: loadingOptions?.silent,
+      } as any);
       throw error;
     }
   }

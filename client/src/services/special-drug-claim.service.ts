@@ -22,7 +22,7 @@ export class SpecialDrugClaimService {
 
   static async updateClaim(
     claimId: number,
-    body: IUpdateSpecialDrugClaimBody,
+    body: IUpdateSpecialDrugClaimBody
   ): Promise<any> {
     return Api.put(`/special-drug-claim/${claimId}`, body);
   }

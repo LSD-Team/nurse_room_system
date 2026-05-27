@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+  BadRequestException,
+} from '@nestjs/common';
 import { DatabaseService } from '@/src/database/database.service';
 import {
   ICreateHolidayWorkDto,
@@ -29,11 +34,12 @@ export class HolidayWorkService {
   }
 
   async getByDate(workDate: string): Promise<IHolidayWorkAnnouncement | null> {
-    const rows = await this.databaseService.executeStoredProcedure<IHolidayWorkAnnouncement>(
-      this.DATABASE_NAME,
-      'sp_HolidayWork_GetByDate',
-      { work_date: workDate },
-    );
+    const rows =
+      await this.databaseService.executeStoredProcedure<IHolidayWorkAnnouncement>(
+        this.DATABASE_NAME,
+        'sp_HolidayWork_GetByDate',
+        { work_date: workDate },
+      );
     return rows[0] || null;
   }
 
@@ -59,7 +65,11 @@ export class HolidayWorkService {
     }
   }
 
-  async update(workDate: string, body: IUpdateHolidayWorkDto, updatedBy: string) {
+  async update(
+    workDate: string,
+    body: IUpdateHolidayWorkDto,
+    updatedBy: string,
+  ) {
     try {
       return await this.databaseService.executeStoredProcedure<any>(
         this.DATABASE_NAME,

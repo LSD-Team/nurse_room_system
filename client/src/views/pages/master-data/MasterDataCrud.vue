@@ -613,9 +613,7 @@
       await loadRows();
       await Swal.fire({
         icon: 'success',
-        title: isEditing.value
-          ? 'Updated successfully'
-          : 'Saved successfully',
+        title: isEditing.value ? 'Updated successfully' : 'Saved successfully',
         timer: 1400,
         showConfirmButton: false,
       });

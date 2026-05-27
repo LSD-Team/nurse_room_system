@@ -16,7 +16,10 @@ export class SpecialDrugClaimService {
     return this.databaseService.getDatabaseName();
   }
 
-  private async hasColumn(tableName: string, columnName: string): Promise<boolean> {
+  private async hasColumn(
+    tableName: string,
+    columnName: string,
+  ): Promise<boolean> {
     const query = `
       SELECT CASE WHEN EXISTS (
         SELECT 1
@@ -170,7 +173,10 @@ export class SpecialDrugClaimService {
       CreatedBy: createdBy,
     };
 
-    const hasVisitParam = await this.spHasParameter('sp_SC_01_Create', '@VisitId');
+    const hasVisitParam = await this.spHasParameter(
+      'sp_SC_01_Create',
+      '@VisitId',
+    );
     if (hasVisitParam) {
       params.VisitId = body.visit_id ?? null;
     }

@@ -537,7 +537,10 @@
     return map[role] || role;
   }
 
-  function getStepStatusLabel(item: IApprovalHistory, borrowStatus: string): string {
+  function getStepStatusLabel(
+    item: IApprovalHistory,
+    borrowStatus: string
+  ): string {
     if (item.status === 'APPROVE') return 'Approved';
     if (item.status === 'REJECT') return 'Rejected';
     if (item.status === 'REWORK') return 'Rework Required';
@@ -556,10 +559,14 @@
     return 'Pending';
   }
 
-  function getStepSeverity(item: IApprovalHistory, borrowStatus: string): string {
+  function getStepSeverity(
+    item: IApprovalHistory,
+    borrowStatus: string
+  ): string {
     if (item.status === 'APPROVE') return 'success';
     if (item.status === 'REJECT') return 'danger';
-    if (item.status === 'REWORK' || item.status === 'CANCELLED') return 'secondary';
+    if (item.status === 'REWORK' || item.status === 'CANCELLED')
+      return 'secondary';
 
     const currentLevelMap: Record<string, number> = {
       PENDING_APPROVAL: 1,
@@ -596,22 +603,24 @@
     detailLines.value = [];
     detailApprovals.value = [];
     showDetailTimeline.value = false;
-    
+
     // Auto-show timeline for REWORK status
     if (row.approval_status === 'REWORK') {
       showDetailTimeline.value = true;
     }
-    
+
     showDetailDialog.value = true;
-    
+
     try {
       // 1. Load Lines (Crucial)
       const lines = await BorrowService.getBorrowLines(row.borrow_id);
       detailLines.value = lines || [];
-      
+
       // 2. Load Approval History (Secondary, don't crash if fails)
       try {
-        const history = await ApprovalService.getBorrowApprovalHistory(row.borrow_id);
+        const history = await ApprovalService.getBorrowApprovalHistory(
+          row.borrow_id
+        );
         detailApprovals.value = history || [];
       } catch (historyErr) {
         console.warn('Failed to load borrow approval history:', historyErr);
@@ -1175,9 +1184,7 @@
           v-if="formLines.length > 0"
           class="flex justify-end text-lg font-bold"
         >
-          {{
-            'Total Amount: '
-          }}฿{{ formatNumber(formTotalAmount) }}
+          {{ 'Total Amount: ' }}฿{{ formatNumber(formTotalAmount) }}
         </div>
       </div>
 
@@ -1373,8 +1380,10 @@
                           ? '#F59E0B'
                           : '#6B7280',
                   backgroundColor:
-                    (getStepSeverity(item, detailBorrow?.borrow_status || '') ===
-                    'success'
+                    (getStepSeverity(
+                      item,
+                      detailBorrow?.borrow_status || ''
+                    ) === 'success'
                       ? '#22C55E'
                       : getStepSeverity(
                             item,
@@ -1418,7 +1427,10 @@
                 <div class="flex items-center gap-2 mb-1">
                   <Tag
                     :value="
-                      getStepStatusLabel(item, detailBorrow?.borrow_status || '')
+                      getStepStatusLabel(
+                        item,
+                        detailBorrow?.borrow_status || ''
+                      )
                     "
                     :severity="
                       getStepSeverity(item, detailBorrow?.borrow_status || '')

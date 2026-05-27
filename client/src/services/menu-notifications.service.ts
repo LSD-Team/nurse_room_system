@@ -13,7 +13,11 @@ export class MenuNotificationsService {
   // ─── Get All Bullet Counts from view_bullet_list ───
   static async getAllCounts(silent = false): Promise<MenuNotificationCounts> {
     try {
-      const counts = await Api.get<MenuNotificationCounts>('/bullet/counts', {}, { silent } as any);
+      const counts = await Api.get<MenuNotificationCounts>(
+        '/bullet/counts',
+        {},
+        { silent } as any
+      );
       console.log('[MenuNotifications] Bullet counts loaded:', counts);
       return counts;
     } catch (error) {

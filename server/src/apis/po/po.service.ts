@@ -476,9 +476,13 @@ export class PoService {
             additionalMessage: remark || 'Your PO has been rejected',
             sentByEmployeeId: actionedBy,
           });
-          this.logger.log(`✅ [PoService] Rejection notification sent for PO: ${poHeader.po_no}`);
+          this.logger.log(
+            `✅ [PoService] Rejection notification sent for PO: ${poHeader.po_no}`,
+          );
         } catch (error: any) {
-          this.logger.error(`❌ [PoService] Failed to send rejection email: ${error.message}`);
+          this.logger.error(
+            `❌ [PoService] Failed to send rejection email: ${error.message}`,
+          );
         }
       } else if (action === 'REWORK') {
         // Send rework notification to PO creator
@@ -503,7 +507,8 @@ export class PoService {
             error.stack,
           );
         }
-      } else if (action === 'APPROVE' || action === 'APPROVED') {        // Check if there are more pending approvals
+      } else if (action === 'APPROVE' || action === 'APPROVED') {
+        // Check if there are more pending approvals
         try {
           const pendingApprovals = await this.getPendingApprovals(
             poHeader.po_id,

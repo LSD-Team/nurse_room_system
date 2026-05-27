@@ -563,7 +563,11 @@
       } else {
         const poDate = formatDateToString(formPoDate.value);
         if (!poDate) {
-          await Swal.fire('Warning', 'Please specify the purchase date', 'warning');
+          await Swal.fire(
+            'Warning',
+            'Please specify the purchase date',
+            'warning'
+          );
           return;
         }
 
@@ -617,7 +621,8 @@
   function approvalStatusSeverity(item: IPoApproval, poStatus: string): string {
     if (item.status === 'APPROVE') return 'success';
     if (item.status === 'REJECT') return 'danger';
-    if (item.status === 'REWORK' || item.status === 'CANCELLED') return 'secondary';
+    if (item.status === 'REWORK' || item.status === 'CANCELLED')
+      return 'secondary';
 
     const currentLevelMap: Record<string, number> = {
       PENDING_APPROVAL: 1,
@@ -690,7 +695,11 @@
 
     try {
       await PoService.submitPo(row.po_id);
-      await Swal.fire('Success', 'Submitted for approval successfully', 'success');
+      await Swal.fire(
+        'Success',
+        'Submitted for approval successfully',
+        'success'
+      );
       await loadPoHeaders();
     } catch (err: any) {
       // Error handled by axios interceptor
@@ -1384,8 +1393,16 @@
           <Column header="#" style="min-width: 50px">
             <template #body="{ index }">{{ index + 1 }}</template>
           </Column>
-          <Column field="item_code" header="Item Code" style="min-width: 100px" />
-          <Column field="item_name_th" header="Item Name" style="min-width: 220px">
+          <Column
+            field="item_code"
+            header="Item Code"
+            style="min-width: 100px"
+          />
+          <Column
+            field="item_name_th"
+            header="Item Name"
+            style="min-width: 220px"
+          >
             <template #body="{ data }">
               <div>{{ data.item_name_th }}</div>
               <div class="text-sm text-surface-400">
@@ -1533,7 +1550,9 @@
               <div class="mb-3">
                 <div class="flex items-center gap-2 mb-1">
                   <Tag
-                    :value="approvalStatusLabel(item, detailPo?.po_status || '')"
+                    :value="
+                      approvalStatusLabel(item, detailPo?.po_status || '')
+                    "
                     :severity="
                       approvalStatusSeverity(item, detailPo?.po_status || '')
                     "
@@ -1581,7 +1600,11 @@
           <template #body="{ index }">{{ index + 1 }}</template>
         </Column>
         <Column field="item_code" header="Item Code" style="min-width: 100px" />
-        <Column field="item_name_th" header="Item Name" style="min-width: 250px">
+        <Column
+          field="item_name_th"
+          header="Item Name"
+          style="min-width: 250px"
+        >
           <template #body="{ data }">
             <div>{{ data.item_name_th }}</div>
             <div class="text-sm text-surface-400">

@@ -29,10 +29,10 @@ export class StockService {
   }
 
   static async getStockMonthlyReport(
-    periodCode: string,
+    periodCode: string
   ): Promise<IStockMonthlyReport[]> {
     return Api.get<IStockMonthlyReport[]>(
-      `/stock/monthly-report/${periodCode}`,
+      `/stock/monthly-report/${periodCode}`
     );
   }
 }

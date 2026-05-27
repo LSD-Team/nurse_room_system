@@ -10,7 +10,7 @@ export default defineConfig({
   optimizeDeps: {
     noDiscovery: true,
   },
-  base: '/nurse-room-system/', // Set your desired public
+  base: '/nurse_room_system/', // Set your desired public
   plugins: [
     vue({}) as any,
     vueDevTools(),
