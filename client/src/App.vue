@@ -6,7 +6,6 @@
 
   const store = useMainStore();
   onMounted(async () => {
-    await store.getUserData();
     const adminStatus = await authService.checkAdmin();
     console.log('Is Admin:', adminStatus);
   });
