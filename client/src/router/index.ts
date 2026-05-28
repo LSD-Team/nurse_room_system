@@ -3,7 +3,10 @@ import {
   type RouteRecordRaw,
   createRouter,
   createWebHashHistory,
+  type NavigationGuardNext,
+  type RouteLocationNormalized,
 } from 'vue-router';
+import { useMainStore } from '@/stores/main.store';
 
 const routes: RouteRecordRaw[] = [
   {
@@ -13,7 +16,24 @@ const routes: RouteRecordRaw[] = [
       {
         path: '',
         name: 'dashboard',
-        redirect: { name: 'treatmentRecord' },
+        redirect: to => {
+          const mainStore = useMainStore();
+          const defaultRoute = mainStore._defaultPageRoute;
+          
+          if (defaultRoute) {
+            // Try to find a route with matching path
+            const matchedRoute = routes[0].children?.find(
+              (r) => r.path === defaultRoute || r.name === defaultRoute,
+            );
+            if (matchedRoute) {
+              return { name: matchedRoute.name };
+            }
+            // Fallback: try to navigate to the route as-is
+            return defaultRoute;
+          }
+          // Default fallback
+          return { name: 'treatmentRecord' };
+        },
       },
 
       // ===== การรักษาพยาบาล =====

@@ -57,6 +57,38 @@ export class EmployeesService {
         HttpStatus.FORBIDDEN,
       );
     }
+
+    // Get user's role with default_page_route
+    try {
+      const roleQuery: string = `
+        SELECT TOP 1
+          r.id as role_id,
+          r.code as role_code,
+          r.name as role_name,
+          r.default_page_route
+        FROM dbo.role_emp re
+        INNER JOIN dbo.roles r ON r.id = re.role_id
+        WHERE CAST(re.employee_id AS NVARCHAR(50)) = @employeeId
+          AND r.is_active = 1
+        ORDER BY r.id
+      `;
+      const roleData = await this.databaseService.query<any>(
+        this.DATABASE_NAME,
+        roleQuery,
+        { employeeId: UserID },
+      );
+      
+      if (roleData && roleData.length > 0) {
+        viewEmployee.role_id = roleData[0].role_id;
+        viewEmployee.role_code = roleData[0].role_code;
+        viewEmployee.role_name = roleData[0].role_name;
+        viewEmployee.default_page_route = roleData[0].default_page_route;
+      }
+    } catch (error) {
+      // Role info is optional, so don't throw error if query fails
+      console.warn('Failed to fetch role info:', error);
+    }
+
     return viewEmployee;
   }
 }

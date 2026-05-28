@@ -17,6 +17,7 @@ interface IMainStoreState {
   loadingMessage: string;
   isSilder: boolean;
   employees: IViewEmployee[];
+  defaultPageRoute: string | null;
 }
 
 //  ===== default state =====
@@ -43,6 +44,7 @@ const default_state: IMainStoreState = {
   loadingMessage: 'Loading...',
   isSilder: false,
   employees: [],
+  defaultPageRoute: null,
 };
 
 export const useMainStore = defineStore('main', {
@@ -53,6 +55,7 @@ export const useMainStore = defineStore('main', {
     _isSilder: state => state.isSilder,
     _userInfo: state => state.userInfo,
     _employees: state => state.employees,
+    _defaultPageRoute: state => state.defaultPageRoute,
   },
   actions: {
     async setLoading(status: boolean, message?: string) {
@@ -70,6 +73,7 @@ export const useMainStore = defineStore('main', {
     },
     async setUserData(data: IViewEmployee) {
       this.userInfo = data;
+      this.defaultPageRoute = data.default_page_route || null;
     },
 
     async getEmployees() {
