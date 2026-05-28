@@ -1,0 +1,24 @@
+{
+  "name": "nurse_room_system",
+  "version": "1.0.0",
+  "description": "",
+  "main": "decode_sitemap.js",
+  "scripts": {
+    "client-docker-build": "docker build -f ./client/Dockerfile -t lsd-app-serv2:5000/app-nurse-room-client:0.1.1 -t lsd-app-serv2:5000/app-nurse-room-client:latest .",
+    "client-docker-push": "docker push lsd-app-serv2:5000/app-nurse-room-client:0.1.1 && docker push lsd-app-serv2:5000/app-nurse-room-client:latest",
+    "server-docker-build": "docker build -f ./server/Dockerfile -t lsd-app-serv2:5000/app-nurse-room-server:0.1.1 -t lsd-app-serv2:5000/app-nurse-room-server:latest .",
+    "server-docker-push": "docker push lsd-app-serv2:5000/app-nurse-room-server:0.1.1 && docker push lsd-app-serv2:5000/app-nurse-room-server:latest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LSD-Team/nurse_room_system.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/LSD-Team/nurse_room_system/issues"
+  },
+  "homepage": "https://github.com/LSD-Team/nurse_room_system#readme"
+}
