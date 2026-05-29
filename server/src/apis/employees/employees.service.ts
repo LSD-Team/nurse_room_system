@@ -72,12 +72,8 @@ export class EmployeesService {
           AND r.is_active = 1
         ORDER BY r.id
       `;
-      const roleData = await this.databaseService.query<any>(
-        this.DATABASE_NAME,
-        roleQuery,
-        { employeeId: UserID },
-      );
-      
+      const roleData = await this.databaseService.query<any>(this.DATABASE_NAME, roleQuery, { employeeId: UserID });
+
       if (roleData && roleData.length > 0) {
         viewEmployee.role_id = roleData[0].role_id;
         viewEmployee.role_code = roleData[0].role_code;
